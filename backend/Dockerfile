@@ -1,29 +1,20 @@
-# Use the official Golang image to create a build artifact.
-FROM golang:1.21.0 as builder
+# Start from the latest golang base image
+FROM golang:latest
 
-# Set the working directory outside $GOPATH to enable the support for modules.
+# Set the current working directory inside the container
 WORKDIR /app
 
-# Copy the go.mod and go.sum to download all dependencies.
-# Adjust the paths to point to the src directory.
-COPY src/go.mod ./
-COPY src/go.sum ./
+# Copy go.mod and go.sum
+COPY go.mod go.sum ./
 
-# Download all dependencies.
+# Download all dependencies
 RUN go mod download
 
-# Copy the source code into the container.
-# Again, adjust the path to copy from the src directory.
-COPY src/ .
+# Copy the source from the current directory to the working directory inside the container
+COPY . .
 
-# Build the application to /gopher-api.
-RUN CGO_ENABLED=0 GOOS=linux go build -v -o /gopher-api .
+# Build the Go app
+RUN go build -o main .
 
-# Use a Docker multi-stage build to create a lean production image.
-FROM alpine:latest
-
-# Copy the binary to the production image from the builder stage.
-COPY --from=builder /gopher-api /gopher-api
-
-# Run the web service on container startup.
-CMD ["/gopher-api"]
+# Command to run the executable
+CMD ["./main"]
