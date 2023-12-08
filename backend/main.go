@@ -2,11 +2,24 @@
 package main
 
 import (
-	"fmt"
+	"log"
+	"net/http"
+	"os"
 
+	"github.com/k-zehnder/gophersignal/internals/taskserver"
 	"github.com/k-zehnder/gophersignal/internals/taskstore"
 )
 
 func main() {
-	fmt.Println("is working:", taskstore.IsWorking())
+	mux := http.NewServeMux()
+
+	taskstore := taskstore.New()
+	taskserver := taskserver.New(taskstore)
+
+	mux.HandleFunc("/task/", taskserver.TaskHandler)
+
+	// Server port set to 3003
+	log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("SERVERPORT"), mux))
+
+
 }
