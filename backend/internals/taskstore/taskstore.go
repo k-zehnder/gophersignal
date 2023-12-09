@@ -1,10 +1,12 @@
-// taskstore package is the model or data layer
-// for our server
 package taskstore
 
 import (
-	"sync"
+	"database/sql"
+	"encoding/json"
+	"fmt"
 	"time"
+
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Task struct {
@@ -14,52 +16,60 @@ type Task struct {
 	Due  time.Time `json:"due"`
 }
 
-// Taskstore is a simple in-memory db of tasks; Taskstore methods are safe
-// to call concurrently
 type Taskstore struct {
-	sync.Mutex
-
-	tasks  map[int]Task
-	nextId int
+	db *sql.DB
 }
 
 func New() *Taskstore {
-	return &Taskstore{
-		tasks: make(map[int]Task),
+	// Connect to the database
+	dsn := "root:gopher@tcp(localhost:3333)/gopher_api?parseTime=true"
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		panic(err)
 	}
+
+	return &Taskstore{db: db}
 }
 
-// CreateTask creates a new task in the store.
 func (ts *Taskstore) CreateTask(text string, tags []string, due time.Time) int {
-	ts.Lock()
-	defer ts.Unlock()
+	// Convert tags slice to JSON for storing in the database
+	tagsJSON, _ := json.Marshal(tags)
 
-	task := Task{
-		Id: ts.nextId,
-		Text: text,
-		Due: due}
-	task.Tags = make([]string, len(tags))
-	copy(task.Tags, tags)
+	// Insert the task into the database
+	result, err := ts.db.Exec("INSERT INTO tasks (text, tags, due) VALUES (?, ?, ?)", text, tagsJSON, due)
+	if err != nil {
+		fmt.Println("Error creating task:", err)
+		return 0
+	}
 
-	ts.tasks[ts.nextId] = task
-	ts.nextId++
-	return task.Id
+	id, err := result.LastInsertId()
+	if err != nil {
+		fmt.Println("Error getting last insert ID:", err)
+		return 0
+	}
+
+	return int(id)
 }
 
-// // GetTask retrieves a task from the store, by id. If no such id exists, an error is returned.
-// func (ts *Taskstore) GetTask(id int) (Task, error)
+func (ts *Taskstore) GetAllTasks() []Task {
+	rows, err := ts.db.Query("SELECT id, text, tags, due FROM tasks")
+	if err != nil {
+		fmt.Println("Error getting tasks:", err)
+		return nil
+	}
+	defer rows.Close()
 
-// // DeleteTask deletes the task with the given id. If no such id exists, an error is returned.
-// func (ts *Taskstore) DeleteTask(id int) error
+	var tasks []Task
+	for rows.Next() {
+		var task Task
+		var tagsJSON string
+		if err := rows.Scan(&task.Id, &task.Text, &tagsJSON, &task.Due); err != nil {
+			fmt.Println("Error scanning task:", err)
+			continue
+		}
+		json.Unmarshal([]byte(tagsJSON), &task.Tags)
+		tasks = append(tasks, task)
+	}
 
-// // DeleteAllTasks deletes all tasks in the store.
-// func (ts *Taskstore) DeleteAllTasks() error
-
-// // GetAllTasks returns all the tasks in the store, in arbitrary order.
-// func (ts *Taskstore) GetAllTasks() []Task
-
-// // GetTasksByTag returns all the tasks that have the given tag, in arbitrary order
-// func (ts *Taskstore) GetTasksByTag(tag string) []Task
-
-// // GetTasksByDueDate
-// func (ts *Taskstore) GetTasksByDueDate(year int, month time.Month, day int) []Task
+	return tasks
+}
