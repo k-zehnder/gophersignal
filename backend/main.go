@@ -20,6 +20,4 @@ func main() {
 
 	// Server port set to 3003
 	log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("SERVERPORT"), mux))
-
-
 }
