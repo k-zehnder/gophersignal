@@ -1,23 +1,27 @@
-// Basic example of a REST server with several routes, using only the standard library.
 package main
 
 import (
-	"log"
-	"net/http"
+	"fmt"
 	"os"
 
-	"github.com/k-zehnder/gophersignal/internals/taskserver"
-	"github.com/k-zehnder/gophersignal/internals/taskstore"
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/k-zehnder/gophersignal/backend/internals/mysqlstore"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	// exported via ~/.zshrc
+	dsn := os.Getenv("MYSQL_DSN")
+	if dsn == "" {
+		panic("MYSQL_DSN env variable is not set")
+	}
+	store, err := mysqlstore.NewMySQLTaskStore(dsn)
+	if err != nil {
+		panic(err)
+	}
 
-	taskstore := taskstore.New()
-	taskserver := taskserver.New(taskstore)
-
-	mux.HandleFunc("/task/", taskserver.TaskHandler)
-
-	// Server port set to 3003
-	log.Fatal(http.ListenAndServe("localhost:"+os.Getenv("SERVERPORT"), mux))
+	if store.IsConnected() {
+		fmt.Println("[x] Successfully connected to the database.")
+	} else {
+		fmt.Println("[x] Failed to connect to the database.")
+	}
 }
