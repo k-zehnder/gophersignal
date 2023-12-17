@@ -1,6 +1,10 @@
 package mysqlstore
 
-import "database/sql"
+import (
+	"database/sql"
+	"encoding/json"
+	"time"
+)
 
 type MySQLTaskStore struct {
 	db *sql.DB
@@ -30,4 +34,24 @@ func NewMySQLTaskStore(dsn string) (*MySQLTaskStore, error) {
 
 func (store *MySQLTaskStore) IsConnected() bool {
 	return store.db != nil
+}
+
+func (store *MySQLTaskStore) CreateTask(text string, tags []string, due time.Time) (int, error) {
+	// Serialize tags slice to JSON
+	tagsJSON, err := json.Marshal(tags)
+	if err != nil {
+		return 0, err
+	}
+
+	result, err := store.db.Exec("INSERT INTO tasks (text, tags, due) VALUES (?, ?, ?)", text, tagsJSON, due)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int(id), nil
 }
