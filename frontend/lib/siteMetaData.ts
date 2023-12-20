@@ -1,9 +1,9 @@
 export const siteMetaData = {
-  title: "Joy UI Next.js Blog",
-  author: "Sam Sycamore",
-  description: "Minimalist Joy UI blog built with Next.js in TypeScript.",
+  title: "Gopher Signal",
+  author: "Mr. Ritchie",
+  description: "Code snippet blog powered by ChatGPT.",
   language: "en-us",
-  siteUrl: "https://joy-next-blog.vercel.app",
+  siteUrl: "https://gophersignal.com",
   image: "/images/photo.jpeg",
   ogImage: "/images/og-card.jpg",
   twImage: "/images/og-card.jpg",

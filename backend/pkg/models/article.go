@@ -9,3 +9,6 @@ type Article struct {
 	Source    string
 	ScrapedAt time.Time
 }
+
+// NewArticle creates a new Article instance
+func NewArticle() {}
