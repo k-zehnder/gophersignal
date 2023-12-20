@@ -1,32 +1,60 @@
 import Layout from "../components/Layout";
+import Link from "next/link";
+import Date from "../components/Date";
+import { GetStaticProps } from "next";
+import Typography from "@mui/joy/Typography";
 import List from "@mui/joy/List";
 import ListItem from "@mui/joy/ListItem";
-import Typography from "@mui/joy/Typography";
+import { getSortedPostsData } from "../lib/posts";
 
-export default function Index() {
+export default function Index({
+  allPostsData,
+}: {
+  allPostsData: {
+    title: string;
+    summary: string;
+    category: string;
+    date: string;
+    id: string;
+  }[];
+}) {
   return (
     <Layout>
-      <Typography level="h2" sx={{ mb: "1rem" }}>
-        Minimalist Joy UI Blog
-      </Typography>
-      <Typography sx={{ mb: "1rem" }}>
-        Welcome to your sleek new Joy UI blog. ✨
-      </Typography>
-      <Typography component="h2" level="h3">
-        Features
-      </Typography>
-      <List>
-        <ListItem>✓ Built with TypeScript</ListItem>
-        <ListItem>✓ Designed with Joy UI's default styles</ListItem>
-        <ListItem>✓ Ready to publish with Next.js Markdown blog</ListItem>
-        <ListItem>✓ Light and dark modes with toggle button</ListItem>
-        <ListItem>✓ Includes Prettier for code formatting</ListItem>
+      <Typography level="h2">Posts</Typography>
+      <List
+        sx={{
+          display: "flex",
+          gap: "10px",
+        }}
+      >
+        {allPostsData.map(({ id, date, category, title, summary }) => (
+          <ListItem
+            key={id}
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+            }}
+          >
+            <Typography level="body3">
+              <Date dateString={date} /> ⋅ {category}
+            </Typography>
+            <Typography level="h4" component="p">
+              <Link href={`/blog/${id}`}>{title}</Link>
+            </Typography>
+            {summary}
+          </ListItem>
+        ))}
       </List>
-      <Typography>
-        View it on{" "}
-        <a href="https://github.com/samuelsycamore/joy-next-blog/">GitHub</a>.
-        Created with 💙 by <a href="https://mui.com/">MUI</a>.
-      </Typography>
     </Layout>
   );
 }
+
+export const getStaticProps: GetStaticProps = async () => {
+  const allPostsData = getSortedPostsData();
+  return {
+    props: {
+      allPostsData,
+    },
+  };
+};
