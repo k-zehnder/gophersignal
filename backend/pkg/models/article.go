@@ -2,8 +2,6 @@ package models
 
 import "time"
 
-// {allPostsData.map(({ id, date, category, title, summary }) => (
-
 // Article represents a generic article structure
 type Article struct {
 	Title     string
@@ -13,4 +11,11 @@ type Article struct {
 }
 
 // NewArticle creates a new Article instance
-func NewArticle() {}
+func NewArticle(title, link, source string) *Article {
+	return &Article{
+		Title:     title,
+		Link:      link,
+		Source:    source,
+		ScrapedAt: time.Now(),
+	}
+}
