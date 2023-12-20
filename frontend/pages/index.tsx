@@ -20,13 +20,13 @@ export default function Index({
 }) {
   return (
     <Layout>
-      <Typography level="h2">Posts</Typography>
-      <List
-        sx={{
-          display: "flex",
-          gap: "10px",
-        }}
-      >
+      {/* Header */}
+      <Typography level="h1" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
+        Latest Posts
+      </Typography>
+
+      {/* Posts List */}
+      <List sx={{ display: "flex", flexDirection: 'column', gap: "1rem" }}>
         {allPostsData.map(({ id, date, category, title, summary }) => (
           <ListItem
             key={id}
@@ -34,15 +34,27 @@ export default function Index({
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-start",
+              '&:hover a': {
+                textDecoration: 'underline',
+              },
             }}
           >
-            <Typography level="body3">
+            {/* Date and Category */}
+            <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem' }}>
               <Date dateString={date} /> ⋅ {category}
             </Typography>
-            <Typography level="h4" component="p">
-              <Link href={`/blog/${id}`}>{title}</Link>
+            
+            {/* Title with default link color */}
+            <Typography level="h4" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium' }}>
+              <Link legacyBehavior href={`/blog/${id}`}>
+                <a>{title}</a>
+              </Link>
             </Typography>
-            {summary}
+            
+            {/* Summary */}
+            <Typography level="body2">
+              {summary}
+            </Typography>
           </ListItem>
         ))}
       </List>
