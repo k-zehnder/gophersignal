@@ -19,8 +19,6 @@ services:
       - "3333:3306"
     volumes:
       - mysql_gophersignal_newest:/var/lib/mysql
-    restart:
-      - always
 
 volumes:
   mysql_gophersignal_newest:
