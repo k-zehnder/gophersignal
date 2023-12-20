@@ -2,17 +2,19 @@ package main
 
 import (
 	"fmt"
-	"time"
+	"log"
 
-	article "github.com/k-zehnder/gophersignal/backend/pkg/models"
+	"github.com/k-zehnder/gophersignal/backend/pkg/hackernews"
 )
 
 func main() {
-	article0 := &article.Article{
-		Title:     "Some article title",
-		Link:      "https://example.com",
-		Source:    "hackernews",
-		ScrapedAt: time.Now(),
+	hns := hackernews.HackerNewsScraper{}
+	articles, err := hns.Scrape()
+	if err != nil {
+		log.Fatal(err)
 	}
-	fmt.Printf("[x] article0: %v\n", article0)
+	for i, article := range articles {
+		msg := fmt.Sprintf("[%d] %s - %s", i, article.Title, article.Link)
+		fmt.Println(msg)
+	}
 }
