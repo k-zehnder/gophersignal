@@ -48,7 +48,7 @@ func main() {
 	cors := handlers.CORS(
 	    handlers.AllowedOrigins([]string{
 		"http://localhost:3000", // Add other origins as needed
-		"http://gophersignal.com", // Add your domain here
+		"https://gophersignal.com", // Add your domain here
 	    }),
 	    handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 	    handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
