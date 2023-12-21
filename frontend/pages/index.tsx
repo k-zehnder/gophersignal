@@ -17,7 +17,7 @@ function Articles() {
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    fetch('/articles')
+    fetch('http://localhost:8080/articles')
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
