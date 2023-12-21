@@ -35,3 +35,21 @@ func (store *DBStore) SaveArticles(articles []*models.Article) {
 		}
 	}
 }
+
+func (store *DBStore) GetAllArticles() ([]*models.Article, error) {
+	rows, err := store.db.Query("SELECT title, link, content, summary, source, scraped_at FROM articles")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var articles []*models.Article
+	for rows.Next() {
+		var article models.Article
+		if err := rows.Scan(&article.Title, &article.Link, &article.Content, &article.Summary, &article.Source, &article.ScrapedAt); err != nil {
+			return nil, err
+		}
+		articles = append(articles, &article)
+	}
+	return articles, nil
+}

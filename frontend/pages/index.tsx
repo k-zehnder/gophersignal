@@ -1,59 +1,58 @@
-import Layout from "../components/Layout";
-import Link from "next/link";
-import Date from "../components/Date";
-import { GetStaticProps } from "next";
-import Typography from "@mui/joy/Typography";
-import List from "@mui/joy/List";
-import ListItem from "@mui/joy/ListItem";
-import { getSortedPostsData } from "../lib/posts";
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import Typography from '@mui/joy/Typography';
+import List from '@mui/joy/List';
+import ListItem from '@mui/joy/ListItem';
+import Layout from "../components/Layout"; 
 
-export default function Index({
-  allPostsData,
-}: {
-  allPostsData: {
-    title: string;
-    summary: string;
-    category: string;
-    date: string;
-    id: string;
-  }[];
-}) {
+interface Article {
+  id: number;
+  title: string;
+  source: string;
+  scrapedAt: string;
+  summary: { String: string; Valid: boolean }; // Updated summary field
+}
+
+function Articles() {
+  const [articles, setArticles] = useState<Article[]>([]);
+
+  useEffect(() => {
+    fetch('http://localhost:8080/articles')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then(data => {
+        setArticles(data);
+      })
+      .catch(error => {
+        console.error('Error fetching articles:', error);
+      });
+  }, []);
+
   return (
     <Layout>
-      {/* Header */}
       <Typography level="h1" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
-        Latest Posts
+        Latest Articles
       </Typography>
 
-      {/* Posts List */}
       <List sx={{ display: "flex", flexDirection: 'column', gap: "1rem" }}>
-        {allPostsData.map(({ id, date, category, title, summary }) => (
-          <ListItem
-            key={id}
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-              '&:hover a': {
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            {/* Date and Category */}
+        {articles.map(({ id, title, source, scrapedAt, summary }, index) => (
+          <ListItem key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
             <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem' }}>
-              <Date dateString={date} /> ⋅ {category}
+              "Today" ⋅ {source}
             </Typography>
             
-            {/* Title with default link color */}
             <Typography level="h4" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium' }}>
-              <Link legacyBehavior href={`/blog/${id}`}>
+              <Link legacyBehavior href={`/article/${id}`} passHref>
                 <a>{title}</a>
               </Link>
             </Typography>
             
-            {/* Summary */}
             <Typography level="body2">
-              {summary}
+              {summary.Valid ? summary.String : 'No summary available'}
             </Typography>
           </ListItem>
         ))}
@@ -62,11 +61,4 @@ export default function Index({
   );
 }
 
-export const getStaticProps: GetStaticProps = async () => {
-  const allPostsData = getSortedPostsData();
-  return {
-    props: {
-      allPostsData,
-    },
-  };
-};
+export default Articles;
