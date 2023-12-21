@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly/v2"
@@ -34,7 +35,7 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 			if len(content) > maxContentLength {
 				content = content[:maxContentLength] + "..." // Truncate content
 			}
-			article := models.NewArticle(title, link, content, "Hacker News")
+			article := models.NewArticle(0, title, link, content, "", "Hacker News", time.Now())
 			articles = append(articles, article)
 		}
 	})
