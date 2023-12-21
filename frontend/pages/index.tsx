@@ -10,14 +10,16 @@ interface Article {
   title: string;
   source: string;
   scrapedAt: string;
-  summary: { String: string; Valid: boolean }; // Updated summary field
+  summary: { String: string; Valid: boolean };
 }
 
 function Articles() {
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    fetch('https://gophersignal.com/articles')
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/articles';
+
+    fetch(apiUrl)
       .then(response => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
