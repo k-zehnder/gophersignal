@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/k-zehnder/gophersignal/backend/myhandlers"
+	"github.com/k-zehnder/gophersignal/backend/pkg/myhandlers"
 	"github.com/k-zehnder/gophersignal/backend/pkg/store"
 )
 
