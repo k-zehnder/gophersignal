@@ -1,23 +1,60 @@
 package models
 
-import "time"
+import (
+	"database/sql"
+	"fmt"
+	"time"
+)
 
 // Article represents a generic article structure
 type Article struct {
-	Title     string
-	Link      string
-	Content   string
-	Source    string
-	ScrapedAt time.Time
+	ID        int            `json:"id"`
+	Title     string         `json:"title"`
+	Link      string         `json:"link"`
+	Content   string         `json:"content"`
+	Summary   sql.NullString `json:"summary"`
+	Source    string         `json:"source"`
+	ScrapedAt Timestamp      `json:"scrapedAt"`
 }
 
-// NewArticle creates a new Article instance
-func NewArticle(title, link, content, source string) *Article {
+// NewArticle creates a new Article instance with a Summary field
+func NewArticle(id int, title, link, content, summary, source string, scrapedAt time.Time) *Article {
+	var summaryNullString sql.NullString
+	if summary != "" {
+		summaryNullString = sql.NullString{String: summary, Valid: true}
+	} else {
+		summaryNullString = sql.NullString{Valid: false}
+	}
+
 	return &Article{
+		ID:        id,
 		Title:     title,
 		Link:      link,
 		Content:   content,
+		Summary:   summaryNullString,
 		Source:    source,
-		ScrapedAt: time.Now(),
+		ScrapedAt: Timestamp{Time: scrapedAt},
 	}
+}
+
+// Timestamp is a custom type for handling time.Time in MySQL
+type Timestamp struct {
+	time.Time
+}
+
+// Scan implements the sql.Scanner interface for Timestamp
+func (t *Timestamp) Scan(value interface{}) error {
+	if value == nil {
+		t.Time = time.Time{}
+		return nil
+	}
+	if bytes, ok := value.([]byte); ok {
+		parsedTime, err := time.Parse("2006-01-02 15:04:05", string(bytes))
+		if err != nil {
+			return err
+		}
+		t.Time = parsedTime
+		return nil
+	}
+	return fmt.Errorf("unable to convert %v to Timestamp", value)
 }
