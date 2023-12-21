@@ -17,7 +17,7 @@ function Articles() {
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/articles';
+    const apiUrl = "https://gophersignal.com/articles";
 
     fetch(apiUrl)
       .then(response => {
