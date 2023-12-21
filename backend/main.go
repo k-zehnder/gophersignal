@@ -3,7 +3,6 @@ package main
 import (
 	// "fmt"
 
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -13,7 +12,7 @@ import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/k-zehnder/gophersignal/backend/myhandlers"
-	"github.com/k-zehnder/gophersignal/backend/pkg/hackernews"
+	// "github.com/k-zehnder/gophersignal/backend/pkg/hackernews"
 	"github.com/k-zehnder/gophersignal/backend/pkg/store"
 )
 
@@ -27,6 +26,7 @@ func main() {
 	// Initialize database connection
 	dbStore := store.NewDBStore(dsn)
 
+	/*
 	hns := hackernews.HackerNewsScraper{}
 	articles, err := hns.Scrape()
 	if err != nil {
@@ -39,6 +39,7 @@ func main() {
 	for i, article := range articles {
 		fmt.Printf("[%d] %s - %s\n", i, article.Title, article.Link)
 	}
+	*/
 
 	// Create a new mux.Router
 	r := mux.NewRouter()
