@@ -4,6 +4,7 @@ import Typography from '@mui/joy/Typography';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
 import Layout from "../components/Layout"; 
+import Description from "../components/Description"; 
 
 interface Article {
   id: number;
@@ -19,8 +20,6 @@ function Articles() {
 
   useEffect(() => {
     const apiUrl = "https://gophersignal.com/articles";
-    // const apiUrl = "http://localhost:8080/articles";
-
     fetch(apiUrl)
       .then(response => {
         if (!response.ok) {
@@ -36,27 +35,38 @@ function Articles() {
       });
   }, []);
 
+  // Function to format date to a readable string
+  const formatDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+  };
+
   return (
     <Layout>
-      <Typography level="h1" component="h2" sx={{ fontWeight: 'bold', mb: 2 }}>
+      <Description /> 
+      <Typography level="h2" component="h2" sx={{ fontWeight: 'bold', mb: 4, fontSize: '2rem' }}>
         Latest Articles
       </Typography>
 
-      <List sx={{ display: "flex", flexDirection: 'column', gap: "1rem" }}>
-        {articles.map(({ id, title, source, scrapedAt, summary, link }, index) => (
-          <ListItem key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-            <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem' }}>
-              Today ⋅ {source}
+      <List sx={{ display: "flex", flexDirection: 'column', gap: "1.5rem" }}>
+        {articles.map((article) => (
+          <ListItem key={article.id} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+            <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
+              {formatDate(article.scrapedAt)} ⋅ {article.source}
             </Typography>
             
-            <Typography level="h4" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium' }}>
-              <Link legacyBehavior href={link} passHref> 
-                <a target="_blank" rel="noopener noreferrer">{title}</a>
+            <Typography level="h3" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium', fontSize: '1.5rem' }}>
+              <Link href={article.link} passHref> 
+                <a target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#007bff' }}>
+                  {article.title}
+                </a>
               </Link>
             </Typography>
             
-            <Typography level="body2">
-              {summary.Valid ? summary.String : 'No summary available'}
+            <Typography level="body2" sx={{ fontSize: '1rem' }}>
+              {article.summary.Valid ? article.summary.String : 'No summary available'}
             </Typography>
           </ListItem>
         ))}
