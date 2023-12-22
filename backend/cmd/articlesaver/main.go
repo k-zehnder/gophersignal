@@ -22,7 +22,8 @@ func SaveArticles(dbStore *store.DBStore) {
 	hns := hackernews.HackerNewsScraper{}
 	articles, err := hns.Scrape()
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("Error scraping articles: %v\n", err)
+		return // Don't terminate the program, just return
 	}
 
 	dbStore.SaveArticles(articles)
