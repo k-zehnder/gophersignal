@@ -1,6 +1,7 @@
 package hackernews
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -64,7 +65,16 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 }
 
 func fetchArticleContent(url string) (string, error) {
-	resp, err := http.Get(url)
+	// Create a context with a timeout of, for example, 10 seconds
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}
