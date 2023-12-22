@@ -36,13 +36,13 @@ function Articles() {
   }, []);
 
   // Function to format date to a readable string
-  const formatDate = (dateStr) => {
+  const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleDateString(undefined, {
       year: 'numeric', month: 'long', day: 'numeric'
     });
   };
-
+  
   return (
     <Layout>
       <Description /> 
