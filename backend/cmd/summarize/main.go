@@ -63,7 +63,7 @@ func main() {
 
 		// Prepare the API request to summarize the content
 		reqBody := OpenAIRequest{
-			Prompt:    fmt.Sprintf("Summarize the following text in about 100 words or less: %s", content),
+			Prompt:    fmt.Sprintf("Summarize the following text in about 50 words: %s", content),
 			MaxTokens: 100, // Adjustable
 		}
 		reqBytes, err := json.Marshal(reqBody)
