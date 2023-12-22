@@ -6,7 +6,7 @@ import { siteMetaData } from "../lib/siteMetaData";
 export default function About() {
   return (
     <Layout>
-      <Typography level="h2" sx={{ mb: "1rem" }}>
+      <Typography level="h2" sx={{ mb: "1rem", fontWeight: 'bold', fontSize: '1.75rem' }}>
         About
       </Typography>
       <Avatar
@@ -14,13 +14,11 @@ export default function About() {
           "--Avatar-size": "100px",
           mb: "1rem",
         }}
-        alt="this image does not exist"
+        alt="Opher Signal Logo"
         src={siteMetaData.image}
-      >
-        JN
-      </Avatar>
-      <Typography>
-        This application turns HackerNews articles into short code snippets.
+      />
+      <Typography sx={{ fontSize: '1rem' }}>
+        Gopher Signal uses smart technology to quickly summarize important points from Hacker News articles, giving you brief and useful updates.
       </Typography>
     </Layout>
   );
