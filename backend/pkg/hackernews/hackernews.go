@@ -39,6 +39,7 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 				}
 				article := models.NewArticle(0, title, link, content, "", "Hacker News", time.Now())
 				articles = append(articles, article)
+				fmt.Printf("Saved article: %s - %s\n", article.Title, article.Link) // Log the saved article
 			} else {
 				fmt.Printf("Skipping unsupported protocol for URL: %s\n", link)
 			}
