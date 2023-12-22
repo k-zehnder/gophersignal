@@ -64,6 +64,10 @@ func fetchArticleContent(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("Failed to fetch content from %s. Status code: %d", url, resp.StatusCode)
+	}
+
 	// Read the body of the response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
