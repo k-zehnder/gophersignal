@@ -14,7 +14,7 @@ import (
 )
 
 const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
-//const openAIURL = "https://api.openai.com/v1/engines/text-ada-001/completions"
+// const openAIURL = "https://api.openai.com/v1/engines/text-ada-001/completions"
 
 type OpenAIRequest struct {
 	Prompt    string `json:"prompt"`
