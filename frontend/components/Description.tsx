@@ -8,7 +8,7 @@ function Description() {
         Welcome to Gopher Signal
       </Typography>
       <Typography level="body1" sx={{ mt: 1 }}>
-        Your concise source of summarized tech news. We use ChatGPT to provide quick summaries of the latest scraped articles from 
+        Your source for summarized tech news. We use ChatGPT to provide quick summaries of the latest scraped articles from 
         <Link href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer" sx={{ ml: 0.5 }}>
           Hacker News
         </Link>.
