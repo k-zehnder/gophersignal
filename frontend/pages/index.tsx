@@ -42,7 +42,7 @@ function Articles() {
       year: 'numeric', month: 'long', day: 'numeric'
     });
   };
-  
+
   return (
     <Layout>
       <Description /> 
@@ -58,7 +58,7 @@ function Articles() {
             </Typography>
             
             <Typography level="h3" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium', fontSize: '1.5rem' }}>
-              <Link legacyBehavior href={article.link} passHref> 
+              <Link href={article.link} passHref> 
                 <a target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#007bff' }}>
                   {article.title}
                 </a>
