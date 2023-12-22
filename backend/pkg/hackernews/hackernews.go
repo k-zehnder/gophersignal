@@ -27,16 +27,21 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 		link := e.ChildAttr("td.title > span.titleline > a", "href")
 
 		if title != "" && link != "" {
-			content, err := fetchArticleContent(link)
-			if err != nil {
-				fmt.Printf("Failed to fetch content for %s: %v\n", link, err)
-				return
+			// Check if the URL has a supported protocol (e.g., http or https)
+			if strings.HasPrefix(link, "http://") || strings.HasPrefix(link, "https://") {
+				content, err := fetchArticleContent(link)
+				if err != nil {
+					fmt.Printf("Failed to fetch content for %s: %v\n", link, err)
+					return
+				}
+				if len(content) > maxContentLength {
+					content = content[:maxContentLength] + "..." // Truncate content
+				}
+				article := models.NewArticle(0, title, link, content, "", "Hacker News", time.Now())
+				articles = append(articles, article)
+			} else {
+				fmt.Printf("Skipping unsupported protocol for URL: %s\n", link)
 			}
-			if len(content) > maxContentLength {
-				content = content[:maxContentLength] + "..." // Truncate content
-			}
-			article := models.NewArticle(0, title, link, content, "", "Hacker News", time.Now())
-			articles = append(articles, article)
 		}
 	})
 
