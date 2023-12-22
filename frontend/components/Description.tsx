@@ -1,6 +1,7 @@
 import Typography from '@mui/joy/Typography';
 import Box from '@mui/joy/Box';
 import Link from '@mui/joy/Link';
+
 function Description() {
   return (
     <Box sx={{ my: 4 }}> 
@@ -8,10 +9,10 @@ function Description() {
         Welcome to Gopher Signal
       </Typography>
       <Typography level="body1" sx={{ mt: 1 }}>
-        Your source for summarized tech news. We use ChatGPT to provide quick summaries of the latest scraped articles from 
+        Gopher Signal uses ChatGPT to quickly summarize important points from 
         <Link href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer" sx={{ ml: 0.5 }}>
           Hacker News
-        </Link>.
+        </Link> articles, giving you brief and useful updates.
       </Typography>
     </Box>
   );
