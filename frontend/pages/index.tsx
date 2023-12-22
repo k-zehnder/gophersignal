@@ -11,6 +11,7 @@ interface Article {
   source: string;
   scrapedAt: string;
   summary: { String: string; Valid: boolean };
+  link: string; 
 }
 
 function Articles() {
@@ -18,6 +19,7 @@ function Articles() {
 
   useEffect(() => {
     const apiUrl = "https://gophersignal.com/articles";
+    // const apiUrl = "http://localhost:8080/articles";
 
     fetch(apiUrl)
       .then(response => {
@@ -41,15 +43,15 @@ function Articles() {
       </Typography>
 
       <List sx={{ display: "flex", flexDirection: 'column', gap: "1rem" }}>
-        {articles.map(({ id, title, source, scrapedAt, summary }, index) => (
+        {articles.map(({ id, title, source, scrapedAt, summary, link }, index) => (
           <ListItem key={index} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
             <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem' }}>
-              "Today" ⋅ {source}
+              Today ⋅ {source}
             </Typography>
             
             <Typography level="h4" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium' }}>
-              <Link legacyBehavior href={`/article/${id}`} passHref>
-                <a>{title}</a>
+              <Link legacyBehavior href={link} passHref> 
+                <a target="_blank" rel="noopener noreferrer">{title}</a>
               </Link>
             </Typography>
             
