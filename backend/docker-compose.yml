@@ -3,11 +3,10 @@ version: '3.8'
 services:
   app:
     build: .
+    env_file:
+      - .env
     ports:
       - "8080:8080"
-    environment:
-      - OPEN_AI_API_KEY=${OPEN_AI_API_KEY}
-      - MYSQL_DSN=${MYSQL_DSN}
     depends_on:
       - mysql
 
