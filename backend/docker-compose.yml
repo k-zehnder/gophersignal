@@ -3,12 +3,11 @@ version: '3.8'
 services:
   app:
     build: .
-    env_file:
-      - .env
     ports:
       - "8080:8080"
     depends_on:
       - mysql
+    restart: always 
 
   mysql:
     image: mysql:latest
@@ -21,6 +20,7 @@ services:
       - "3333:3306"
     volumes:
       - mysql_gophersignal_recent:/var/lib/mysql
+    restart: always 
 
 volumes:
   mysql_gophersignal_recent:
