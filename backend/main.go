@@ -7,11 +7,18 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"github.com/k-zehnder/gophersignal/backend/pkg/myhandlers"
 	"github.com/k-zehnder/gophersignal/backend/pkg/store"
 )
 
 func main() {
+	// Load environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	// Get DSN from environment variable
 	dsn := os.Getenv("MYSQL_DSN")
 	if dsn == "" {

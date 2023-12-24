@@ -4,11 +4,18 @@ import (
 	"log"
 	"os"
 
+	"github.com/joho/godotenv"
 	"github.com/k-zehnder/gophersignal/backend/pkg/hackernews"
 	"github.com/k-zehnder/gophersignal/backend/pkg/store"
 )
 
 func main() {
+	// Load environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	dsn := os.Getenv("MYSQL_DSN")
 	if dsn == "" {
 		log.Fatal("MYSQL_DSN not set in .env file")

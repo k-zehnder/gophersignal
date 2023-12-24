@@ -11,6 +11,7 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 )
 
 const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
@@ -29,10 +30,15 @@ type OpenAIResponse struct {
 }
 
 func main() {
-	// Get API key and DSN from environment variables
+	// Load environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	apiKey := os.Getenv("OPEN_AI_API_KEY")
 	if apiKey == "" {
-		log.Fatal("API key not set in .env file")
+		log.Fatal("OPEN_AI_API_KEY not set in .env file")
 	}
 
 	dsn := os.Getenv("MYSQL_DSN")
@@ -105,5 +111,9 @@ func main() {
 			}
 			fmt.Printf("Article ID %d summarized\n", id)
 		}
+	}
+
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
 	}
 }
