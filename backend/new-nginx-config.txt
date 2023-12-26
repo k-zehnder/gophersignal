@@ -1,0 +1,39 @@
+server {
+    root /var/www/gophersignal.com/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name gophersignal.com www.gophersignal.com;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Proxy all requests to the Go application
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    listen [::]:443 ssl ipv6only=on;
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/gophersignal.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/gophersignal.com/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name gophersignal.com www.gophersignal.com;
+
+    return 404; # managed by Certbot
+}

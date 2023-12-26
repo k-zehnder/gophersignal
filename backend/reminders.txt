@@ -1,0 +1,5 @@
+1. need to run docker-compose up -d --build --remove-orphans on reboot
+
+2. This is how you find the host for the MYSQL_DSN needed for prod (i think because of snap version of docker):
+
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONTAINER_ID 

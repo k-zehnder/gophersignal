@@ -14,7 +14,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
+// const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
+
+const openAIURL = "https://api.openai.com/v1/engines/text-curie-001/completions"
+
+// const openAIURL = "https://api.openai.com/v1/engines/text-babbage-001/completions"
 
 // const openAIURL = "https://api.openai.com/v1/engines/text-ada-001/completions"
 
