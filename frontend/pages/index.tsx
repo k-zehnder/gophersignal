@@ -19,7 +19,11 @@ function Articles() {
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    const apiUrl = "https://gophersignal.com/articles";
+    const apiUrl = process.env.NEXT_PUBLIC_ENV === "development" 
+      ? "http://localhost:8080/articles" 
+      : "https://gophersignal.com/articles";
+
+    // Fetch articles
     fetch(apiUrl)
       .then(response => {
         if (!response.ok) {
@@ -27,15 +31,11 @@ function Articles() {
         }
         return response.json();
       })
-      .then(data => {
-        setArticles(data);
-      })
-      .catch(error => {
-        console.error('Error fetching articles:', error);
-      });
+      .then(data => setArticles(data))
+      .catch(error => console.error('Error fetching articles:', error));
   }, []);
 
-  // Function to format date to a readable string
+  // Function to format date
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleDateString(undefined, {
@@ -45,26 +45,26 @@ function Articles() {
 
   return (
     <Layout>
-      <Description /> 
+      <Description />
       <Typography level="h2" component="h2" sx={{ fontWeight: 'bold', mb: 4, fontSize: '2rem' }}>
         Latest Articles
       </Typography>
 
       <List sx={{ display: "flex", flexDirection: 'column', gap: "1.5rem" }}>
-        {articles.map((article) => (
-          <ListItem key={article.id} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
+        {articles.map((article, idx) => (
+          <ListItem key={idx} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
             <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
               {formatDate(article.scrapedAt)} ⋅ {article.source}
             </Typography>
-            
+
             <Typography level="h3" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium', fontSize: '1.5rem' }}>
-              <Link legacyBehavior href={article.link} passHref> 
+              <Link legacyBehavior href={article.link} passHref>
                 <a target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: '#007bff' }}>
                   {article.title}
                 </a>
               </Link>
             </Typography>
-            
+
             <Typography level="body2" sx={{ fontSize: '1rem' }}>
               {article.summary.Valid ? article.summary.String : 'No summary available'}
             </Typography>
