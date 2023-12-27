@@ -3,55 +3,22 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
-	"github.com/joho/godotenv"
-	"github.com/k-zehnder/gophersignal/backend/pkg/myhandlers"
-	"github.com/k-zehnder/gophersignal/backend/pkg/store"
+	"github.com/k-zehnder/gophersignal/backend/config"
+	"github.com/k-zehnder/gophersignal/backend/pkg/router"
 )
 
 func main() {
 	// Load environment variables from .env file
-	err := godotenv.Load()
-	if err != nil {
+	if err := config.LoadEnv(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// Get DSN from environment variable
-	dsn := os.Getenv("MYSQL_DSN")
-	if dsn == "" {
-		log.Fatal("MYSQL_DSN not set in .env file")
-	}
+	// Initialize the router
+	r := router.SetupRouter()
 
-	// Initialize database connection
-	dbStore := store.NewDBStore(dsn)
-
-	// Create a new mux.Router
-	r := mux.NewRouter()
-
-	// Enable CORS
-	cors := handlers.CORS(
-		handlers.AllowedOrigins([]string{
-			"http://localhost:3000",
-			"https://gophersignal.com",
-		}),
-		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
-		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
-	)
-
-	// Apply CORS middleware to your router
-	r.Use(cors)
-
-	// Define API routes here
-
-	// Setup a route for handling /articles
-	r.HandleFunc("/articles", func(w http.ResponseWriter, r *http.Request) {
-		myhandlers.GetArticlesHandler(w, r, dbStore)
-	}).Methods("GET")
-
-	// Start the HTTP server with your router
-	http.Handle("/", r)
-	log.Fatal(http.ListenAndServe("0.0.0.0:8080", r))
+	// Start the HTTP server with the router
+	addr := config.GetEnvVar("SERVER_ADDRESS", "0.0.0.0:8080")
+	log.Printf("Server is running on %s", addr)
+	log.Fatal(http.ListenAndServe(addr, r))
 }
