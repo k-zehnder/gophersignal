@@ -20,8 +20,8 @@ function Articles() {
 
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_ENV === "development" 
-      ? "http://localhost:8080/articles" 
-      : "https://gophersignal.com/articles";
+      ? "http://localhost:8080/api/v1/articles" 
+      : "https://gophersignal.com/api/v1/articles";
 
     // Fetch articles
     fetch(apiUrl)

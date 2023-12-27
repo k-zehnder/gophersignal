@@ -7,8 +7,8 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/pkg/store"
 )
 
-func GetArticlesHandler(w http.ResponseWriter, r *http.Request, store *store.DBStore) {
-	articles, err := store.GetAllArticles()
+func GetArticlesHandler(w http.ResponseWriter, r *http.Request, dbStore *store.DBStore) {
+	articles, err := dbStore.GetAllArticles()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
