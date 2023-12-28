@@ -16,7 +16,7 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
-	dsn := os.Getenv("MYSQL_DSN")
+	dsn := os.Getenv("SCRAPER_MYSQL_DSN") // Hack
 	if dsn == "" {
 		log.Fatal("MYSQL_DSN not set in .env file")
 	}

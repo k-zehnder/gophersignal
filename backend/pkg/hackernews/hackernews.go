@@ -28,7 +28,7 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 		link := e.ChildAttr("td.title > span.titleline > a", "href")
 
 		if title != "" && link != "" {
-			// Check if the URL has a supported protocol (e.g., http or https)
+			fmt.Printf("Found article: %s - %s\n", title, link) // Log found article
 			if strings.HasPrefix(link, "http://") || strings.HasPrefix(link, "https://") {
 				content, err := fetchArticleContent(link)
 				if err != nil {
@@ -40,7 +40,7 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 				}
 				article := models.NewArticle(0, title, link, content, "", "Hacker News", time.Now())
 				articles = append(articles, article)
-				fmt.Printf("Saved article: %s - %s\n", article.Title, article.Link) // Log the saved article
+				fmt.Printf("Saved article: %s - %s\nContent: %s\n", article.Title, article.Link, content) // Log the saved article with content
 			} else {
 				fmt.Printf("Skipping unsupported protocol for URL: %s\n", link)
 			}
@@ -65,7 +65,7 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 }
 
 func fetchArticleContent(url string) (string, error) {
-	// Create a context with a timeout of, for example, 10 seconds
+	// Create a context with a timeout of 10 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -84,7 +84,7 @@ func fetchArticleContent(url string) (string, error) {
 		return "", fmt.Errorf("Failed to fetch content from %s. Status code: %d", url, resp.StatusCode)
 	}
 
-	// Read the body of the response
+	// Read the entire body of the response
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
@@ -96,12 +96,31 @@ func fetchArticleContent(url string) (string, error) {
 		return "", err
 	}
 
-	// Extract and concatenate text from certain elements
-	var textContent strings.Builder
-	doc.Find("article, p, h1, h2, h3").Each(func(i int, s *goquery.Selection) {
-		textContent.WriteString(s.Text())
-		textContent.WriteString("\n\n") // Add some spacing between elements
-	})
+	// Extract text from the entire body
+	textContent := doc.Find("body").Text()
 
-	return textContent.String(), nil
+	// Remove excess whitespace and blank lines
+	cleanedText := removeExtraWhitespace(textContent)
+
+	return cleanedText, nil
+}
+
+// Removes extra whitespace and blank lines from a string
+func removeExtraWhitespace(text string) string {
+	// Split the text into lines
+	lines := strings.Split(text, "\n")
+
+	var cleanedLines []string
+	for _, line := range lines {
+		// Trim whitespace from each line
+		trimmedLine := strings.TrimSpace(line)
+
+		// Add the line if it is not empty
+		if trimmedLine != "" {
+			cleanedLines = append(cleanedLines, trimmedLine)
+		}
+	}
+
+	// Join the cleaned lines back into a single string
+	return strings.Join(cleanedLines, "\n")
 }
