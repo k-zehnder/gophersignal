@@ -12,7 +12,8 @@ interface Article {
   source: string;
   scrapedAt: string;
   summary: { String: string; Valid: boolean };
-  link: string; 
+  link: string;
+  isOnHomepage: boolean; 
 }
 
 function Articles() {
@@ -51,7 +52,7 @@ function Articles() {
       </Typography>
 
       <List sx={{ display: "flex", flexDirection: 'column', gap: "1.5rem" }}>
-        {articles.map((article, idx) => (
+        {articles.filter(article => article.isOnHomepage).map((article, idx) => (
           <ListItem key={idx} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
             <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
               {formatDate(article.scrapedAt)} ⋅ {article.source}
