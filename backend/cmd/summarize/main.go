@@ -14,11 +14,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
+// const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
 
-//const openAIURL = "https://api.openai.com/v1/engines/text-curie-001/completions"
+const openAIURL = "https://api.openai.com/v1/engines/text-curie-001/completions"
 
-//const openAIURL = "https://api.openai.com/v1/engines/text-babbage-001/completions"
+// const openAIURL = "https://api.openai.com/v1/engines/text-babbage-001/completions"
 
 // const openAIURL = "https://api.openai.com/v1/engines/text-ada-001/completions"
 
@@ -45,7 +45,7 @@ func main() {
 		log.Fatal("OPEN_AI_API_KEY not set in .env file")
 	}
 
-	dsn := os.Getenv("MYSQL_DSN")
+	dsn := os.Getenv("SCRAPER_MYSQL_DSN") // Hack
 	if dsn == "" {
 		log.Fatal("MYSQL_DSN not set in .env file")
 	}
