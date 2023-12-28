@@ -6,6 +6,5 @@ CREATE TABLE IF NOT EXISTS articles (
     summary TEXT,
     source VARCHAR(100) NOT NULL,
     scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    isOnHomepage BOOLEAN,
     UNIQUE KEY unique_article (title, link)
 );

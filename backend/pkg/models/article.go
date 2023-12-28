@@ -8,18 +8,17 @@ import (
 
 // Article represents a generic article structure
 type Article struct {
-	ID           int            `json:"id"`
-	Title        string         `json:"title"`
-	Link         string         `json:"link"`
-	Content      string         `json:"content"`
-	Summary      sql.NullString `json:"summary"`
-	Source       string         `json:"source"`
-	ScrapedAt    Timestamp      `json:"scrapedAt"`
-	IsOnHomepage bool           `json:"isOnHomepage"`
+	ID        int            `json:"id"`
+	Title     string         `json:"title"`
+	Link      string         `json:"link"`
+	Content   string         `json:"content"`
+	Summary   sql.NullString `json:"summary"`
+	Source    string         `json:"source"`
+	ScrapedAt Timestamp      `json:"scrapedAt"`
 }
 
 // NewArticle creates a new Article instance with a Summary field
-func NewArticle(id int, title, link, content, summary, source string, scrapedAt time.Time, isOnHomepage bool) *Article {
+func NewArticle(id int, title, link, content, summary, source string, scrapedAt time.Time) *Article {
 	var summaryNullString sql.NullString
 	if summary != "" {
 		summaryNullString = sql.NullString{String: summary, Valid: true}
@@ -28,14 +27,13 @@ func NewArticle(id int, title, link, content, summary, source string, scrapedAt 
 	}
 
 	return &Article{
-		ID:           id,
-		Title:        title,
-		Link:         link,
-		Content:      content,
-		Summary:      summaryNullString,
-		Source:       source,
-		ScrapedAt:    Timestamp{Time: scrapedAt},
-		IsOnHomepage: isOnHomepage,
+		ID:        id,
+		Title:     title,
+		Link:      link,
+		Content:   content,
+		Summary:   summaryNullString,
+		Source:    source,
+		ScrapedAt: Timestamp{Time: scrapedAt},
 	}
 }
 
