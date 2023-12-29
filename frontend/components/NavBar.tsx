@@ -12,7 +12,7 @@ const navLinks = [
   },
   {
     name: "About",
-    path: "/about/",
+    path: "/about",
   },
 ];
 
