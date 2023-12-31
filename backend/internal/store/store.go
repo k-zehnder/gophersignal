@@ -8,6 +8,12 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 )
 
+// Store defines methods for storing and retrieving articles in a repository.
+type Store interface {
+	SaveArticles(articles []*models.Article) error
+	GetAllArticles() ([]*models.Article, error)
+}
+
 // DBStore wraps the SQL database connection.
 type DBStore struct {
 	db *sql.DB
