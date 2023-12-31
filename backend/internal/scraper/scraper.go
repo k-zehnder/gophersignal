@@ -1,4 +1,4 @@
-package hackernews
+package scraper
 
 import (
 	"context"
@@ -10,8 +10,13 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly/v2"
-	"github.com/k-zehnder/gophersignal/backend/pkg/models"
+	"github.com/k-zehnder/gophersignal/backend/internal/models"
 )
+
+// Scraper defines the interface for a scraper
+type Scraper interface {
+	Scrape() (*[]models.Article, error)
+}
 
 const maxContentLength = 10000
 

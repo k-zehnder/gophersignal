@@ -8,10 +8,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
+	"github.com/k-zehnder/gophersignal/backend/config"
 )
 
 const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
@@ -34,20 +33,20 @@ type OpenAIResponse struct {
 }
 
 func main() {
-	// Load environment variables from .env file
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
+	// Attempt to load environment variables from the .env file.
+	if err := config.LoadEnv(); err != nil {
+		log.Fatal("Failed to load .env file: ", err)
 	}
 
-	apiKey := os.Getenv("OPEN_AI_API_KEY")
+	dsn := config.GetEnvVar("SCRAPER_MYSQL_DSN", "") // Hack
+	if dsn == "" {
+		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
+	}
+
+	apiKey := config.GetEnvVar("OPEN_AI_API_KEY", "")
+
 	if apiKey == "" {
 		log.Fatal("OPEN_AI_API_KEY not set in .env file")
-	}
-
-	dsn := os.Getenv("SCRAPER_MYSQL_DSN") // Hack
-	if dsn == "" {
-		log.Fatal("MYSQL_DSN not set in .env file")
 	}
 
 	// Connect to the database
@@ -74,7 +73,7 @@ func main() {
 		// Prepare the API request to summarize the content
 		reqBody := OpenAIRequest{
 			Prompt:    fmt.Sprintf("Summarize the following text in about 50 words: %s", content),
-			MaxTokens: 100, // Adjustable
+			MaxTokens: 100,
 		}
 		reqBytes, err := json.Marshal(reqBody)
 		if err != nil {
