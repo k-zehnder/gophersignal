@@ -18,8 +18,8 @@ services:
     ports:
       - "3333:3306"
     volumes:
-      - mysql_gophersignal_recent:/var/lib/mysql
+      - mysql_gophersignal:/var/lib/mysql
 
 volumes:
-  mysql_gophersignal_recent:
+  mysql_gophersignal:
     driver: local
