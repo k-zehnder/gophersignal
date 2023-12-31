@@ -14,7 +14,7 @@ export default function About() {
           "--Avatar-size": "100px",
           mb: "1rem",
         }}
-        alt="Opher Signal Logo"
+        alt="Gopher Signal Logo"
         src={siteMetaData.image}
       />
       <Typography sx={{ fontSize: '1rem' }}>
