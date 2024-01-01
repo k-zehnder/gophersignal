@@ -28,6 +28,11 @@ func main() {
 		log.Fatalf("Failed to initialize database store: %v", err)
 	}
 
+	// Initialize the database tables
+	if err := dbStore.Init(); err != nil {
+		log.Fatalf("Failed to initialize database tables: %v", err)
+	}
+
 	// Create a new handler for routing, injecting the database store dependency
 	handler := routeHandlers.NewHandler(dbStore)
 
