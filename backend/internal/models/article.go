@@ -18,7 +18,7 @@ type Article struct {
 	IsOnHomepage bool           `json:"isOnHomepage"`
 }
 
-// NewArticle creates a new Article instance with a Summary field
+// NewArticle creates and returns a new instance of NewArticle
 func NewArticle(id int, title, link, content, summary, source string, scrapedAt time.Time, isOnHomepage bool) *Article {
 	var summaryNullString sql.NullString
 	if summary != "" {

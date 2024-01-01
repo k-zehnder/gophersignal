@@ -1,9 +1,10 @@
 package scraper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -11,14 +12,16 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly/v2"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
+	"golang.org/x/net/html/charset"
+	"golang.org/x/text/transform"
 )
+
+const maxContentLength = 10000
 
 // Scraper defines the interface for a scraper
 type Scraper interface {
-	Scrape() (*[]models.Article, error)
+	Scrape() ([]*models.Article, error)
 }
-
-const maxContentLength = 10000
 
 type HackerNewsScraper struct{}
 
@@ -38,14 +41,15 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 				content, err := fetchArticleContent(link)
 				if err != nil {
 					fmt.Printf("Failed to fetch content for %s: %v\n", link, err)
+					// Continue to next article instead of returning error
 					return
 				}
 				if len(content) > maxContentLength {
-					content = content[:maxContentLength] + "..." // Truncate content
+					content = content[:maxContentLength] + "..."
 				}
 				article := models.NewArticle(0, title, link, content, "", "Hacker News", time.Now(), true)
 				articles = append(articles, article)
-				fmt.Printf("Saved article: %s - %s\nContent: %s\n", article.Title, article.Link, content) // Log the saved article with content
+				fmt.Printf("Saved article: %s - %s\nContent: %s\n", article.Title, article.Link, content)
 			} else {
 				fmt.Printf("Skipping unsupported protocol for URL: %s\n", link)
 			}
@@ -70,7 +74,6 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 }
 
 func fetchArticleContent(url string) (string, error) {
-	// Create a context with a timeout of 10 seconds
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -86,46 +89,50 @@ func fetchArticleContent(url string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("Failed to fetch content from %s. Status code: %d", url, resp.StatusCode)
+		return "", fmt.Errorf("failed to fetch content from %s. Status code: %d", url, resp.StatusCode)
 	}
 
-	// Read the entire body of the response
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
 
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(body)))
+	utf8Body, err := detectAndConvertToUTF8(body)
+	if err != nil {
+		return "", fmt.Errorf("failed to convert content to UTF-8 for %s: %v", url, err)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(strings.NewReader(utf8Body))
 	if err != nil {
 		return "", err
 	}
 
-	// Extract text from the entire body
 	textContent := doc.Find("body").Text()
-
-	// Remove excess whitespace and blank lines
 	cleanedText := removeExtraWhitespace(textContent)
 
 	return cleanedText, nil
 }
 
-// Removes extra whitespace and blank lines from a string
-func removeExtraWhitespace(text string) string {
-	// Split the text into lines
-	lines := strings.Split(text, "\n")
+func detectAndConvertToUTF8(content []byte) (string, error) {
+	r := bytes.NewReader(content)
+	e, _, _ := charset.DetermineEncoding(content, "")
+	utf8Reader := transform.NewReader(r, e.NewDecoder())
 
+	transformedContent, err := io.ReadAll(utf8Reader)
+	if err != nil {
+		return "", err
+	}
+	return string(transformedContent), nil
+}
+
+func removeExtraWhitespace(text string) string {
+	lines := strings.Split(text, "\n")
 	var cleanedLines []string
 	for _, line := range lines {
-		// Trim whitespace from each line
 		trimmedLine := strings.TrimSpace(line)
-
-		// Add the line if it is not empty
 		if trimmedLine != "" {
 			cleanedLines = append(cleanedLines, trimmedLine)
 		}
 	}
-
-	// Join the cleaned lines back into a single string
 	return strings.Join(cleanedLines, "\n")
 }

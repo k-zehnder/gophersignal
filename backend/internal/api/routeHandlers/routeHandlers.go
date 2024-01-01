@@ -8,15 +8,16 @@ import (
 )
 
 type Handler struct {
-	Store *store.DBStore
+	Store store.Store
 }
 
-func NewHandler(store *store.DBStore) *Handler {
+// NewHandler creates and returns a new instance of NewHandler
+func NewHandler(store store.Store) *Handler {
 	return &Handler{Store: store}
 }
 
 func (h *Handler) GetArticles(w http.ResponseWriter, r *http.Request) {
-	articles, err := h.Store.GetAllArticles()
+	articles, err := h.Store.GetArticles()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
