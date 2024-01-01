@@ -12,7 +12,7 @@ type MockStore struct {
 // NewMockStore creates and returns a new instance of MockStore.
 func NewMockStore(articles []*models.Article, saveError error, getAllError error) *MockStore {
 	return &MockStore{
-		Articles:    []*models.Article{},
+		Articles:    articles,
 		SaveError:   saveError,
 		GetAllError: getAllError,
 	}
