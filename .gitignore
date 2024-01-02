@@ -131,3 +131,4 @@ dist
 
 # Other
 .DS_Store
+coverage.out

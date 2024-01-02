@@ -23,7 +23,7 @@ func main() {
 	}
 
 	// Initialize the database store with the provided DSN
-	dbStore, err := store.NewDBStore(dsn)
+	dbStore, err := store.NewMySQLStore(dsn)
 	if err != nil {
 		log.Fatalf("Failed to initialize database store: %v", err)
 	}
