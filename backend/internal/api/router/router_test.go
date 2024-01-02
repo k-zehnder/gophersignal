@@ -6,11 +6,18 @@ import (
 	"testing"
 
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
+	"github.com/k-zehnder/gophersignal/backend/internal/models"
+	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
 func TestRouter_ArticlesRoute(t *testing.T) {
-	// Initialize mock handler.
-	handler := &routeHandlers.Handler{}
+	// Create a MockStore with some sample data.
+	mockStore := store.NewMockStore([]*models.Article{}, nil, nil)
+
+	// Initialize the Handler with the MockStore.
+	handler := &routeHandlers.Handler{
+		Store: mockStore,
+	}
 
 	// Setup router with the handler.
 	router := SetupRouter(handler)
