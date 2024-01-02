@@ -35,7 +35,10 @@ func TestRouter_ArticlesRoute(t *testing.T) {
 	}
 
 	// Validate existence of the route.
-	if route := router.GetRoute("/api/v1/articles"); route == nil {
-		t.Error("Expected /api/v1/articles route to exist")
+	route := router.GetRoute("GetArticles")
+	if route == nil {
+		t.Error("Expected GetArticles route to exist")
+	} else {
+		t.Logf("Route: %v", route.GetName())
 	}
 }
