@@ -10,7 +10,8 @@ interface Article {
   id: number;
   title: string;
   source: string;
-  scrapedAt: string;
+  createdAt: string;
+  updatedAt: string;
   summary: { String: string; Valid: boolean };
   link: string;
   isOnHomepage: boolean; 
@@ -24,7 +25,6 @@ function Articles() {
       ? "http://localhost:8080/api/v1/articles" 
       : "https://gophersignal.com/api/v1/articles";
 
-    // Fetch articles
     fetch(apiUrl)
       .then(response => {
         if (!response.ok) {
@@ -36,7 +36,6 @@ function Articles() {
       .catch(error => console.error('Error fetching articles:', error));
   }, []);
 
-  // Function to format date
   const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleDateString(undefined, {
@@ -55,7 +54,7 @@ function Articles() {
         {articles.filter(article => article.isOnHomepage).map((article, idx) => (
           <ListItem key={idx} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
             <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
-              {formatDate(article.scrapedAt)} ⋅ {article.source}
+              {formatDate(article.createdAt)} ⋅ {article.source}
             </Typography>
 
             <Typography level="h3" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium', fontSize: '1.5rem' }}>
@@ -77,4 +76,3 @@ function Articles() {
 }
 
 export default Articles;
-
