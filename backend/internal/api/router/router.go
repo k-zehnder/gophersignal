@@ -31,5 +31,6 @@ func SetupRouter(handler *routeHandlers.Handler) *mux.Router {
 
 func setupAPIRoutes(r *mux.Router, handler *routeHandlers.Handler) {
 	v1 := r.PathPrefix("/api/v1").Subrouter()
-	v1.HandleFunc("/articles", handler.GetArticles).Methods("GET")
+	route := v1.HandleFunc("/articles", handler.GetArticles).Methods("GET")
+	route.Name("GetArticles")
 }
