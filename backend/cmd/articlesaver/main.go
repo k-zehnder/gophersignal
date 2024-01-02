@@ -21,7 +21,7 @@ func main() {
 	}
 
 	// Initialize the database store
-	dbStore, err := store.NewDBStore(dsn)
+	dbStore, err := store.NewMySQLStore(dsn)
 	if err != nil {
 		log.Fatal("Error initializing DBStore:", err)
 	}
@@ -30,7 +30,7 @@ func main() {
 	SaveArticles(dbStore)
 }
 
-func SaveArticles(dbStore *store.DBStore) {
+func SaveArticles(dbStore *store.MySQLStore) {
 	hns := scraper.HackerNewsScraper{}
 	articles, err := hns.Scrape()
 	if err != nil {

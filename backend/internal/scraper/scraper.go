@@ -47,7 +47,9 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 				if len(content) > maxContentLength {
 					content = content[:maxContentLength] + "..."
 				}
-				article := models.NewArticle(0, title, link, content, "", "Hacker News", time.Now(), true)
+				// Adjusted NewArticle call to include created_at and updated_at
+				now := time.Now()
+				article := models.NewArticle(0, title, link, content, "", "Hacker News", now, now, true)
 				articles = append(articles, article)
 				fmt.Printf("Saved article: %s - %s\nContent: %s\n", article.Title, article.Link, content)
 			} else {

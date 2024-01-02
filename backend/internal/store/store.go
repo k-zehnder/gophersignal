@@ -15,13 +15,13 @@ type Store interface {
 	GetArticles() ([]*models.Article, error)
 }
 
-// DBStore implements the Store interface using a SQL database.
-type DBStore struct {
+// MySQLStore implements the Store interface using a MySQL database.
+type MySQLStore struct {
 	db *sql.DB
 }
 
-// NewDBStore establishes a connection to the SQL database and returns a DBStore.
-func NewDBStore(dataSourceName string) (*DBStore, error) {
+// NewMySQLStore establishes a connection to the MySQL database and returns a MySQLStore.
+func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
@@ -31,11 +31,11 @@ func NewDBStore(dataSourceName string) (*DBStore, error) {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	return &DBStore{db: db}, nil
+	return &MySQLStore{db: db}, nil
 }
 
 // Init sets up the necessary database tables, particularly 'articles'.
-func (store *DBStore) Init() error {
+func (store *MySQLStore) Init() error {
 	createTableSQL := `
 	CREATE TABLE IF NOT EXISTS articles (
 		id INT AUTO_INCREMENT PRIMARY KEY,
@@ -44,7 +44,8 @@ func (store *DBStore) Init() error {
 		content TEXT,
 		summary TEXT,
 		source VARCHAR(100) NOT NULL,
-		scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 		isOnHomepage BOOLEAN,
 		UNIQUE KEY unique_article (title, link)
 	);`
@@ -56,14 +57,11 @@ func (store *DBStore) Init() error {
 }
 
 // SaveArticles updates or adds new articles in the database.
-func (store *DBStore) SaveArticles(articles []*models.Article) error {
-	if _, err := store.db.Exec("UPDATE articles SET isOnHomepage = FALSE"); err != nil {
-		return fmt.Errorf("failed to reset articles isOnHomepage status: %w", err)
-	}
-
+func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	for _, article := range articles {
-		if _, err := store.db.Exec("INSERT INTO articles (title, link, content, source, isOnHomepage) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title=VALUES(title), link=VALUES(link), content=VALUES(content), source=VALUES(source), isOnHomepage=VALUES(isOnHomepage)",
-			article.Title, article.Link, article.Content, article.Source, article.IsOnHomepage); err != nil {
+		_, err := store.db.Exec("INSERT INTO articles (title, link, content, summary, source, created_at, updated_at, isOnHomepage) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title=VALUES(title), link=VALUES(link), content=VALUES(content), summary=VALUES(summary), source=VALUES(source), updated_at=VALUES(updated_at), isOnHomepage=VALUES(isOnHomepage)",
+			article.Title, article.Link, article.Content, article.Summary, article.Source, article.CreatedAt, article.UpdatedAt, article.IsOnHomepage)
+		if err != nil {
 			return fmt.Errorf("failed to save article: %s, error: %w", article.Title, err)
 		}
 	}
@@ -72,8 +70,8 @@ func (store *DBStore) SaveArticles(articles []*models.Article) error {
 }
 
 // GetArticles retrieves all the articles from the database.
-func (store *DBStore) GetArticles() ([]*models.Article, error) {
-	rows, err := store.db.Query("SELECT id, title, link, content, summary, source, scraped_at, isOnHomepage FROM articles")
+func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
+	rows, err := store.db.Query("SELECT id, title, link, content, summary, source, created_at, updated_at, isOnHomepage FROM articles")
 	if err != nil {
 		return nil, fmt.Errorf("failed to query articles: %w", err)
 	}
@@ -82,10 +80,14 @@ func (store *DBStore) GetArticles() ([]*models.Article, error) {
 	var articles []*models.Article
 	for rows.Next() {
 		var article models.Article
-		if err := rows.Scan(&article.ID, &article.Title, &article.Link, &article.Content, &article.Summary, &article.Source, &article.ScrapedAt, &article.IsOnHomepage); err != nil {
+		if err := rows.Scan(&article.ID, &article.Title, &article.Link, &article.Content, &article.Summary, &article.Source, &article.CreatedAt, &article.UpdatedAt, &article.IsOnHomepage); err != nil {
 			return nil, fmt.Errorf("failed to scan article: %w", err)
 		}
 		articles = append(articles, &article)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 
 	return articles, nil

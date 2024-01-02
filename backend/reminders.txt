@@ -1,9 +1,5 @@
-1. need to run docker-compose up -d --build --remove-orphans on reboot
-
-2. This is how you find the host for the MYSQL_DSN needed for prod (i think because of snap version of docker):
-
-docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONTAINER_ID 
-
-3. Sometimes I have had issues when I reboot that require me to change back and forth in prod the MYSQL_DSN from XXX.XXX.XXX:3333 to mysql:3333. 
-
-4. Also / && /backend both have idential .env's but that needs to be fixed so just one of them has it. 
+1. **Docker Setup**: Run `docker-compose up -d --build --remove-orphans` after a reboot to set up Docker.
+2. **MYSQL_DSN Host**: To find the MySQL host for `MYSQL_DSN` in production, use: `docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONTAINER_ID`.
+3. **MYSQL_DSN Issues**: Post-reboot, if there are connectivity issues, switch `MYSQL_DSN` between `XXX.XXX.XXX:3333` and `mysql:3333`.
+4. **.env File Duplication**: Resolve duplication of `.env` files in both `/` and `/backend`.
+5. **Go Test Coverage**: Run `go test -coverprofile=coverage.out ./...` for coverage, then `go tool cover -html=coverage.out -o coverage.html` to generate an HTML report. View it with `open coverage.html` 

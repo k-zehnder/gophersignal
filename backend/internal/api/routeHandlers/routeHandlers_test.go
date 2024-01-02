@@ -1,6 +1,7 @@
 package routeHandlers
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -10,35 +11,65 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
-func TestGetArticlesHandler(t *testing.T) {
-	// Create a mock store with some dummy data
+func TestGetArticles_Success(t *testing.T) {
+	// Set up mock store with predefined data.
 	mockstore := &store.MockStore{
 		Articles: []*models.Article{{Title: "Test Article 1"}},
 	}
 
-	// Create a new handler with the mock store
+	// Initialize handler with mock store.
 	handler := NewHandler(mockstore)
 
-	// Create a new router and register the handler
+	// Configure router with API endpoint.
 	r := mux.NewRouter()
 	r.HandleFunc("/api/v1/articles", handler.GetArticles).Methods("GET")
 
-	// Create a new HTTP request to the endpoint
+	// Simulate HTTP request to API endpoint.
 	req, err := http.NewRequest("GET", "/api/v1/articles", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// Create a ResponseRecorder to record the response
+	// Record HTTP response.
 	rr := httptest.NewRecorder()
 
-	// Serve the HTTP request
+	// Serve request and capture response.
 	r.ServeHTTP(rr, req)
 
-	// Check the status code
+	// Validate response status code.
 	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
+		t.Errorf("Expected status code %v, got %v", http.StatusOK, status)
 	}
 
-	// Check the response body, headers, etc next
+	// Further checks for response body can be added here.
+}
+
+func TestGetArticles_StoreError(t *testing.T) {
+	// Set up mock store to return an error.
+	mockStore := store.NewMockStore(nil, nil, errors.New("store error"))
+	handler := NewHandler(mockStore)
+
+	// Simulate HTTP request to API endpoint.
+	req, err := http.NewRequest("GET", "/api/v1/articles", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Record HTTP response.
+	rr := httptest.NewRecorder()
+	handlerFunc := http.HandlerFunc(handler.GetArticles)
+
+	// Serve request and capture response.
+	handlerFunc.ServeHTTP(rr, req)
+
+	// Validate response status code for error scenario.
+	if status := rr.Code; status != http.StatusInternalServerError {
+		t.Errorf("Expected status code %v, got %v", http.StatusInternalServerError, status)
+	}
+
+	// Validate response body for error message.
+	expected := "store error\n"
+	if rr.Body.String() != expected {
+		t.Errorf("Expected response body %v, got %v", expected, rr.Body.String())
+	}
 }

@@ -4,15 +4,19 @@ FROM golang:latest
 # Set the current working directory inside the container
 WORKDIR /app
 
-# Copy go.mod and go.sum from the backend directory and download dependencies
-COPY backend/go.mod backend/go.sum ./
+# Copy go.mod and go.sum and download dependencies
+COPY go.mod go.sum ./
 RUN go mod download
 
 # Copy the backend source code to the Working Directory inside the container
-COPY backend/ ./
+COPY . ./
 
 # Build the Go app
+# Since your main.go is in the backend directory, we assume that's where the entry point of your application is
 RUN go build -o main .
+
+# Expose the port the app runs on
+EXPOSE 8080
 
 # Command to run the executable
 CMD ["./main"]
