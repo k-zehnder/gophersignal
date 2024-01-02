@@ -7,3 +7,6 @@ docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' CONT
 3. Sometimes I have had issues when I reboot that require me to change back and forth in prod the MYSQL_DSN from XXX.XXX.XXX:3333 to mysql:3333. 
 
 4. Also / && /backend both have idential .env's but that needs to be fixed so just one of them has it. 
+
+5. How to give peppermint user on mac laptop perms
+sudo chmod -R 777 ~/docker_volumes/mysql_gophersignal 
