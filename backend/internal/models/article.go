@@ -15,7 +15,7 @@ type Article struct {
 	Source       string         `json:"source"`
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"updatedAt"`
-	IsOnHomepage bool           `json:"isOnHomepage"`
+	IsOnHomepage bool           `json:"is_on_homepage"`
 }
 
 // NewArticle creates and returns a new instance of Article

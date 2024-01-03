@@ -3,8 +3,8 @@ import Link from 'next/link';
 import Typography from '@mui/joy/Typography';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
-import Layout from "../components/Layout"; 
-import Description from "../components/Description"; 
+import Layout from "../components/Layout";
+import Description from "../components/Description";
 
 interface Article {
   id: number;
@@ -12,28 +12,44 @@ interface Article {
   source: string;
   createdAt: string;
   updatedAt: string;
-  summary: { String: string; Valid: boolean };
+  summary: string;
   link: string;
-  isOnHomepage: boolean; 
+  isOnHomepage: boolean;
 }
 
 function Articles() {
   const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
-    const apiUrl = process.env.NEXT_PUBLIC_ENV === "development" 
-      ? "http://localhost:8080/api/v1/articles" 
-      : "https://gophersignal.com/api/v1/articles";
-
-    fetch(apiUrl)
-      .then(response => {
+    const fetchArticles = async () => {
+      const apiUrl = process.env.NEXT_PUBLIC_ENV === "development"
+        ? "http://localhost:8080/api/v1/articles"
+        : "https://gophersignal.com/api/v1/articles";
+      
+      try {
+        const response = await fetch(apiUrl);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        return response.json();
-      })
-      .then(data => setArticles(data))
-      .catch(error => console.error('Error fetching articles:', error));
+        const data = await response.json();
+
+        const articlesData: Article[] = data.map((item: any) => ({
+          id: item.id,
+          title: item.title,
+          source: item.source,
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+          summary: item.summary && item.summary.Valid ? item.summary.String : 'No summary available',
+          link: item.link,
+          isOnHomepage: item.is_on_homepage,
+        }));
+        setArticles(articlesData);
+      } catch (error) {
+        console.error('Error fetching articles:', error);
+      }
+    };
+
+    fetchArticles();
   }, []);
 
   const formatDate = (dateStr: string): string => {
@@ -66,7 +82,7 @@ function Articles() {
             </Typography>
 
             <Typography level="body2" sx={{ fontSize: '1rem' }}>
-              {article.summary.Valid ? article.summary.String : 'No summary available'}
+              {article.summary}
             </Typography>
           </ListItem>
         ))}

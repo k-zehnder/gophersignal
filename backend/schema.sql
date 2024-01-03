@@ -7,6 +7,5 @@ CREATE TABLE IF NOT EXISTS articles (
     source VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, 
-    isOnHomepage BOOLEAN,
-    UNIQUE KEY unique_article (title, link)
+    is_on_homepage BOOLEAN
 );
