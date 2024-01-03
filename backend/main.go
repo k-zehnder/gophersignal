@@ -41,7 +41,7 @@ func main() {
 
 	// Determine the server address from environment variables and start the HTTP server
 	addr := config.GetEnvVar("SERVER_ADDRESS", "0.0.0.0:8080")
-	log.Printf("Server is running on %s", addr)
+	log.Printf("Server is running on %s\n", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

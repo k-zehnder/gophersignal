@@ -12,7 +12,6 @@ RUN go mod download
 COPY . ./
 
 # Build the Go app
-# Since your main.go is in the backend directory, we assume that's where the entry point of your application is
 RUN go build -o main .
 
 # Expose the port the app runs on

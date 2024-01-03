@@ -1,62 +1,14 @@
-winston@vps-ca69b6ab:~/code/gophersignal/frontend$ npm install && npm run build && npm run export
+# Install dependencies, build, and export the Next.js application
+npm install && npm run build && npm run export
 
-up to date, audited 255 packages in 1s
+# The output of the build and export commands will appear here
+# ... [build and export process output]
 
-93 packages are looking for funding
-  run `npm fund` for details
+# Remove the existing files in the web server's root directory
+rm -rf /var/www/yourdomain.com/html/*
 
-4 vulnerabilities (3 moderate, 1 critical)
+# Copy the newly built static files to the web server's root directory
+cp -r out/* /var/www/yourdomain.com/html/
 
-To address issues that do not require attention, run:
-  npm audit fix
-
-To address all issues, run:
-  npm audit fix --force
-
-Run `npm audit` for details.
-
-> build
-> next build
-
-info  - Linting and checking validity of types  
-info  - Creating an optimized production build  
-info  - Compiled successfully
-info  - Collecting page data  
-info  - Generating static pages (7/7)
-info  - Finalizing page optimization  
-
-Route (pages)                              Size     First Load JS
-┌ ● /                                      1.66 kB         125 kB
-├   /_app                                  0 B            95.1 kB
-├ ○ /404                                   181 B          95.3 kB
-├ ○ /about                                 3.53 kB         120 kB
-└ ● /blog/[id]                             1.52 kB         125 kB
-    ├ /blog/01
-    ├ /blog/02
-    └ /blog/03
-+ First Load JS shared by all              95.1 kB
-  ├ chunks/framework-2c79e2a64abdb08b.js   45.2 kB
-  ├ chunks/main-a0dca5a2ff5035f1.js        26.8 kB
-  ├ chunks/pages/_app-34ecd146cf4df3b0.js  22.1 kB
-  └ chunks/webpack-0b5d8249fb15f5f3.js     939 B
-
-○  (Static)  automatically rendered as static HTML (uses no initial props)
-●  (SSG)     automatically generated as static HTML + JSON (uses getStaticProps)
-
-
-> export
-> next export
-
-info  - using build directory: /home/winston/code/gophersignal/frontend/.next
-info  - Copying "static build" directory
-info  - No "exportPathMap" found in "undefined". Generating map from "./pages"
-info  - Launching 1 workers
-info  - Copying "public" directory
-info  - Exporting (4/4)
-Export successful. Files written to /home/winston/code/gophersignal/frontend/out
-winston@vps-ca69b6ab:~/code/gophersignal/frontend$ rm -rf /var/www/gophersignal.com/html/*
-winston@vps-ca69b6ab:~/code/gophersignal/frontend$ cp -r out/* /var/www/gophersignal.com/html/
-winston@vps-ca69b6ab:~/code/gophersignal/frontend$ sudo service nginx restart
-[sudo] password for winston: 
-winston@vps-ca69b6ab:~/code/gophersignal/frontend$ 
-
+# Restart the Nginx service to apply changes
+sudo service nginx restart
