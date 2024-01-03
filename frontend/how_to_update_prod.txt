@@ -5,10 +5,10 @@ npm install && npm run build && npm run export
 # ... [build and export process output]
 
 # Remove the existing files in the web server's root directory
-rm -rf /var/www/yourdomain.com/html/*
+rm -rf /var/www/gophersignal.com/html/*
 
 # Copy the newly built static files to the web server's root directory
-cp -r out/* /var/www/yourdomain.com/html/
+cp -r out/* /var/www/gophersignal.com/html/
 
 # Restart the Nginx service to apply changes
 sudo service nginx restart
