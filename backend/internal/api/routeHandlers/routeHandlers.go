@@ -11,7 +11,7 @@ type Handler struct {
 	Store store.Store
 }
 
-// NewHandler creates and returns a new instance of NewHandler
+// NewHandler creates and returns a new instance of Handler
 func NewHandler(store store.Store) *Handler {
 	return &Handler{Store: store}
 }
