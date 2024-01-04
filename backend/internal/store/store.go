@@ -56,21 +56,37 @@ func (store *MySQLStore) Init() error {
 	return nil
 }
 
-// SaveArticles updates or adds new articles in the database.
+// SaveArticles updates or adds new articles in the database. It first resets the is_on_homepage flag for all articles.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
+	// Begin a transaction
+	tx, err := store.db.Begin()
+	if err != nil {
+		return fmt.Errorf("failed to start transaction: %w", err)
+	}
+
+	// Reset is_on_homepage for all articles
+	if _, err = tx.Exec("UPDATE articles SET is_on_homepage = FALSE"); err != nil {
+		tx.Rollback()
+		return fmt.Errorf("failed to reset is_on_homepage: %w", err)
+	}
+
+	// Insert or update articles
 	for _, article := range articles {
-		_, err := store.db.Exec("INSERT INTO articles (title, link, content, summary, source, created_at, updated_at, is_on_homepage) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title=VALUES(title), link=VALUES(link), content=VALUES(content), summary=VALUES(summary), source=VALUES(source), updated_at=VALUES(updated_at), is_on_homepage=VALUES(is_on_homepage)",
+		_, err := tx.Exec("INSERT INTO articles (title, link, content, summary, source, created_at, updated_at, is_on_homepage) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title=VALUES(title), link=VALUES(link), content=VALUES(content), summary=VALUES(summary), source=VALUES(source), updated_at=VALUES(updated_at), is_on_homepage=VALUES(is_on_homepage)",
 			article.Title, article.Link, article.Content, article.Summary, article.Source, article.CreatedAt, article.UpdatedAt, article.IsOnHomepage)
 		if err != nil {
+			tx.Rollback()
 			return fmt.Errorf("failed to save article: %s, error: %w", article.Title, err)
 		}
 	}
-	return nil
+
+	// Commit the transaction
+	return tx.Commit()
 }
 
-// GetArticles retrieves all the articles from the database.
+// GetArticles retrieves all articles that are marked as on the homepage from the database.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
-	rows, err := store.db.Query("SELECT id, title, link, content, summary, source, created_at, updated_at, is_on_homepage FROM articles")
+	rows, err := store.db.Query("SELECT id, title, link, content, summary, source, created_at, updated_at, is_on_homepage FROM articles WHERE is_on_homepage = TRUE")
 	if err != nil {
 		return nil, fmt.Errorf("failed to query articles: %w", err)
 	}
