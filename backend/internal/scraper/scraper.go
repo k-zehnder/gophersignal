@@ -36,16 +36,18 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 		link := e.ChildAttr("td.title > span.titleline > a", "href")
 
 		if title != "" && link != "" {
-			fmt.Printf("Found article: %s - %s\n", title, link)
+			fmt.Printf("Found article: %s - %s\n", title, link) // Log found article
 			if strings.HasPrefix(link, "http://") || strings.HasPrefix(link, "https://") {
 				content, err := fetchArticleContent(link)
 				if err != nil {
 					fmt.Printf("Failed to fetch content for %s: %v\n", link, err)
+					// Continue to next article instead of returning error
 					return
 				}
 				if len(content) > maxContentLength {
 					content = content[:maxContentLength] + "..."
 				}
+				// Adjusted NewArticle call to include created_at and updated_at
 				now := time.Now()
 				article := models.NewArticle(0, title, link, content, "", "Hacker News", now, now, true)
 				articles = append(articles, article)
