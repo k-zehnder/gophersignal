@@ -33,16 +33,18 @@ function Articles() {
         }
         const data = await response.json();
 
-        const articlesData: Article[] = data.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          source: item.source,
-          createdAt: item.created_at,
-          updatedAt: item.updated_at,
-          summary: item.summary && item.summary.Valid ? item.summary.String : 'No summary available',
-          link: item.link,
-          isOnHomepage: item.is_on_homepage,
-        }));
+        const articlesData: Article[] = data.map((item: any) => {
+          return {
+            id: item.id,
+            title: item.title,
+            source: item.source,
+            createdAt: item.createdAt, 
+            updatedAt: item.updatedAt,
+            summary: item.summary && item.summary.Valid ? item.summary.String : 'No summary available',
+            link: item.link,
+            isOnHomepage: item.is_on_homepage,
+          };
+        });
         setArticles(articlesData);
       } catch (error) {
         console.error('Error fetching articles:', error);
@@ -53,7 +55,14 @@ function Articles() {
   }, []);
 
   const formatDate = (dateStr: string): string => {
+  // Handle null, undefined, or empty date strings
+    if (!dateStr) {
+      return 'Date not available'; 
+    }
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date'; 
+    }
     return date.toLocaleDateString(undefined, {
       year: 'numeric', month: 'long', day: 'numeric'
     });
