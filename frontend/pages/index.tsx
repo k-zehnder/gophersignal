@@ -67,7 +67,7 @@ function Articles() {
       </Typography>
 
       <List sx={{ display: "flex", flexDirection: 'column', gap: "1.5rem" }}>
-        {articles.filter(article => article.isOnHomepage).map((article, idx) => (
+        {articles.map((article, idx) => (
           <ListItem key={idx} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
             <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
               {formatDate(article.createdAt)} ⋅ {article.source}
