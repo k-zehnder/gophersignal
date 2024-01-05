@@ -72,8 +72,8 @@ func main() {
 
 		// Prepare the API request to summarize the content
 		reqBody := OpenAIRequest{
-			Prompt:    fmt.Sprintf("Summarize the following hacker news articles in a few sentences: %s", content),
-			MaxTokens: 50,
+			Prompt:    fmt.Sprintf("Summarize the following text in about 50 words: %s", content),
+			MaxTokens: 100,
 		}
 		reqBytes, err := json.Marshal(reqBody)
 		if err != nil {
