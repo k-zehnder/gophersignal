@@ -99,7 +99,8 @@ func fetchArticleContent(url string) (string, error) {
 
 	utf8Body, err := detectAndConvertToUTF8(body)
 	if err != nil {
-		return "", fmt.Errorf("failed to convert content to UTF-8 for %s: %v", url, err)
+		fmt.Printf("Error converting content to UTF-8 for %s: %v\n", url, err)
+		return "", nil
 	}
 
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(utf8Body))
