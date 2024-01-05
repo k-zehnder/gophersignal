@@ -75,8 +75,9 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 		_, err := tx.Exec("INSERT INTO articles (title, link, content, summary, source, created_at, updated_at, is_on_homepage) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title=VALUES(title), link=VALUES(link), content=VALUES(content), summary=VALUES(summary), source=VALUES(source), updated_at=VALUES(updated_at), is_on_homepage=VALUES(is_on_homepage)",
 			article.Title, article.Link, article.Content, article.Summary, article.Source, article.CreatedAt, article.UpdatedAt, article.IsOnHomepage)
 		if err != nil {
-			tx.Rollback()
-			return fmt.Errorf("failed to save article: %s, error: %w", article.Title, err)
+			// Handle the error gracefully, you can log it and continue processing other articles.
+			fmt.Printf("Error saving article: %s, error: %v\n", article.Title, err)
+			continue
 		}
 	}
 
