@@ -13,6 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      # Setup and test Go backend
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
@@ -44,6 +45,7 @@ jobs:
           name: coverage-report
           path: backend/coverage.html
 
+      # Setup Node.js for frontend
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
@@ -54,6 +56,16 @@ jobs:
           cd frontend
           npm install
 
+      # Start Next.js server in the background
+      - name: Start Next.js Server
+        run: |
+          cd frontend
+          nohup npm run dev &
+
+      - name: Wait for Server to be Up
+        run: sleep 10
+
+      # Run Cypress tests
       - name: Run Cypress tests and capture output
         run: |
           cd frontend
