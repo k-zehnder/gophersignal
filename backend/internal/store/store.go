@@ -37,18 +37,19 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 // Init sets up the necessary database tables, particularly 'articles'.
 func (store *MySQLStore) Init() error {
 	createTableSQL := `
-    CREATE TABLE IF NOT EXISTS articles (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        link VARCHAR(512) NOT NULL,
-        content TEXT,
-        summary TEXT,
-        source VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        is_on_homepage BOOLEAN, 
-        UNIQUE KEY unique_article (title, link)
-    );`
+		CREATE TABLE IF NOT EXISTS articles (
+			id INT AUTO_INCREMENT PRIMARY KEY,
+			title VARCHAR(255) NOT NULL,
+			link VARCHAR(512) NOT NULL,
+			content TEXT,
+			summary TEXT,
+			source VARCHAR(100) NOT NULL,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+			is_on_homepage BOOLEAN, 
+			UNIQUE KEY unique_article (title, link)
+    	);
+	`
 	_, err := store.db.Exec(createTableSQL)
 	if err != nil {
 		return fmt.Errorf("failed to create articles table: %w", err)
@@ -75,7 +76,6 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 		_, err := tx.Exec("INSERT INTO articles (title, link, content, summary, source, created_at, updated_at, is_on_homepage) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE title=VALUES(title), link=VALUES(link), content=VALUES(content), summary=VALUES(summary), source=VALUES(source), updated_at=VALUES(updated_at), is_on_homepage=VALUES(is_on_homepage)",
 			article.Title, article.Link, article.Content, article.Summary, article.Source, article.CreatedAt, article.UpdatedAt, article.IsOnHomepage)
 		if err != nil {
-			// Handle the error gracefully, you can log it and continue processing other articles.
 			fmt.Printf("Error saving article: %s, error: %v\n", article.Title, err)
 			continue
 		}

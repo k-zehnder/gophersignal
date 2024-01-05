@@ -99,7 +99,6 @@ func fetchArticleContent(url string) (string, error) {
 
 	utf8Body, err := detectAndConvertToUTF8(body)
 	if err != nil {
-		// Handle the error gracefully, you can log it and continue with an empty content.
 		fmt.Printf("Error converting content to UTF-8 for %s: %v\n", url, err)
 		return "", nil
 	}
