@@ -1,6 +1,7 @@
 package routeHandlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -41,7 +42,17 @@ func TestGetArticles_Success(t *testing.T) {
 		t.Errorf("Expected status code %v, got %v", http.StatusOK, status)
 	}
 
-	// Further checks for response body can be added here.
+	// Unmarshal response body into a slice of pointers to articles.
+	var articles []*models.Article
+	err = json.Unmarshal(rr.Body.Bytes(), &articles)
+	if err != nil {
+		t.Fatal("Failed to unmarshal response body:", err)
+	}
+
+	// Check if the response contains the expected data.
+	if len(articles) != 1 || articles[0].Title != "Test Article 1" {
+		t.Errorf("Unexpected response body: got %v", articles)
+	}
 }
 
 func TestGetArticles_StoreError(t *testing.T) {
