@@ -22,6 +22,20 @@ services:
     volumes:
       - mysql_gophersignal:/var/lib/mysql
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./frontend/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /etc/letsencrypt/live/gophersignal.com/fullchain.pem:/etc/ssl/certs/fullchain.pem:ro
+      - /etc/letsencrypt/live/gophersignal.com/privkey.pem:/etc/ssl/private/privkey.pem:ro
+      - /etc/letsencrypt/options-ssl-nginx.conf:/etc/ssl/options-ssl-nginx.conf:ro
+      - /etc/letsencrypt/ssl-dhparams.pem:/etc/ssl/ssl-dhparams.pem:ro
+
 volumes:
   mysql_gophersignal:
     driver: local
