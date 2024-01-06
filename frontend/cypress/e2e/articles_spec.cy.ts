@@ -1,3 +1,5 @@
+export {};
+
 describe('Articles Page', () => {
   it('should display the title "Latest Articles"', () => {
     cy.visit('http://localhost:3000');
