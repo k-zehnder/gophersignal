@@ -8,7 +8,7 @@ function Description() {
       <Typography level="h4" component="h3" sx={{ fontWeight: 'medium' }}>
         Welcome to Gopher Signal
       </Typography>
-      <Typography  sx={{ mt: 1 }}>
+      <Typography level="body1" sx={{ mt: 1 }}>
         Gopher Signal uses ChatGPT to quickly summarize important points from{" "}
         <Link href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer">
           Hacker News

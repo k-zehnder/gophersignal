@@ -55,7 +55,7 @@ function Articles() {
   }, []);
 
   const formatDate = (dateStr: string): string => {
-    // Handle null, undefined, or empty date strings
+  // Handle null, undefined, or empty date strings
     if (!dateStr) {
       return 'Date not available'; 
     }
@@ -78,7 +78,7 @@ function Articles() {
       <List sx={{ display: "flex", flexDirection: 'column', gap: "1.5rem" }}>
         {articles.map((article, idx) => (
           <ListItem key={idx} sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-            <Typography sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
+            <Typography level="body2" sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
               {formatDate(article.createdAt)} ⋅ {article.source}
             </Typography>
 
@@ -90,7 +90,7 @@ function Articles() {
               </Link>
             </Typography>
 
-            <Typography  sx={{ fontSize: '1rem' }}>
+            <Typography level="body2" sx={{ fontSize: '1rem' }}>
               {article.summary}
             </Typography>
           </ListItem>
