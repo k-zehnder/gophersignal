@@ -1,5 +1,4 @@
 # gophersignal
-https://www.gophersignal.com
 [Visit gophersignal.com](https://www.gophersignal.com)
 
 ### Frontend (Update for Production):
