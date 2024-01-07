@@ -20,7 +20,7 @@ export default function NavBar() {
   return (
     <>
       <Link href="/">
-        <Typography component="h1" fontSize="xl">
+        <Typography component="h1" level="display2" fontSize="xl">
           {siteMetaData.title}
         </Typography>
       </Link>
