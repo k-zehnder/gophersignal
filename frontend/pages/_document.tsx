@@ -10,18 +10,6 @@ export default class MyDocument extends Document {
       <Html lang="en">
         <Head>
           <link rel="shortcut icon" href="/favicon.ico" />
-          {/* Google Analytics Script */}
-          <script async src="https://www.googletagmanager.com/gtag/js?id=G-H03QDKFRJ0"></script>
-          <script
-            dangerouslySetInnerHTML={{
-              __html: `
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', 'G-H03QDKFRJ0');
-              `,
-            }}
-          />
           {(this.props as any).emotionStyleTags}
         </Head>
         <body>
