@@ -1,7 +1,6 @@
 package router
 
 import (
-	"net/http"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
@@ -26,15 +25,6 @@ func SetupRouter(handler *routeHandlers.Handler) *mux.Router {
 
 	// Setup API routes and subroutes
 	setupAPIRoutes(r, handler)
-
-	// Serve OpenAPI Specification
-	r.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./docs/openapi.yaml")
-	})
-
-	// Serve Swagger UI
-	swaggerUI := http.FileServer(http.Dir("./swaggerui"))
-	r.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", swaggerUI))
 
 	return r
 }
