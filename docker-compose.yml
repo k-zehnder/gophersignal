@@ -1,29 +1,48 @@
 version: '3.8'
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: nginx:latest
+    ports:
+      - 80:80
+      - 443:443
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - '8080:8080'
-    depends_on:
-      - mysql
+      - 8080:8080
     environment:
       SCRAPER_MYSQL_DSN: ${SCRAPER_MYSQL_DSN}
       MYSQL_DSN: ${MYSQL_DSN}
       SERVER_ADDRESS: ${SERVER_ADDRESS}
+    networks:
+      - app-network
 
   mysql:
-    image: 'mysql:latest'
+    image: mysql:latest
     environment:
-      MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
-      MYSQL_DATABASE: '${DB_NAME}'
-      MYSQL_USER: '${DB_USER}'
-      MYSQL_PASSWORD: '${DB_PASSWORD}'
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
-      - '3333:3306'
+      - 3333:3306
     volumes:
-      - 'mysql_gophersignal:/var/lib/mysql'
+      - mysql_gophersignal:/var/lib/mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   mysql_gophersignal:
