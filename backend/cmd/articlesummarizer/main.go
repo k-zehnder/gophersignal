@@ -57,7 +57,7 @@ func main() {
 	defer db.Close()
 
 	// Fetch articles from the database
-	rows, err := db.Query("SELECT id, content FROM articles WHERE summary IS NULL")
+	rows, err := db.Query("SELECT id, content FROM articles WHERE summary IS NULL AND is_on_homepage = true")
 	if err != nil {
 		log.Fatal(err)
 	}
