@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       # Setup and test Go backend
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v3
         with:
           go-version: "1.21"
 
@@ -40,14 +40,14 @@ jobs:
           go tool cover -html=coverage.out -o coverage.html
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: backend/coverage.html
 
       # Setup Node.js for frontend
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
 
@@ -69,10 +69,10 @@ jobs:
       - name: Run Cypress tests and capture output
         run: |
           cd frontend
-          npx cypress run > cypress-output.txt 2>&1
+          npx cypress run | sed 's/\x1b\[[0-9;]*m//g' > cypress-output.txt
 
       - name: Upload Cypress test output
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: cypress-output
           path: frontend/cypress-output.txt

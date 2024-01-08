@@ -1,4 +1,4 @@
-version: '3.8'
+version: 3.8
 services:
   frontend:
     build:
@@ -14,6 +14,7 @@ services:
       - backend
     networks:
       - app-network
+    restart: always
 
   backend:
     build:
@@ -27,6 +28,7 @@ services:
       SERVER_ADDRESS: ${SERVER_ADDRESS}
     networks:
       - app-network
+    restart: always
 
   mysql:
     image: mysql:latest
@@ -41,6 +43,7 @@ services:
       - mysql_gophersignal:/var/lib/mysql
     networks:
       - app-network
+    restart: always
 
 networks:
   app-network:
