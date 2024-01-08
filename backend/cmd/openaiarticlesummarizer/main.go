@@ -57,7 +57,7 @@ func main() {
 	defer db.Close()
 
 	// Fetch articles from the database
-	rows, err := db.Query("SELECT id, content FROM articles WHERE summary IS NULL AND is_on_homepage = true")
+	rows, err := db.Query("SELECT id, content FROM articles WHERE summary = '' AND is_on_homepage = true")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -72,8 +72,8 @@ func main() {
 
 		// Prepare the API request to summarize the content
 		reqBody := OpenAIRequest{
-			Prompt:    fmt.Sprintf("Summarize the following text in about 50 words: %s", content),
-			MaxTokens: 100,
+			Prompt:    fmt.Sprintf("Summarize the following article scraped from hackernews.com:\n\n%s", content),
+			MaxTokens: 75,
 		}
 		reqBytes, err := json.Marshal(reqBody)
 		if err != nil {

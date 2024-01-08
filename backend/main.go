@@ -39,7 +39,7 @@ func main() {
 	// Set up the HTTP router with the handler
 	r := router.SetupRouter(handler)
 
-	// Determine the server address from environment variables and start the HTTP server
+	// Start the HTTP server
 	addr := config.GetEnvVar("SERVER_ADDRESS", "0.0.0.0:8080")
 	log.Printf("Server is running on %s\n", addr)
 	if err := http.ListenAndServe(addr, r); err != nil {
