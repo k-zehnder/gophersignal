@@ -25,6 +25,7 @@ services:
       SCRAPER_MYSQL_DSN: ${SCRAPER_MYSQL_DSN}
       MYSQL_DSN: ${MYSQL_DSN}
       SERVER_ADDRESS: ${SERVER_ADDRESS}
+      HUGGING_FACE_API_KEY: ${HUGGING_FACE_API_KEY}
     networks:
       - app-network
 
