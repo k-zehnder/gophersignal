@@ -1,7 +1,6 @@
 package router
 
 import (
-	"net/http"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 
@@ -26,10 +25,6 @@ func SetupRouter(handler *routeHandlers.Handler) *mux.Router {
 
 	// Setup API routes and subroutes
 	setupAPIRoutes(r, handler)
-
-	// Serve Swagger UI
-	swaggerUI := http.FileServer(http.Dir("./swaggerui"))
-	r.PathPrefix("/swagger/").Handler(http.StripPrefix("/swagger/", swaggerUI))
 
 	return r
 }
