@@ -9,7 +9,7 @@ function Description() {
         Welcome to Gopher Signal
       </Typography>
       <Typography sx={{ mt: 1 }}>
-        Gopher Signal uses ChatGPT to quickly summarize important points from{" "}
+        Gopher Signal uses smart technology to quickly summarize important points from{" "}
         <Link href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer">
           Hacker News
         </Link>{" "}
