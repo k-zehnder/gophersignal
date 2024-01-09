@@ -26,23 +26,6 @@ type HuggingFaceResponseItem struct {
 	SummaryText string `json:"summary_text"`
 }
 
-// Function to clean the text
-func cleanText(text string) string {
-	// Define a regular expression pattern 
-	pattern := `(?i)(In this chapter, .*?\.|The narrator explains, .*?\.)`
-
-	// Create a regular expression object with the case-insensitive flag
-	regex := regexp.MustCompile(pattern)
-
-	// Remove unwanted phrases using regex
-	text = regex.ReplaceAllString(text, "")
-
-	// Remove leading and trailing whitespaces
-	text = strings.TrimSpace(text)
-
-	return text
-}
-
 func main() {
 	if err := config.LoadEnv(); err != nil {
 		log.Fatal("Failed to load .env file: ", err)
@@ -64,7 +47,7 @@ func main() {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, content FROM articles WHERE summary = '' AND is_on_homepage = true")
+	rows, err := db.Query("SELECT id, content FROM articles WHERE summary = '' AND content <> '' AND is_on_homepage = true")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -157,6 +140,22 @@ func main() {
 			fmt.Printf("No summary received for Article ID %d\n", id)
 		}
 	}
+}
+
+func cleanText(text string) string {
+	// Define a regular expression pattern
+	pattern := `(?i)(In this chapter, .*?\.|The narrator explains, .*?\.)`
+
+	// Create a regular expression object with the case-insensitive flag
+	regex := regexp.MustCompile(pattern)
+
+	// Remove unwanted phrases using regex
+	text = regex.ReplaceAllString(text, "")
+
+	// Remove leading and trailing whitespaces
+	text = strings.TrimSpace(text)
+
+	return text
 }
 
 func isValidJSONArray(body []byte) bool {
