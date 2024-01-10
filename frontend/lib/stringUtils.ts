@@ -19,4 +19,3 @@ export const formatDate = (dateStr: string): string => {
         day: 'numeric',
     });
 };
-  

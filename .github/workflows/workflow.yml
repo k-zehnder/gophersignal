@@ -70,9 +70,30 @@ jobs:
         run: |
           cd frontend
           npx cypress run | sed 's/\x1b\[[0-9;]*m//g' > cypress-output.txt
+          # Save Cypress screenshot as an artifact
+          mkdir -p frontend/cypress-screenshots
+          mv frontend/cypress/screenshots frontend/cypress-screenshots
+          # Upload Cypress test output
+          echo '## Cypress Test Output' >> cypress-output.txt
+          echo >> cypress-output.txt
+          cat frontend/cypress-output.txt >> cypress-output.txt
+          if grep -q "0 failing" frontend/cypress-output.txt; then
+            echo "Cypress tests passed"
+          else
+            echo "Cypress tests failed"
+            exit 1
+          fi
 
+      # Upload Cypress test output
       - name: Upload Cypress test output
         uses: actions/upload-artifact@v3
         with:
           name: cypress-output
           path: frontend/cypress-output.txt
+
+      # Upload Cypress screenshots as artifacts
+      - name: Upload Cypress screenshots
+        uses: actions/upload-artifact@v3
+        with:
+          name: cypress-screenshots
+          path: frontend/cypress-screenshots
