@@ -65,12 +65,19 @@ jobs:
       - name: Wait for Server to be Up
         run: sleep 10
 
-      # Run Cypress tests
+      # Run Cypress tests and capture output
       - name: Run Cypress tests and capture output
         run: |
           cd frontend
-          npx cypress run | sed 's/\x1b\[[0-9;]*m//g' > cypress-output.txt
+          npx cypress run | tee cypress-output.txt
+          if grep -q "All specs passed!" cypress-output.txt; then
+            echo "Cypress tests passed"
+          else
+            echo "Cypress tests failed"
+            exit 1
+          fi
 
+      # Upload Cypress test output
       - name: Upload Cypress test output
         uses: actions/upload-artifact@v3
         with:
