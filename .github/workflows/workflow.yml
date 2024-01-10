@@ -65,20 +65,12 @@ jobs:
       - name: Wait for Server to be Up
         run: sleep 10
 
-      # Run Cypress tests
+      # Run Cypress tests and capture output
       - name: Run Cypress tests and capture output
         run: |
           cd frontend
-          npx cypress run | sed 's/\x1b\[[0-9;]*m//g' > cypress-output.txt
-          # Check if Cypress screenshots directory exists before moving
-          if [ -d "cypress/screenshots" ]; then
-            mkdir -p cypress-screenshots
-            mv cypress/screenshots/* cypress-screenshots/
-          fi
-          # Append Cypress test output
-          echo '## Cypress Test Output' >> cypress-output.txt
-          cat cypress-output.txt >> combined-cypress-output.txt
-          if grep -q "0 failing" combined-cypress-output.txt; then
+          npx cypress run | tee cypress-output.txt
+          if grep -q "0 failing" cypress-output.txt; then
             echo "Cypress tests passed"
           else
             echo "Cypress tests failed"
@@ -90,11 +82,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: cypress-output
-          path: frontend/combined-cypress-output.txt
-
-      # Upload Cypress screenshots as artifacts
-      - name: Upload Cypress screenshots
-        uses: actions/upload-artifact@v3
-        with:
-          name: cypress-screenshots
-          path: frontend/cypress-screenshots
+          path: frontend/cypress-output.txt
