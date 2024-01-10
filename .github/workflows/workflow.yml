@@ -70,7 +70,7 @@ jobs:
         run: |
           cd frontend
           npx cypress run | tee cypress-output.txt
-          if grep -q "0 failing" cypress-output.txt; then
+          if grep -q "All specs passed!" cypress-output.txt; then
             echo "Cypress tests passed"
           else
             echo "Cypress tests failed"
