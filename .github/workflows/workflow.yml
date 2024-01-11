@@ -79,7 +79,7 @@ jobs:
       # Install Playwright
       - name: Install Playwright
         run: |
-          npm install playwright --save-dev
+          npx playwright install --with-deps chromium
 
       # Run Playwright tests against services in Docker
       - name: Run Playwright tests
