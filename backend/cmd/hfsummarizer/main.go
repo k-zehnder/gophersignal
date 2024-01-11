@@ -27,16 +27,12 @@ type HuggingFaceResponseItem struct {
 }
 
 func main() {
-	if err := config.LoadEnv(); err != nil {
-		log.Fatal("Failed to load .env file: ", err)
-	}
-
-	dsn := config.GetEnvVar("SCRAPER_MYSQL_DSN", "")
+	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") // Hack
 	if dsn == "" {
 		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
 	}
 
-	apiKey := config.GetEnvVar("HUGGING_FACE_API_KEY", "")
+	apiKey := config.GetEnv("HUGGING_FACE_API_KEY", "")
 	if apiKey == "" {
 		log.Fatal("HUGGING_FACE_API_KEY not set in .env file")
 	}

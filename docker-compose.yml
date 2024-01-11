@@ -21,27 +21,29 @@ services:
       dockerfile: Dockerfile
     ports:
       - 8080:8080
-    environment:
-      SCRAPER_MYSQL_DSN: ${SCRAPER_MYSQL_DSN}
-      MYSQL_DSN: ${MYSQL_DSN}
-      SERVER_ADDRESS: ${SERVER_ADDRESS}
-      HUGGING_FACE_API_KEY: ${HUGGING_FACE_API_KEY}
     networks:
       - app-network
+    env_file:
+      - .env 
+    environment:
+      - MYSQL_DSN
+      - SERVER_ADDRESS
 
   mysql:
     image: mysql:latest
-    environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
     ports:
       - 3333:3306
     volumes:
       - mysql_gophersignal:/var/lib/mysql
     networks:
       - app-network
+    env_file:
+      - .env 
+    environment:  
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
 
 networks:
   app-network:

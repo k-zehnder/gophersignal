@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 
@@ -14,10 +14,6 @@ import (
 )
 
 const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
-
-// const openAIURL = "https://api.openai.com/v1/engines/text-curie-001/completions"
-
-// const openAIURL = "https://api.openai.com/v1/engines/text-babbage-001/completions"
 
 // const openAIURL = "https://api.openai.com/v1/engines/text-ada-001/completions"
 
@@ -33,17 +29,12 @@ type OpenAIResponse struct {
 }
 
 func main() {
-	// Attempt to load environment variables from the .env file.
-	if err := config.LoadEnv(); err != nil {
-		log.Fatal("Failed to load .env file: ", err)
-	}
-
-	dsn := config.GetEnvVar("SCRAPER_MYSQL_DSN", "") // Hack
+	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") // Hack
 	if dsn == "" {
 		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
 	}
 
-	apiKey := config.GetEnvVar("OPEN_AI_API_KEY", "")
+	apiKey := config.GetEnv("OPEN_AI_API_KEY", "")
 
 	if apiKey == "" {
 		log.Fatal("OPEN_AI_API_KEY not set in .env file")
@@ -95,7 +86,7 @@ func main() {
 		}
 		defer resp.Body.Close()
 
-		body, err := ioutil.ReadAll(resp.Body)
+		body, err := io.ReadAll(resp.Body)
 		if err != nil {
 			log.Fatal(err)
 		}
