@@ -18,15 +18,19 @@ jobs:
         run: |
           echo "MYSQL_DSN=${{ secrets.MYSQL_DSN }}" >> $GITHUB_ENV
           echo "SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}" >> $GITHUB_ENV
+
       # Setup Docker and Docker Compose
       - name: Set up Docker
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+          sudo curl -L "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+
       # Build and start services using Docker Compose
       - name: Build and Start Services
         run: |
-          docker-compose -f docker-compose.yml up --build -d
+          docker-compose -f docker-compose.ci.yml up --build -d
 
       # Setup and test Go backend
       - name: Set up Go
