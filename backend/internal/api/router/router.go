@@ -3,10 +3,10 @@ package router
 import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/k-zehnder/gophersignal/backend/internal/api/routehandlers"
+	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
 )
 
-func SetupRouter(handler *routehandlers.Handler) *mux.Router {
+func SetupRouter(handler *routeHandlers.Handler) *mux.Router {
 	r := mux.NewRouter()
 
 	// Enable CORS
@@ -28,7 +28,7 @@ func SetupRouter(handler *routehandlers.Handler) *mux.Router {
 	return r
 }
 
-func setupAPIRoutes(r *mux.Router, handler *routehandlers.Handler) {
+func setupAPIRoutes(r *mux.Router, handler *routeHandlers.Handler) {
 	v1 := r.PathPrefix("/api/v1").Subrouter()
 	route := v1.HandleFunc("/articles", handler.GetArticles).Methods("GET")
 	route.Name("GetArticles")

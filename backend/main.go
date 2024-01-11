@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/k-zehnder/gophersignal/backend/config"
-	"github.com/k-zehnder/gophersignal/backend/internal/api/routehandlers"
+	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
@@ -25,7 +25,7 @@ func main() {
 		log.Fatalf("Failed to initialize database tables: %v", err)
 	}
 
-	handler := routehandlers.NewHandler(sqlstore)
+	handler := routeHandlers.NewHandler(sqlstore)
 	router := router.SetupRouter(handler)
 
 	// Start the HTTP server
