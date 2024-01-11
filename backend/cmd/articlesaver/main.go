@@ -3,19 +3,13 @@ package main
 import (
 	"log"
 
-	"github.com/joho/godotenv"
 	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/internal/scraper"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
 func main() {
-	// Load environment variables from .env file
-	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file:", err)
-	}
-
-	dsn := config.GetEnvVar("SCRAPER_MYSQL_DSN", "") // Hack
+	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") // Hack
 	if dsn == "" {
 		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
 	}
