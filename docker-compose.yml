@@ -23,8 +23,6 @@ services:
       - 8080:8080
     networks:
       - app-network
-    env_file:
-      - .env 
     environment:
       - MYSQL_DSN
       - SERVER_ADDRESS
@@ -37,8 +35,6 @@ services:
       - mysql_gophersignal:/var/lib/mysql
     networks:
       - app-network
-    env_file:
-      - .env 
     environment:  
       - MYSQL_ROOT_PASSWORD
       - MYSQL_DATABASE
