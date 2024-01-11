@@ -80,7 +80,7 @@ jobs:
       - name: Run Playwright tests
         run: |
           cd frontend
-          npm run test:playwright
+          npx playwright test
 
       # Save Playwright test results as an artifact
       - name: Upload Playwright test report
