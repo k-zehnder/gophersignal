@@ -85,6 +85,7 @@ jobs:
       - name: Run Playwright tests
         run: |
           cd frontend
+          npm install -D @playwright/test@latest && npx playwright install &&
           npx playwright test
 
       # Save Playwright test results as an artifact
