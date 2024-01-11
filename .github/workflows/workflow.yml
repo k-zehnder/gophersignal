@@ -49,7 +49,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: "18"
 
       - name: Install dependencies (Node.js)
         run: |
@@ -65,21 +65,16 @@ jobs:
       - name: Wait for Server to be Up
         run: sleep 10
 
-      # Run Cypress tests and capture output
-      - name: Run Cypress tests and capture output
-        run: |
-          cd frontend
-          npx cypress run | sed 's/\x1b\[[0-9;]*m//g' | tee cypress-output.txt
-          if grep -q "All specs passed!" cypress-output.txt; then
-            echo "Cypress tests passed"
-          else
-            echo "Cypress tests failed"
-            exit 1
-          fi
+      # Run Playwright tests
+      - name: Run Playwright Tests
+        run: npx playwright test
 
-      # Upload Cypress test output
-      - name: Upload Cypress test output
+      # Generate and upload Playwright test report
+      - name: Generate Playwright Test Report
+        run: npx playwright show-report
+
+      - name: Upload Playwright Test Report
         uses: actions/upload-artifact@v3
         with:
-          name: cypress-output
-          path: frontend/cypress-output.txt
+          name: playwright-test-report
+          path: ./playwright-report

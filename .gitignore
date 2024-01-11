@@ -134,3 +134,4 @@ dist
 coverage.out
 coverage.html
 nginx.conf
+test_output.txt
