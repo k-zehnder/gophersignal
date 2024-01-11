@@ -1,4 +1,4 @@
-package routeHandlers
+package routehandlers
 
 import (
 	"encoding/json"

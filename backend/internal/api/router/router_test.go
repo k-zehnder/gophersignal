@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
+	"github.com/k-zehnder/gophersignal/backend/internal/api/routehandlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
@@ -15,7 +15,7 @@ func TestRouter_ArticlesRoute(t *testing.T) {
 	mockStore := store.NewMockStore([]*models.Article{}, nil, nil)
 
 	// Initialize the Handler with the MockStore.
-	handler := &routeHandlers.Handler{
+	handler := &routehandlers.Handler{
 		Store: mockStore,
 	}
 
