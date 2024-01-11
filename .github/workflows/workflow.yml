@@ -79,13 +79,15 @@ jobs:
       # Install Playwright
       - name: Install Playwright
         run: |
-          npx playwright install --with-deps chromium
+          cd frontend
+          npx playwright install &&
+          npx playwright install-deps &&
+          npm install @playwright/test   
 
       # Run Playwright tests against services in Docker
       - name: Run Playwright tests
         run: |
           cd frontend
-          npm install -D @playwright/test@latest && npx playwright install &&
           npx playwright test
 
       # Save Playwright test results as an artifact
