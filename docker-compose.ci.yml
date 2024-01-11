@@ -1,20 +1,5 @@
 version: '3.8'
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.ci
-    image: nginx:latest
-    ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    depends_on:
-      - backend
-    networks:
-      - app-network
-
   backend:
     build:
       context: ./backend
