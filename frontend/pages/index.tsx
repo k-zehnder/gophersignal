@@ -13,7 +13,7 @@ function Index() {
         component="h2"
         sx={{ fontWeight: 'bold', mb: 4, fontSize: '2rem' }}
       >
-       This shouldn't work 
+        Latest Articles
       </Typography>
       <ArticleList />
     </Layout>
