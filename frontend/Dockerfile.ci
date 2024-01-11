@@ -1,0 +1,17 @@
+# Use the base node image from Docker Hub
+FROM node:latest
+
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the rest of your application
+COPY . .
+
+# Start the app in development mode
+CMD ["npm", "start"]

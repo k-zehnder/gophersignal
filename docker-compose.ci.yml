@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.ci
+    image: nginx:latest
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
+    networks:
+      - app-network
+    environment:
+      - MYSQL_DSN
+      - SERVER_ADDRESS
+
+  mysql:
+    image: mysql:latest
+    ports:
+      - 3333:3306
+    volumes:
+      - mysql_gophersignal:/var/lib/mysql
+    networks:
+      - app-network
+    environment:  
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_gophersignal:
+    driver: local

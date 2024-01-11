@@ -1,4 +1,4 @@
-name: workflow
+name: Workflow (CI)
 
 on:
   push:
@@ -7,77 +7,33 @@ on:
     branches: [main, staging]
 
 jobs:
-  build:
+  ci:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
 
       # Set environment variables from GitHub Secrets
-      - name: Set Environment Variables
+      - name: Set Environment Variables (CI)
         run: |
           echo "MYSQL_DSN=${{ secrets.MYSQL_DSN }}" >> $GITHUB_ENV
           echo "SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}" >> $GITHUB_ENV
 
       # Setup Docker and Docker Compose
-      - name: Set up Docker
+      - name: Set up Docker (CI)
         run: |
           sudo apt-get update
           sudo apt-get install -y docker-ce docker-ce-cli containerd.io
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
-      # Build and start services using Docker Compose
-      - name: Build and Start Services
+      # Build and start services using Docker Compose (CI)
+      - name: Build and Start Services (CI)
         run: |
-          docker-compose -f docker-compose.yml up --build -d
+          docker-compose -f docker-compose.ci.yml up --build -d
 
-      # Setup and test Go backend
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: "1.21"
-
-      - name: Get Go dependencies
-        run: |
-          cd backend
-          go get -v -t -d ./...
-
-      - name: Build Go application
-        run: |
-          cd backend
-          go build -v ./...
-
-      - name: Run Go tests with coverage
-        run: |
-          cd backend
-          go test -v -coverprofile=coverage.out ./...
-
-      - name: Generate coverage HTML report
-        run: |
-          cd backend
-          go tool cover -html=coverage.out -o coverage.html
-
-      # Upload Go coverage report
-      - name: Upload Go coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: backend/coverage.html
-
-      # Setup Node.js for frontend
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-
-      - name: Install dependencies (Node.js)
-        run: |
-          cd frontend
-          npm install
-
-      # Run Cypress tests against services in Docker
-      - name: Run Cypress tests
+      # Run Cypress tests against services in Docker (CI)
+      - name: Run Cypress tests (CI)
         run: |
           cd frontend
           npx cypress run | sed 's/\x1b\[[0-9;]*m//g' | tee cypress-output.txt
@@ -88,15 +44,8 @@ jobs:
             exit 1
           fi
 
-      # Upload Cypress test output
-      - name: Upload Cypress test output
-        uses: actions/upload-artifact@v3
-        with:
-          name: cypress-output
-          path: frontend/cypress-output.txt
-
-      # Cleanup Docker Compose services
-      - name: Cleanup Docker Services
+      # Cleanup Docker Compose services (CI)
+      - name: Cleanup Docker Services (CI)
         if: always()
         run: |
-          docker-compose -f docker-compose.yml down
+          docker-compose -f docker-compose.ci.yml down
