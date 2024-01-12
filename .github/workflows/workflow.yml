@@ -72,6 +72,13 @@ jobs:
             sleep 5
           done
 
+      - name: Install Playwright
+        run: |
+          cd frontend
+          npx playwright install &&
+          npx playwright install-deps &&
+          npm install @playwright/test   
+
       - name: Run Playwright tests
         run: |
           cd frontend
