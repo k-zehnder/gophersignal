@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS articles (
     title VARCHAR(255) NOT NULL,
     link VARCHAR(512) NOT NULL,
     content TEXT,
-    summary TEXT,
+    summary VARCHAR(2000),
     source VARCHAR(100) NOT NULL,
     is_on_homepage BOOLEAN,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
