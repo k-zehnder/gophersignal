@@ -25,12 +25,10 @@ jobs:
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
-      # Build and start services using Docker Compose
       - name: Build and Start Services
         run: |
           docker-compose -f docker-compose.ci.yml up --build -d
 
-      # Setup and test Go backend
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
@@ -56,29 +54,23 @@ jobs:
           cd backend
           go tool cover -html=coverage.out -o coverage.html
 
-      # Upload Go coverage report
       - name: Upload Go coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: backend/coverage.html
 
-      # Setup Node.js for frontend
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-
-      - name: Install dependencies (Node.js)
+      - name: Wait for Frontend Server
         run: |
-          cd frontend
-          npm install
-
-      # Install Playwright
-      - name: Install Playwright
-        run: |
-          cd frontend
-          npx playwright install
+          echo "Waiting for the frontend server to be up on http://localhost:3000"
+          for i in {1..30}; do
+            if curl --head --silent --fail http://localhost:3000; then
+              echo "Frontend server is up and running"
+              break
+            fi
+            echo "Waiting for frontend server..."
+            sleep 5
+          done
 
       - name: Run Playwright tests
         run: |
