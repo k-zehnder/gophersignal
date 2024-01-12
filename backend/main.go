@@ -16,16 +16,16 @@ func main() {
 		log.Fatal("MYSQL_DSN not set in .env file")
 	}
 
-	dbStore, err := store.NewMySQLStore(dsn)
+	sqlstore, err := store.NewMySQLStore(dsn)
 	if err != nil {
 		log.Fatalf("Failed to initialize database store: %v", err)
 	}
 
-	if err := dbStore.Init(); err != nil {
+	if err := sqlstore.Init(); err != nil {
 		log.Fatalf("Failed to initialize database tables: %v", err)
 	}
 
-	handler := routeHandlers.NewHandler(dbStore)
+	handler := routeHandlers.NewHandler(sqlstore)
 	r := router.SetupRouter(handler)
 
 	// Start the HTTP server

@@ -18,11 +18,6 @@ import (
 
 const maxContentLength = 10000
 
-// Scraper defines the interface for a scraper
-type Scraper interface {
-	Scrape() ([]*models.Article, error)
-}
-
 type HackerNewsScraper struct{}
 
 func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {

@@ -2,9 +2,9 @@ name: workflow
 
 on:
   push:
-    branches: [main, staging]
+    branches: [staging]
   pull_request:
-    branches: [main, staging]
+    branches: [main]
 
 jobs:
   build:
@@ -13,13 +13,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # Set environment variables from GitHub Secrets
       - name: Set Environment Variables
         run: |
           echo "MYSQL_DSN=${{ secrets.MYSQL_DSN }}" >> $GITHUB_ENV
           echo "SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}" >> $GITHUB_ENV
 
-      # Setup Docker and Docker Compose
       - name: Set up Docker
         run: |
           sudo apt-get update
@@ -27,12 +25,10 @@ jobs:
           sudo curl -L "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
           sudo chmod +x /usr/local/bin/docker-compose
 
-      # Build and start services using Docker Compose
       - name: Build and Start Services
         run: |
           docker-compose -f docker-compose.ci.yml up --build -d
 
-      # Setup and test Go backend
       - name: Set up Go
         uses: actions/setup-go@v3
         with:
@@ -58,46 +54,30 @@ jobs:
           cd backend
           go tool cover -html=coverage.out -o coverage.html
 
-      # Upload Go coverage report
       - name: Upload Go coverage report
         uses: actions/upload-artifact@v3
         with:
           name: coverage-report
           path: backend/coverage.html
 
-      # Setup Node.js for frontend
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-
-      - name: Install dependencies (Node.js)
-        run: |
-          cd frontend
-          npm install
-
-      # Install Playwright
       - name: Install Playwright
         run: |
           cd frontend
-          npx playwright install &&
-          npx playwright install-deps &&
+          npx playwright install
+          npx playwright install-deps
           npm install @playwright/test   
 
-      # Run Playwright tests against services in Docker
       - name: Run Playwright tests
         run: |
           cd frontend
           npx playwright test
 
-      # Save Playwright test results as an artifact
       - name: Upload Playwright test report
         uses: actions/upload-artifact@v3
         with:
           name: playwright-test-report
           path: frontend/playwright-report
 
-      # Cleanup Docker Compose services
       - name: Cleanup Docker Services
         if: always()
         run: |
