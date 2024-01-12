@@ -139,18 +139,10 @@ func main() {
 }
 
 func cleanText(text string) string {
-	// Define a regular expression pattern
 	pattern := `(?i)(In this chapter, .*?\.|The narrator explains, .*?\.)`
-
-	// Create a regular expression object with the case-insensitive flag
 	regex := regexp.MustCompile(pattern)
-
-	// Remove unwanted phrases using regex
 	text = regex.ReplaceAllString(text, "")
-
-	// Remove leading and trailing whitespaces
 	text = strings.TrimSpace(text)
-
 	return text
 }
 
