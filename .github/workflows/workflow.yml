@@ -60,18 +60,6 @@ jobs:
           name: coverage-report
           path: backend/coverage.html
 
-      - name: Wait for Frontend Server
-        run: |
-          echo "Waiting for the frontend server to be up on http://localhost:3000"
-          for i in {1..30}; do
-            if curl --head --silent --fail http://localhost:3000; then
-              echo "Frontend server is up and running"
-              break
-            fi
-            echo "Waiting for frontend server..."
-            sleep 5
-          done
-
       - name: Install Playwright
         run: |
           cd frontend
