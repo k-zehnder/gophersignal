@@ -13,5 +13,5 @@ RUN npm install
 # Copy the rest of your application
 COPY . .
 
-# Start the app in development mode
+# Start the app 
 CMD ["npm", "start"]

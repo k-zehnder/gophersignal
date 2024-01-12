@@ -78,9 +78,7 @@ jobs:
       - name: Install Playwright
         run: |
           cd frontend
-          npx playwright install &&
-          npx playwright install-deps &&
-          npm install @playwright/test   
+          npx playwright install
 
       - name: Run Playwright tests
         run: |
