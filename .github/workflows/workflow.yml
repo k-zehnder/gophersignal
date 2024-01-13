@@ -1,4 +1,4 @@
-name: workflow
+name: CI/CD Pipeline
 
 on:
   push:
@@ -7,78 +7,33 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  build-test-push:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout
 
-      - name: Set Environment Variables
-        run: |
-          echo "MYSQL_DSN=${{ secrets.MYSQL_DSN }}" >> $GITHUB_ENV
-          echo "SERVER_ADDRESS=${{ secrets.SERVER_ADDRESS }}" >> $GITHUB_ENV
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action
 
-      - name: Set up Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-          sudo curl -L "https://github.com/docker/compose/releases/download/v2.2.3/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-          sudo chmod +x /usr/local/bin/docker-compose
-
-      - name: Build and Start Services
-        run: |
-          docker-compose -f docker-compose.ci.yml up --build -d
-
-      - name: Set up Go
-        uses: actions/setup-go@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action
         with:
-          go-version: "1.21"
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Get Go dependencies
-        run: |
-          cd backend
-          go get -v -t -d ./...
+      - name: Build Frontend Image
+        run: make build-frontend
 
-      - name: Build Go application
-        run: |
-          cd backend
-          go build -v ./...
+      - name: Build Backend Image
+        run: make build-backend
 
-      - name: Run Go tests with coverage
-        run: |
-          cd backend
-          go test -v -coverprofile=coverage.out ./...
+      - name: Run Tests
+        run: make test
 
-      - name: Generate coverage HTML report
-        run: |
-          cd backend
-          go tool cover -html=coverage.out -o coverage.html
+      - name: Push Frontend Image to Docker Hub
+        run: make docker_push_frontend
 
-      - name: Upload Go coverage report
-        uses: actions/upload-artifact@v3
-        with:
-          name: coverage-report
-          path: backend/coverage.html
-
-      - name: Install Playwright
-        run: |
-          cd frontend
-          npx playwright install
-          npx playwright install-deps
-          npm install @playwright/test   
-
-      - name: Run Playwright tests
-        run: |
-          cd frontend
-          npx playwright test
-
-      - name: Upload Playwright test report
-        uses: actions/upload-artifact@v3
-        with:
-          name: playwright-test-report
-          path: frontend/playwright-report
-
-      - name: Cleanup Docker Services
-        if: always()
-        run: |
-          docker-compose -f docker-compose.ci.yml down
+      - name: Push Backend Image to Docker Hub
+        run: make docker_push_backend

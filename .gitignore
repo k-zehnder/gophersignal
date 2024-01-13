@@ -135,3 +135,4 @@ coverage.out
 coverage.html
 nginx.conf
 test_output.txt
+sample_makefile
