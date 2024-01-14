@@ -1,7 +1,7 @@
-.PHONY: build-backend run-backend
+.PHONY: build run
 
-build-backend:
-	docker build -t my-backend-image .
+build:
+	docker build -t $(BACKEND_TAG) .
 
-run-backend:
+run:
 	docker-compose up -d backend
