@@ -25,7 +25,7 @@ type HuggingFaceResponseItem struct {
 }
 
 func main() {
-	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") // Hack
+	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") 
 	if dsn == "" {
 		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
 	}
@@ -41,7 +41,7 @@ func main() {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, content FROM articles WHERE content IS NOT NULL AND summary IS NULL;")
+	rows, err := db.Query("SELECT id, content FROM articles WHERE (summary IS NULL OR summary = '') AND is_on_homepage = TRUE;")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -52,6 +52,11 @@ func main() {
 		var content string
 		if err := rows.Scan(&id, &content); err != nil {
 			log.Fatal(err)
+		}
+
+		if content == "" {
+			log.Printf("Skipping Article ID %d: content is empty", id)
+			continue
 		}
 
 		reqBody := HuggingFaceRequest{
@@ -123,7 +128,6 @@ func main() {
 		}
 
 		if len(apiResps) > 0 {
-			// You can add custom text processing or summary cleaning here if needed.
 			summary := apiResps[0].SummaryText
 			_, err := db.Exec("UPDATE articles SET summary = ? WHERE id = ?", summary, id)
 			if err != nil {

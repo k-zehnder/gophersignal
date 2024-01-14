@@ -29,7 +29,7 @@ type OpenAIResponse struct {
 }
 
 func main() {
-	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") // Hack
+	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "")
 	if dsn == "" {
 		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
 	}
@@ -40,14 +40,12 @@ func main() {
 		log.Fatal("OPEN_AI_API_KEY not set in .env file")
 	}
 
-	// Connect to the database
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
-	// Fetch articles from the database
 	rows, err := db.Query("SELECT id, content FROM articles WHERE summary = '' AND is_on_homepage = true")
 	if err != nil {
 		log.Fatal(err)
