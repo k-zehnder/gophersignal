@@ -1,10 +1,7 @@
 version: '3.8'
 services:
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    image: nginx:latest
+    image: kjzehnder3/gophersignal:frontend-latest
     ports:
       - 80:80
       - 443:443
@@ -16,9 +13,7 @@ services:
       - app-network
 
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: kjzehnder3/gophersignal:backend-latest
     ports:
       - 8080:8080
     networks:
