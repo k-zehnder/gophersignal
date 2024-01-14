@@ -8,8 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"regexp"
-	"strings"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -43,7 +41,7 @@ func main() {
 	}
 	defer db.Close()
 
-	rows, err := db.Query("SELECT id, content FROM articles WHERE summary = '' AND content <> '' AND is_on_homepage = true")
+	rows, err := db.Query("SELECT id, content FROM articles WHERE content IS NOT NULL AND summary IS NULL;")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -125,7 +123,8 @@ func main() {
 		}
 
 		if len(apiResps) > 0 {
-			summary := cleanText(apiResps[0].SummaryText)
+			// You can add custom text processing or summary cleaning here if needed.
+			summary := apiResps[0].SummaryText
 			_, err := db.Exec("UPDATE articles SET summary = ? WHERE id = ?", summary, id)
 			if err != nil {
 				log.Printf("Error updating database for Article ID %d: %v", id, err)
@@ -136,14 +135,6 @@ func main() {
 			fmt.Printf("No summary received for Article ID %d\n", id)
 		}
 	}
-}
-
-func cleanText(text string) string {
-	pattern := `(?i)(In this chapter, .*?\.|The narrator explains, .*?\.)`
-	regex := regexp.MustCompile(pattern)
-	text = regex.ReplaceAllString(text, "")
-	text = strings.TrimSpace(text)
-	return text
 }
 
 func isValidJSONArray(body []byte) bool {
