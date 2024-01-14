@@ -1,18 +1,18 @@
 VERSION ?= latest
-FRONTEND_TAG = 'frontend'
-BACKEND_TAG = 'backend'
+FRONTEND_TAG = $(DOCKERHUB_REPO):frontend-$(VERSION)
+BACKEND_TAG = $(DOCKERHUB_REPO):backend-$(VERSION)
 DOCKER_COMPOSE = docker-compose
-DOCKERHUB_REPO = 'kjzehnder3/gophersignal'
+DOCKERHUB_REPO = kjzehnder3/gophersignal
 
 .PHONY: all build-frontend build-backend run stop down test docker_push_frontend docker_push_backend
 
 all: build-frontend build-backend run
 
 build-frontend:
-	cd frontend && docker build -t $(DOCKERHUB_REPO):$(FRONTEND_TAG) .
+	cd frontend && docker build -t $(FRONTEND_TAG) .
 
 build-backend:
-	cd backend && docker build -t $(DOCKERHUB_REPO):$(BACKEND_TAG) .
+	cd backend && docker build -t $(BACKEND_TAG) .
 
 run:
 	$(DOCKER_COMPOSE) up -d
@@ -28,7 +28,7 @@ test:
 	cd backend && go test -v -cover ./...
 
 docker_push_frontend:
-	docker push $(DOCKERHUB_REPO):$(FRONTEND_TAG)
+	docker push $(FRONTEND_TAG)
 
 docker_push_backend:
-	docker push $(DOCKERHUB_REPO):$(BACKEND_TAG)
+	docker push $(BACKEND_TAG)
