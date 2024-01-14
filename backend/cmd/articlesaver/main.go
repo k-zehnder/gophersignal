@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") // Hack
+	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") 
 	if dsn == "" {
 		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
 	}

@@ -23,17 +23,5 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Build Frontend Image
-        run: make build-frontend
-
-      - name: Build Backend Image
-        run: make build-backend
-
-      - name: Run Tests
-        run: make test
-
-      - name: Push Frontend Image to Docker Hub
-        run: make docker_push_frontend
-
-      - name: Push Backend Image to Docker Hub
-        run: make docker_push_backend
+      - name: Build, Test, and Push Images
+        run: make all-push
