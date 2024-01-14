@@ -14,13 +14,11 @@ func main() {
 		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
 	}
 
-	// Initialize the database store
 	dbStore, err := store.NewMySQLStore(dsn)
 	if err != nil {
 		log.Fatal("Error initializing DBStore:", err)
 	}
 
-	// Scrape and save articles
 	SaveArticles(dbStore)
 }
 

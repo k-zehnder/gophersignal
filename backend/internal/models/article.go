@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// Article represents a generic article structure
 type Article struct {
 	ID           int            `json:"id"`
 	Title        string         `json:"title"`
@@ -18,7 +17,6 @@ type Article struct {
 	IsOnHomepage bool           `json:"is_on_homepage"`
 }
 
-// NewArticle creates and returns a new instance of Article
 func NewArticle(id int, title, link, content, summary, source string, createdAt, updatedAt time.Time, isOnHomepage bool) *Article {
 	var summaryNullString sql.NullString
 	if summary != "" {
