@@ -1,6 +1,8 @@
 import Layout from "../components/Layout";
 import Typography from "@mui/joy/Typography";
 import Avatar from "@mui/joy/Avatar";
+import Link from "@mui/joy/Link";
+
 import { siteMetaData } from "../lib/siteMetaData";
 
 export default function About() {
@@ -18,7 +20,11 @@ export default function About() {
         src={siteMetaData.image}
       />
       <Typography sx={{ fontSize: '1rem' }}>
-        Gopher Signal uses smart technology to quickly summarize important points from Hacker News articles, giving you brief and useful updates.
+        Gopher Signal uses smart technology to quickly summarize important points from{" "}
+        <Link href="https://news.ycombinator.com" target="_blank" rel="noopener noreferrer">
+          Hacker News
+        </Link>{" "}
+        articles, giving you brief and useful updates.
       </Typography>
     </Layout>
   );
