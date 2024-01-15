@@ -24,4 +24,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build, Test, and Push Images
-        run: make all_push
+        run: make all-push
