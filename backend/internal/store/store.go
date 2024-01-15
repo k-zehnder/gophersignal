@@ -34,38 +34,46 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	return &MySQLStore{db: db}, nil
 }
 
-// Init sets up the necessary database tables, particularly 'articles'.
+/// Init creates the 'gophersignal' database and the 'articles' table if they do not exist.
 func (store *MySQLStore) Init() error {
-	createTableSQL := `
-		CREATE TABLE IF NOT EXISTS articles (
-			id INT AUTO_INCREMENT PRIMARY KEY,
-			title VARCHAR(255) NOT NULL,
-			link VARCHAR(512) NOT NULL,
-			content TEXT,
-			summary VARCHAR(2000),
-			source VARCHAR(100) NOT NULL,
-			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-			is_on_homepage BOOLEAN, 
-			UNIQUE KEY unique_article (title, link)
-    	);
-	`
-	_, err := store.db.Exec(createTableSQL)
-	if err != nil {
-		return fmt.Errorf("failed to create articles table: %w", err)
-	}
-	return nil
+    _, err := store.db.Exec("CREATE DATABASE IF NOT EXISTS gophersignal")
+    if err != nil {
+        return fmt.Errorf("failed to create database: %w", err)
+    }
+
+    _, err = store.db.Exec("USE gophersignal")
+    if err != nil {
+        return fmt.Errorf("failed to select database: %w", err)
+    }
+
+    createTableSQL := `
+        CREATE TABLE IF NOT EXISTS articles (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            link VARCHAR(512) NOT NULL,
+            content TEXT,
+            summary VARCHAR(2000),
+            source VARCHAR(100) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            is_on_homepage BOOLEAN, 
+            UNIQUE KEY unique_article (title, link)
+        );
+    `
+    _, err = store.db.Exec(createTableSQL)
+    if err != nil {
+        return fmt.Errorf("failed to create articles table: %w", err)
+    }
+    return nil
 }
 
 // SaveArticles updates or adds new articles in the database. It first resets the is_on_homepage flag for all articles.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
-	// Begin a transaction
 	tx, err := store.db.Begin()
 	if err != nil {
 		return fmt.Errorf("failed to start transaction: %w", err)
 	}
 
-	// Reset is_on_homepage for all articles
 	if _, err = tx.Exec("UPDATE articles SET is_on_homepage = FALSE"); err != nil {
 		tx.Rollback()
 		return fmt.Errorf("failed to reset is_on_homepage: %w", err)
@@ -81,7 +89,6 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 		}
 	}
 
-	// Commit the transaction
 	return tx.Commit()
 }
 
