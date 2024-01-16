@@ -18,10 +18,6 @@ func NewMockStore(articles []*models.Article, saveError error, getAllError error
 	}
 }
 
-func (ms *MockStore) Init() error {
-	return nil // No-op for the mock implementation of Store
-}
-
 func (ms *MockStore) SaveArticles(articles []*models.Article) error {
 	if ms.SaveError != nil {
 		return ms.SaveError

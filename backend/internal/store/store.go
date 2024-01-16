@@ -10,7 +10,6 @@ import (
 
 // Store interface defines the operations for storing and retrieving articles.
 type Store interface {
-	Init() error
 	SaveArticles(articles []*models.Article) error
 	GetArticles() ([]*models.Article, error)
 }
@@ -32,38 +31,6 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	}
 
 	return &MySQLStore{db: db}, nil
-}
-
-// Init creates the 'gophersignal' database and the 'articles' table if they do not exist.
-func (store *MySQLStore) Init() error {
-	_, err := store.db.Exec("CREATE DATABASE IF NOT EXISTS gophersignal")
-	if err != nil {
-		return fmt.Errorf("failed to create database: %w", err)
-	}
-
-	_, err = store.db.Exec("USE gophersignal")
-	if err != nil {
-		return fmt.Errorf("failed to select database: %w", err)
-	}
-
-	createTableSQL := `
-        CREATE TABLE IF NOT EXISTS articles (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            link VARCHAR(512) NOT NULL,
-            content TEXT,
-            summary VARCHAR(2000),
-            source VARCHAR(100) NOT NULL,
-            is_on_homepage BOOLEAN, 
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        );
-    `
-	_, err = store.db.Exec(createTableSQL)
-	if err != nil {
-		return fmt.Errorf("failed to create articles table: %w", err)
-	}
-	return nil
 }
 
 // SaveArticles updates or adds new articles in the database. It first resets the is_on_homepage flag for all articles.

@@ -7,15 +7,6 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 )
 
-// TestMockStore_Init confirms that calling Init on the mock store does not return an error.
-func TestMockStore_Init(t *testing.T) {
-	mockstore := NewMockStore(nil, nil, nil)
-
-	if err := mockstore.Init(); err != nil {
-		t.Fatalf("Init returned an error: %v", err)
-	}
-}
-
 // TestMockStore_GetArticles verifies that the mock store returns the expected articles.
 func TestMockStore_GetArticles(t *testing.T) {
 	expectedArticles := []*models.Article{{Title: "Test Article 1"}}
