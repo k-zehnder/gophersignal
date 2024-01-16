@@ -21,10 +21,6 @@ func main() {
 		log.Fatalf("Failed to initialize database store: %v", err)
 	}
 
-	if err := sqlstore.Init(); err != nil {
-		log.Fatalf("Failed to initialize database tables: %v", err)
-	}
-
 	handler := routeHandlers.NewHandler(sqlstore)
 	r := router.SetupRouter(handler)
 
