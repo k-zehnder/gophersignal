@@ -5,7 +5,6 @@ COPY ./package*.json ./
 RUN npm install
 COPY ./ .
 RUN npm run build
-RUN npm run export
 
 # Stage 2: Setup Nginx to serve the static files
 FROM nginx:latest
