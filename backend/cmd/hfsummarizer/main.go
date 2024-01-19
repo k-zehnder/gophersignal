@@ -10,8 +10,7 @@ import (
 	"net/http"
 	"time"
 
-	_ "github.com/go-sql-driver/mysql"
-	"github.com/k-zehnder/gophersignal/backend/config"
+	"github.com/k-zehnder/gophersignal/config"
 )
 
 const huggingFaceURL = "https://api-inference.huggingface.co/models/facebook/bart-large-cnn"
@@ -25,7 +24,7 @@ type HuggingFaceResponseItem struct {
 }
 
 func main() {
-	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") 
+	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "")
 	if dsn == "" {
 		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
 	}

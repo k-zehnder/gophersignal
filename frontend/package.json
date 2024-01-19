@@ -7,24 +7,21 @@
     "export": "next export"
   },
   "dependencies": {
-    "@babel/traverse": "^7.23.7",
     "@emotion/react": "^11.10.5",
     "@emotion/server": "^11.10.0",
     "@emotion/styled": "^11.10.5",
     "@mui/icons-material": "^5.11.0",
     "@mui/joy": "^5.0.0-alpha.65",
+    "@playwright/test": "^1.41.0",
     "date-fns": "^2.29.3",
     "gray-matter": "^4.0.3",
     "next": "latest",
-    "postcss": "^8.4.33",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "remark": "^14.0.2",
-    "remark-html": "^15.0.1",
-    "semver": "^7.5.4"
+    "remark-html": "^15.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.1",
     "@types/node": "18.11.18",
     "@types/react": "18.0.27",
     "prettier": "2.8.3",
