@@ -1,36 +1,35 @@
 package router
 
 import (
-	"github.com/gorilla/handlers"
-	"github.com/gorilla/mux"
+	"net/http"
 
-	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
+	"github.com/gin-contrib/cors"
+	"github.com/gin-gonic/gin"
+	"github.com/k-zehnder/gophersignal/internal/api/controller"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func SetupRouter(handler *routeHandlers.Handler) *mux.Router {
-	r := mux.NewRouter()
+func NewRouter(articlesController controller.ArticleController) *gin.Engine {
+	router := gin.Default()
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	// Enable CORS
-	cors := handlers.CORS(
-		handlers.AllowedOrigins([]string{
-			"http://localhost:3000",
-			"https://gophersignal.com",
-		}),
-		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
-		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
-	)
+	router.GET("", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, "Welcome to the API")
+	})
 
-	// Apply CORS middleware to the router
-	r.Use(cors)
+	// CORS middleware setup
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{"http://localhost:3000", "https://gophersignal.com"}
+	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "DELETE"}
+	router.Use(cors.New(corsConfig))
 
-	// Setup API routes and subroutes
-	setupAPIRoutes(r, handler)
+	baseRouter := router.Group("/api/v1")
+	articlesRouter := baseRouter.Group("/articles")
 
-	return r
-}
+	// Setup routes for ArticleController
+	articlesRouter.GET("", articlesController.GetAll)
+	articlesRouter.POST("", articlesController.Create)
 
-func setupAPIRoutes(r *mux.Router, handler *routeHandlers.Handler) {
-	v1 := r.PathPrefix("/api/v1").Subrouter()
-	route := v1.HandleFunc("/articles", handler.GetArticles).Methods("GET")
-	route.Name("GetArticles")
+	return router
 }

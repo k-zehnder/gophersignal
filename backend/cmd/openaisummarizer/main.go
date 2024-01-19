@@ -10,7 +10,7 @@ import (
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/k-zehnder/gophersignal/backend/config"
+	"github.com/k-zehnder/gophersignal/config"
 )
 
 const openAIURL = "https://api.openai.com/v1/engines/text-davinci-003/completions"
