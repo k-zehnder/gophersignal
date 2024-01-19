@@ -5,11 +5,17 @@ import (
 	"net/http"
 
 	"github.com/k-zehnder/gophersignal/backend/config"
+	_ "github.com/k-zehnder/gophersignal/backend/docs"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
+// @title GopherSignal API
+// @description This is the GopherSignal API server.
+// @version 1
+// @host https://gophersignal.com
+// @BasePath /api/v1
 func main() {
 	dsn := config.GetEnv("MYSQL_DSN", "")
 	if dsn == "" {
