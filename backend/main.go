@@ -4,26 +4,30 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/k-zehnder/gophersignal/config"
-	"github.com/k-zehnder/gophersignal/internal/api/controller"
-	_ "github.com/k-zehnder/gophersignal/internal/api/docs"
-	"github.com/k-zehnder/gophersignal/internal/api/router"
-	"github.com/k-zehnder/gophersignal/internal/store"
+	"github.com/k-zehnder/gophersignal/backend/config"
+	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
+	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
+	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
 func main() {
-	sqlconnection := config.NewConnection()
-	store := store.NewStore(sqlconnection)
-	controller := controller.NewController(store)
-	routes := router.NewRouter(controller)
-
-	server := &http.Server{
-		Addr:    ":8080",
-		Handler: routes,
+	dsn := config.GetEnv("MYSQL_DSN", "")
+	if dsn == "" {
+		log.Fatal("MYSQL_DSN not set in .env file")
 	}
 
-	log.Printf("starting HTTP server")
-	if err := server.ListenAndServe(); err != nil {
+	sqlstore, err := store.NewMySQLStore(dsn)
+	if err != nil {
+		log.Fatalf("Failed to initialize database store: %v", err)
+	}
+
+	handler := routeHandlers.NewHandler(sqlstore)
+	r := router.SetupRouter(handler)
+
+	// Start the HTTP server
+	addr := config.GetEnv("SERVER_ADDRESS", "0.0.0.0:8080")
+	log.Printf("Server is running on %s\n", addr)
+	if err := http.ListenAndServe(addr, r); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }
