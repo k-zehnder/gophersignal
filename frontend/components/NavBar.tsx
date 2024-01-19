@@ -14,6 +14,10 @@ const navLinks = [
     name: "About",
     path: "/about",
   },
+  {
+    name: "API",
+    path: "https://gophersignal.com/swagger/index.html#/",
+  },
 ];
 
 export default function NavBar() {
@@ -29,11 +33,21 @@ export default function NavBar() {
           sx={{ display: "flex", flexDirection: { xs: "row", md: "column" } }}
         >
           {navLinks.map(({ path, name }) => {
-            return (
-              <ListItem key={path}>
-                <Link href={path}>{name}</Link>
-              </ListItem>
-            );
+            if (path.startsWith("http")) {
+              return (
+                <ListItem key={path}>
+                  <a href={path} target="_blank" rel="noopener noreferrer">
+                    {name}
+                  </a>
+                </ListItem>
+              );
+            } else {
+              return (
+                <ListItem key={path}>
+                  <Link href={path}>{name}</Link>
+                </ListItem>
+              );
+            }
           })}
           <ListItem>
             <ModeButton />
