@@ -28,7 +28,7 @@ func NewHandler(store store.Store) *Handler {
 func (h *Handler) GetArticles(w http.ResponseWriter, r *http.Request) {
 	articles, err := h.Store.GetArticles()
 	if err != nil {
-		h.jsonResponse(w, models.Response{Code: http.StatusInternalServerError, Status: "error", Data: err.Error()}, http.StatusInternalServerError)
+		h.jsonResponse(w, models.Response{Code: http.StatusInternalServerError, Status: "error", Data: "Failed to retrieve articles from the store"}, http.StatusInternalServerError)
 		return
 	}
 
