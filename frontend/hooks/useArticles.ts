@@ -17,7 +17,8 @@ const useArticles = () => {
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        const apiArticles = (await response.json()) as ApiArticle[];
+        const json = await response.json();
+        const apiArticles = json.data as ApiArticle[]; 
 
         const articlesData: Article[] = apiArticles.map((item) => ({
           id: item.id,

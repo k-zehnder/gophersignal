@@ -33,7 +33,7 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	return &MySQLStore{db: db}, nil
 }
 
-// SaveArticles updates or adds new articles in the database. It first resets the is_on_homepage flag for all articles.
+
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	// Begin a transaction
 	tx, err := store.db.Begin()
@@ -61,7 +61,6 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return tx.Commit()
 }
 
-// GetArticles retrieves all articles that are marked as on the homepage from the database.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 	rows, err := store.db.Query("SELECT id, title, link, content, summary, source, created_at, updated_at, is_on_homepage FROM articles WHERE is_on_homepage = TRUE")
 	if err != nil {
