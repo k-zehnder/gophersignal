@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	_ "github.com/k-zehnder/gophersignal/backend/docs"
+	_ "github.com/k-zehnder/gophersignal/backend/internal/api/docs"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
