@@ -23,7 +23,7 @@ definitions:
       status:
         type: string
     type: object
-host: https://gophersignal.com
+host: gophersignal.com
 info:
   contact: {}
   description: This is the GopherSignal API server.
