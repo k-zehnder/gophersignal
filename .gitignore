@@ -138,3 +138,4 @@ sample_makefile
 nginx-dev.conf/
 mysql_setup.log
 ssl
+nginx
