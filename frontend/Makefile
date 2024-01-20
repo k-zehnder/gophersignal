@@ -1,7 +1,11 @@
-.PHONY: build run
-
-build:
+.PHONY: build
+build_frontend:
 	docker build -t $(FRONTEND_TAG) .
 
-run:
+.PHONY: run
+run_frontend:
 	docker-compose up -d frontend
+
+.PHONY: dev
+dev:
+	npm install && npm run dev
