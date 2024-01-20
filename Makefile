@@ -30,11 +30,8 @@ deploy_pull: build_backend docker_push_backend build_frontend docker_push_fronte
 
 .PHONY: dev
 dev:
-	@echo "Starting backend and related services..."
-	$(DOCKER_COMPOSE) -f docker-compose-dev.yml up -d
 	@echo "Backend services are starting. Please wait..."
-	@echo "Launching frontend development server..."
-	cd frontend && make dev
+	$(DOCKER_COMPOSE) -f docker-compose-dev.yml up -d --build
 	@echo "Frontend server is initializing and may take a minute to become available at localhost:3000."
 	@echo "Development environment setup complete. If the backend doesn't start successfully, you might need to run 'make dev' again."
 
