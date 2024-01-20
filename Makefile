@@ -74,7 +74,7 @@ hfsummarize:
 .PHONY: build_frontend
 build_frontend:
 	@echo "Building frontend..."
-	cd frontend && make build
+	cd frontend && make build_frontend
 	@echo "Frontend built successfully"
 
 .PHONY: run_frontend
