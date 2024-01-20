@@ -1,14 +1,11 @@
 version: '3.8'
 services:
   frontend:
-    image: kjzehnder3/gophersignal:frontend-latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
     ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
-    depends_on:
-      - backend
+      - 3000:3000
     networks:
       - app-network
 

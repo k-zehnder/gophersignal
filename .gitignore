@@ -133,6 +133,8 @@ dist
 .DS_Store
 coverage.out
 coverage.html
-nginx.conf
 test_output.txt
 sample_makefile
+nginx-dev.conf/
+mysql_setup.log
+ssl

@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "NEXT_PUBLIC_ENV=development next dev",
     "build": "next build",
     "start": "next start",
     "export": "next export"
@@ -16,6 +16,7 @@
     "date-fns": "^2.29.3",
     "gray-matter": "^4.0.3",
     "next": "latest",
+    "npm": "^10.3.0",
     "postcss": "^8.4.33",
     "react": "18.2.0",
     "react-dom": "18.2.0",
