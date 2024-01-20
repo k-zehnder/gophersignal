@@ -42,7 +42,7 @@ func TestGetArticles_Success(t *testing.T) {
 		t.Errorf("Expected status code %v, got %v", http.StatusOK, status)
 	}
 
-	// Unmarshal response body into a slice of pointers to articles.
+	// Unmarshal response body into a slice of articles.
 	var response struct {
 		Data []models.Article `json:"data"`
 	}
