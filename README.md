@@ -1,8 +1,26 @@
-# gophersignal
+# gophersignal 
 
-## How to run
-1. `git clone https://github.com/k-zehnder/gophersignal`
-2. `cd gophersignal`
-3. `cp .env.example .env` (edit w/ your config)
-3. `make dev_data HUGGING_FACE_API_KEY=your_api_key_here SCRAPER_MYSQL_DSN=mysql_dsn_here`
-3. `make dev`
+## Getting Started
+
+1. **Clone the Repository:**
+   ```
+   git clone https://github.com/k-zehnder/gophersignal.git
+   cd gophersignal
+   ```
+
+2. **Configure Environment:**
+    ```
+   cp .env.example .env 
+    ```
+
+3. **Launch Services with Docker:**
+   ```
+    make dev
+   ```
+
+Your development environment should now be running.
+
+## Accessing the Application
+
+- **Frontend:** Visit `http://localhost:3000` to view the frontend.
+- **Swagger UI:** Access the API documentation at `http://localhost:3000/swagger/index.html`.
