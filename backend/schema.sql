@@ -1,5 +1,5 @@
-CREATE DATABASE gophersignal
-USE gophersignal
+CREATE DATABASE IF NOT EXISTS gophersignal;
+USE gophersignal;
 CREATE TABLE IF NOT EXISTS articles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
