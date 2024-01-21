@@ -14,18 +14,16 @@ all: build_frontend build_backend test_backend
 all_push: build_frontend build_backend test_backend docker_push_backend docker_push_frontend
 
 .PHONY: run
-run: build_frontend build_backend
-	@echo "Running backend..."
-	cd backend && make run_backend &
-	@echo "Running frontend..."
-	cd frontend && make run
+run:
+	docker-compose up -d
+	@echo "Done!"
 
 .PHONY: deploy_pull
-deploy_pull: build_backend docker_push_backend build_frontend docker_push_frontend
-	@echo "Pulling frontend and deploying both backend and frontend..."
+deploy_pull: 
+	@echo "Pulling frontend and backend, then deploying..."
 	docker pull frontend
 	docker pull backend
-	docker-compose up -d backend frontend
+	docker-compose up -d
 	@echo "Frontend and Backend running"
 
 .PHONY: dev
@@ -67,7 +65,7 @@ hfsummarize:
 	cd backend && make hfsummarize
 	@echo "HF summarization complete"
 
-# Backend Section
+# Frontend Section
 .PHONY: build_frontend
 build_frontend:
 	@echo "Building frontend..."
@@ -134,4 +132,3 @@ test_backend:
 	@echo "Running backend tests..."
 	cd backend && make test_backend
 	@echo "Backend tests completed"
-	

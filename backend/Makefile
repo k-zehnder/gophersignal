@@ -1,14 +1,13 @@
-.PHONY: build
+.PHONY: build_backend
 build_backend:
 	docker build -t $(BACKEND_TAG) .
 
-.PHONY: run
+.PHONY: run_backend
 run_backend:
 	docker-compose up -d backend
 
 .PHONY: test_backend
 test_backend:
-	go test -v -cover ./...
 	go test -v -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
 

@@ -5,6 +5,10 @@ import Typography from "@mui/joy/Typography";
 import ModeButton from "./ModeButton";
 import { siteMetaData } from "../lib/siteMetaData";
 
+const apiUrl = process.env.NEXT_PUBLIC_ENV === "development"
+    ? "http://localhost:3000/swagger/index.html#/"
+    : "https://gophersignal.com/swagger/index.html#/";
+
 const navLinks = [
   {
     name: "Home",
@@ -16,7 +20,7 @@ const navLinks = [
   },
   {
     name: "API",
-    path: "https://gophersignal.com/swagger/index.html#/",
+    path: apiUrl,
   },
 ];
 

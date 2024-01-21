@@ -1,24 +1,26 @@
-# gophersignal
+# gophersignal 
 
-## Installation
+## Getting Started
 
-1. Clone the gophersignal repository:
+1. **Clone the Repository:**
    ```
-   git clone https://github.com/k-zehnder/gophersignal
-   ```
-
-2. Navigate to the project directory:
-   ```
+   git clone https://github.com/k-zehnder/gophersignal.git
    cd gophersignal
    ```
 
-3. Copy the `.env.example` file to `.env` and update the environment variables:
-   ```
-   cp .env.example .env
-   ```
-   (Edit the `.env` file with your specific configurations.)
+2. **Configure Environment:**
+    ```
+   cp .env.example .env 
+    ```
 
-4. Start the application using Docker Compose:
+3. **Launch Services with Docker:**
    ```
-   docker-compose up -d --build
+    make dev
    ```
+
+Your development environment should now be running.
+
+## Accessing the Application
+
+- **Frontend:** Visit `http://localhost:3000` to view the frontend.
+- **Swagger UI:** Access the API documentation at `http://localhost:3000/swagger/index.html`.
