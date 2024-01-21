@@ -15,7 +15,7 @@ all_push: build_frontend build_backend test_backend docker_push_backend docker_p
 
 .PHONY: run
 run:
-	docker-compose up -d
+	$(DOCKER_COMPOSE) up -d
 	@echo "Done!"
 
 .PHONY: deploy_pull
@@ -23,7 +23,7 @@ deploy_pull:
 	@echo "Pulling frontend and backend, then deploying..."
 	docker pull frontend
 	docker pull backend
-	docker-compose up -d
+	$(DOCKER_COMPOSE) up -d
 	@echo "Frontend and Backend running"
 
 .PHONY: dev
@@ -93,7 +93,7 @@ pull_frontend:
 .PHONY: deploy_frontend
 deploy_frontend:
 	@echo "Deploying frontend..."
-	docker-compose up -d frontend
+	$(DOCKER_COMPOSE) up -d frontend
 	@echo "Frontend running"
 
 # Backend Section
@@ -124,7 +124,7 @@ pull_backend:
 .PHONY: deploy_backend
 deploy_backend:
 	@echo "Deploying backend..."
-	docker-compose up -d backend
+	$(DOCKER_COMPOSE) up -d backend
 	@echo "Backend running"
 
 .PHONY: test_backend
