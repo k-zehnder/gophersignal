@@ -22,54 +22,54 @@ type MySQLStore struct {
 
 // NewMySQLStore establishes a connection to the MySQL database and returns a MySQLStore.
 func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
-    // Separate the DSN into base DSN (without the database name) and the database name
-    parts := strings.Split(dataSourceName, "/")
-    baseDSN := parts[0] + "/"
-    dbName := strings.Split(parts[1], "?")[0]
+	// Separate the DSN into base DSN (without the database name) and the database name
+	parts := strings.Split(dataSourceName, "/")
+	baseDSN := parts[0] + "/"
+	dbName := strings.Split(parts[1], "?")[0]
 
-    // Connect to MySQL without specifying the database
-    db, err := sql.Open("mysql", baseDSN)
-    if err != nil {
-        return nil, fmt.Errorf("failed to open database connection: %w", err)
-    }
+	// Connect to MySQL without specifying the database
+	db, err := sql.Open("mysql", baseDSN)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database connection: %w", err)
+	}
 
-    // Ping the database to ensure the connection is valid
-    err = db.Ping()
-    if err != nil {
-        return nil, fmt.Errorf("failed to connect to MySQL server: %w", err)
-    }
+	// Ping the database to ensure the connection is valid
+	err = db.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to MySQL server: %w", err)
+	}
 
-    // Create the database if it doesn't exist
-    _, err = db.Exec("CREATE DATABASE IF NOT EXISTS gophersignal")
-    if err != nil {
-        db.Close()
-        return nil, fmt.Errorf("failed to create database '%s': %w", dbName, err)
-    }
+	// Create the database if it doesn't exist
+	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS %s", dbName)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to create database '%s': %w", dbName, err)
+	}
 
-    // Now connect to the new database
-    db.Close()
-    db, err = sql.Open("mysql", dataSourceName)
-    if err != nil {
-        return nil, fmt.Errorf("failed to open database with name '%s': %w", dbName, err)
-    }
+	// Now connect to the new database
+	db.Close()
+	db, err = sql.Open("mysql", dataSourceName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open database with name '%s': %w", dbName, err)
+	}
 
-    // Ping again to check the new connection
-    err = db.Ping()
-    if err != nil {
-        db.Close()
-        return nil, fmt.Errorf("failed to connect to database '%s': %w", dbName, err)
-    }
+	// Ping again to check the new connection
+	err = db.Ping()
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to connect to database '%s': %w", dbName, err)
+	}
 
-    // Check if the articles table exists and create it if not
-    var tableExists bool
-    err = db.QueryRow("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = 'articles'", dbName).Scan(&tableExists)
-    if err != nil {
-        db.Close()
-        return nil, fmt.Errorf("failed to check if articles table exists: %w", err)
-    }
+	// Check if the articles table exists and create it if not
+	var tableExists bool
+	err = db.QueryRow("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = ? AND table_name = 'articles'", dbName).Scan(&tableExists)
+	if err != nil {
+		db.Close()
+		return nil, fmt.Errorf("failed to check if articles table exists: %w", err)
+	}
 
-    if !tableExists {
-        _, err = db.Exec(`CREATE TABLE IF NOT EXISTS articles (
+	if !tableExists {
+		_, err = db.Exec(`CREATE TABLE IF NOT EXISTS articles (
             id INT AUTO_INCREMENT PRIMARY KEY,
             title VARCHAR(255) NOT NULL,
             link VARCHAR(512) NOT NULL,
@@ -80,22 +80,22 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         );`)
-        if err != nil {
-            db.Close()
-            return nil, fmt.Errorf("failed to create articles table: %w", err)
-        }
+		if err != nil {
+			db.Close()
+			return nil, fmt.Errorf("failed to create articles table: %w", err)
+		}
 
-        // Insert a default article
-        _, err = db.Exec("INSERT INTO articles (title, link, content, summary, source, is_on_homepage) VALUES (?, ?, ?, ?, ?, ?)",
-            "Default Title", "http://default.link", "Default Content", "Default Summary", "Default Source", true)
-        if err != nil {
-            db.Close()
-            return nil, fmt.Errorf("failed to insert default article: %w", err)
-        }
-    }
+		// Insert a default article
+		_, err = db.Exec("INSERT INTO articles (title, link, content, summary, source, is_on_homepage) VALUES (?, ?, ?, ?, ?, ?)",
+			"Default Title", "http://default.link", "Default Content", "Default Summary", "Default Source", true)
+		if err != nil {
+			db.Close()
+			return nil, fmt.Errorf("failed to insert default article: %w", err)
+		}
+	}
 
-    // Return the MySQLStore instance with the new connection
-    return &MySQLStore{db: db}, nil
+	// Return the MySQLStore instance with the new connection
+	return &MySQLStore{db: db}, nil
 }
 
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {

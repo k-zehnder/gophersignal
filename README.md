@@ -23,4 +23,4 @@ Your development environment should now be running.
 ## Accessing the Application
 
 - **Frontend:** Visit `http://localhost:3000` to view the frontend.
-- **Swagger UI:** Access the API documentation at `http://localhost:3000/swagger/index.html`.
+- **Swagger UI:** Access the API documentation at `http://localhost:8080/swagger/index.html`.

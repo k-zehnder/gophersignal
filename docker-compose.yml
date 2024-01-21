@@ -48,7 +48,7 @@ services:
       - MYSQL_DATABASE
       - MYSQL_USER
       - MYSQL_PASSWORD
-      - MYSQL_PORT
+      - MYSQL_HOST
 
 networks:
   app-network:
