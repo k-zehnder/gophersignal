@@ -94,12 +94,17 @@ func main() {
 			log.Fatal(err)
 		}
 
-		// Update the article with the summary
+		stmt, err := db.Prepare("UPDATE articles SET summary = ? WHERE id = ?")
+		if err != nil {
+			log.Fatal("Error preparing statement:", err)
+		}
+		defer stmt.Close()
+
 		if len(apiResp.Choices) > 0 {
 			summary := apiResp.Choices[0].Text
-			_, err := db.Exec("UPDATE articles SET summary = ? WHERE id = ?", summary, id)
+			_, err := stmt.Exec(summary, id)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal("Error updating article:", err)
 			}
 			fmt.Printf("Article ID %d summarized\n", id)
 		}

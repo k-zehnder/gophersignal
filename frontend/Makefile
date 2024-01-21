@@ -1,8 +1,8 @@
-.PHONY: build
+.PHONY: build_frontend
 build_frontend:
 	docker build -t $(FRONTEND_TAG) .
 
-.PHONY: run
+.PHONY: run_frontend
 run_frontend:
 	docker-compose up -d frontend
 

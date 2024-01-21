@@ -127,16 +127,24 @@ func main() {
 			continue
 		}
 
-		if len(apiResps) > 0 {
-			summary := apiResps[0].SummaryText
-			_, err := db.Exec("UPDATE articles SET summary = ? WHERE id = ?", summary, id)
-			if err != nil {
-				log.Printf("Error updating database for Article ID %d: %v", id, err)
-				continue
+		stmt, err := db.Prepare("UPDATE articles SET summary = ? WHERE id = ?")
+		if err != nil {
+			log.Fatal("Error preparing statement for updating summary:", err)
+		}
+		defer stmt.Close()
+
+		for _, resp := range apiResps {
+			if len(resp.SummaryText) > 0 {
+				summary := resp.SummaryText
+				_, err := stmt.Exec(summary, id)
+				if err != nil {
+					log.Printf("Error updating database for Article ID %d: %v", id, err)
+					continue
+				}
+				fmt.Printf("Article ID %d summarized\n", id)
+			} else {
+				fmt.Printf("No summary available for Article ID %d\n", id)
 			}
-			fmt.Printf("Article ID %d summarized\n", id)
-		} else {
-			fmt.Printf("No summary received for Article ID %d\n", id)
 		}
 	}
 }

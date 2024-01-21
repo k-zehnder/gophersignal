@@ -1,24 +1,8 @@
 # gophersignal
 
-## Installation
-
-1. Clone the gophersignal repository:
-   ```
-   git clone https://github.com/k-zehnder/gophersignal
-   ```
-
-2. Navigate to the project directory:
-   ```
-   cd gophersignal
-   ```
-
-3. Copy the `.env.example` file to `.env` and update the environment variables:
-   ```
-   cp .env.example .env
-   ```
-   (Edit the `.env` file with your specific configurations.)
-
-4. Start the application using Docker Compose:
-   ```
-   docker-compose up -d --build
-   ```
+## How to run
+1. `git clone https://github.com/k-zehnder/gophersignal`
+2. `cd gophersignal`
+3. `cp .env.example .env` (edit w/ your config)
+3. `make dev_data HUGGING_FACE_API_KEY=your_api_key_here SCRAPER_MYSQL_DSN=mysql_dsn_here`
+3. `make dev`

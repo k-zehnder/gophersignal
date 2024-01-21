@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   frontend:
     image: kjzehnder3/gophersignal:frontend-latest
@@ -23,6 +24,9 @@ services:
     environment:
       - MYSQL_DSN
       - SERVER_ADDRESS
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   mysql:
     image: mysql:latest
@@ -35,7 +39,6 @@ services:
       - 3306:3306
     volumes:
       - mysql_gophersignal:/var/lib/mysql
-      - ./backend/schema.sql:/docker-entrypoint-initdb.d/schema.sql
     networks:
       - app-network
     env_file:
@@ -45,6 +48,7 @@ services:
       - MYSQL_DATABASE
       - MYSQL_USER
       - MYSQL_PASSWORD
+      - MYSQL_PORT
 
 networks:
   app-network:
