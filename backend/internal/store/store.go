@@ -40,7 +40,7 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	}
 
 	// Create the database if it doesn't exist
-	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS %s", dbName)
+	_, err = db.Exec("CREATE DATABASE IF NOT EXISTS gophersignal;")
 	if err != nil {
 		db.Close()
 		return nil, fmt.Errorf("failed to create database '%s': %w", dbName, err)
