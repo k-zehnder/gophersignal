@@ -10,7 +10,11 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {},
-        "version": "{{.Version}}"
+        "version": "{{.Version}}",
+        "x-logo": {
+            "altText": "GopherSignal Logo",
+            "url": "https://sdtimes.com/wp-content/uploads/2021/03/Go-gopher.jpg"
+        }
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
@@ -31,7 +35,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "boolean",
-                        "description": "Filter by is_on_homepage (default: false)",
+                        "default": true,
+                        "description": "Filter by is_on_homepage",
                         "name": "is_on_homepage",
                         "in": "query"
                     }

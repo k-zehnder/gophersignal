@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/k-zehnder/gophersignal/backend/config"
-
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
