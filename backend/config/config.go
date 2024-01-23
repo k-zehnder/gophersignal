@@ -24,7 +24,7 @@ func Init() string {
 	if env == "dev" {
 		docs.SwaggerInfo.Host = "localhost:8080"
 	} else {
-		docs.SwaggerInfo.Host = "0.0.0.0:8080"
+		docs.SwaggerInfo.Host = "gophersignal.com"
 	}
 
 	return dsn
