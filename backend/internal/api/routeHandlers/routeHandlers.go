@@ -17,13 +17,12 @@ func NewHandler(store store.Store) *Handler {
 	return &Handler{Store: store}
 }
 
-// GetArticles godoc
 // @Summary Get articles
 // @Description Retrieve a list of articles from the database.
 // @Tags Articles
 // @Accept json
 // @Produce json
-// @Param is_on_homepage query boolean false "Filter by is_on_homepage (default: false)"
+// @Param is_on_homepage query boolean false "Filter by is_on_homepage" default(true)
 // @Success 200 {array} models.ArticleResponse
 // @Failure 500 {object} models.Response{data=string}
 // @Router /articles [get]
