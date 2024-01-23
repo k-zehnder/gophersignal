@@ -29,9 +29,6 @@ info:
   description: This is the GopherSignal API server.
   title: GopherSignal API
   version: "1"
-  x-logo:
-    altText: GopherSignal Logo
-    url: https://sdtimes.com/wp-content/uploads/2021/03/Go-gopher.jpg
 paths:
   /articles:
     get:

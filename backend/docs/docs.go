@@ -10,11 +10,7 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {},
-        "version": "{{.Version}}",
-        "x-logo": {
-            "altText": "GopherSignal Logo",
-            "url": "https://sdtimes.com/wp-content/uploads/2021/03/Go-gopher.jpg"
-        }
+        "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
