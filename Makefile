@@ -18,7 +18,7 @@ all_push: build_frontend build_backend test_backend docker_push_backend docker_p
 run:
 	$(DOCKER_COMPOSE) up -d
 	@echo "Frontend running at http://localhost:3000"
-	@echo "Backend running at http://localhost:8000"
+	@echo "Backend running at http://localhost:8080"
 	@echo "Swagger Docs available at http://localhost:8080/swagger/index.html"
 
 .PHONY: deploy_pull

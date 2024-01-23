@@ -12,8 +12,8 @@ type Article struct {
 	Content      string         `json:"content"`
 	Summary      sql.NullString `json:"summary"`
 	Source       string         `json:"source"`
-	CreatedAt    time.Time      `json:"createdAt"`
-	UpdatedAt    time.Time      `json:"updatedAt"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
 	IsOnHomepage bool           `json:"is_on_homepage"`
 }
 

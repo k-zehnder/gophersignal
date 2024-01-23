@@ -36,7 +36,8 @@ paths:
       - application/json
       description: Retrieve a list of articles from the database.
       parameters:
-      - description: 'Filter by is_on_homepage (default: false)'
+      - default: true
+        description: Filter by is_on_homepage
         in: query
         name: is_on_homepage
         type: boolean

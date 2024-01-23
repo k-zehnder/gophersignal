@@ -31,7 +31,8 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "boolean",
-                        "description": "Filter by is_on_homepage (default: false)",
+                        "default": true,
+                        "description": "Filter by is_on_homepage",
                         "name": "is_on_homepage",
                         "in": "query"
                     }
