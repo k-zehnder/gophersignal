@@ -12,7 +12,7 @@ import (
 // Store interface defines the operations for storing and retrieving articles.
 type Store interface {
 	SaveArticles(articles []*models.Article) error
-	GetArticles() ([]*models.Article, error)
+	GetArticles(isOnHomepage bool) ([]*models.Article, error) 
 }
 
 // MySQLStore implements the Store interface using a MySQL database.
@@ -125,25 +125,39 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return tx.Commit()
 }
 
-func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
-	rows, err := store.db.Query("SELECT id, title, link, content, summary, source, created_at, updated_at, is_on_homepage FROM articles WHERE is_on_homepage = TRUE;")
-	if err != nil {
-		return nil, fmt.Errorf("failed to query articles: %w", err)
-	}
-	defer rows.Close()
+func (store *MySQLStore) GetArticles(isOnHomepage bool) ([]*models.Article, error) {
+    query := "SELECT id, title, link, content, summary, source, created_at, updated_at, is_on_homepage FROM articles"
+    
+    if isOnHomepage {
+        query += " WHERE is_on_homepage = TRUE"
+    } else {
+        query += " WHERE is_on_homepage = FALSE"
+    }
 
-	var articles []*models.Article
-	for rows.Next() {
-		var article models.Article
-		if err := rows.Scan(&article.ID, &article.Title, &article.Link, &article.Content, &article.Summary, &article.Source, &article.CreatedAt, &article.UpdatedAt, &article.IsOnHomepage); err != nil {
-			return nil, fmt.Errorf("failed to scan article: %w", err)
-		}
-		articles = append(articles, &article)
-	}
+    stmt, err := store.db.Prepare(query)
+    if err != nil {
+        return nil, fmt.Errorf("failed to prepare SQL statement: %w", err)
+    }
+    defer stmt.Close()
 
-	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("iteration error: %w", err)
-	}
+    rows, err := stmt.Query()
+    if err != nil {
+        return nil, fmt.Errorf("failed to execute query: %w", err)
+    }
+    defer rows.Close()
 
-	return articles, nil
+    var articles []*models.Article
+    for rows.Next() {
+        var article models.Article
+        if err := rows.Scan(&article.ID, &article.Title, &article.Link, &article.Content, &article.Summary, &article.Source, &article.CreatedAt, &article.UpdatedAt, &article.IsOnHomepage); err != nil {
+            return nil, fmt.Errorf("failed to scan article: %w", err)
+        }
+        articles = append(articles, &article)
+    }
+
+    if err = rows.Err(); err != nil {
+        return nil, fmt.Errorf("iteration error: %w", err)
+    }
+
+    return articles, nil
 }

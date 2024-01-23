@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/k-zehnder/gophersignal/backend/config"
-	_ "github.com/k-zehnder/gophersignal/backend/internal/api/docs"
+
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
@@ -14,19 +14,19 @@ import (
 // @title GopherSignal API
 // @description This is the GopherSignal API server.
 // @version 1
-// @host gophersignal.com
 // @BasePath /api/v1
+// @host gophersignal.com
 func main() {
-	dsn := config.GetEnv("MYSQL_DSN", "")
-	if dsn == "" {
-		log.Fatal("MYSQL_DSN not set in .env file")
-	}
+	// Initialize configuration
+	dsn := config.Init()
 
+	// Initialize database store
 	sqlstore, err := store.NewMySQLStore(dsn)
 	if err != nil {
 		log.Fatalf("Failed to initialize database store: %v", err)
 	}
 
+	// Initialize API handler and router
 	handler := routeHandlers.NewHandler(sqlstore)
 	r := router.SetupRouter(handler)
 

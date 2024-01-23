@@ -8,8 +8,8 @@ const useArticles = () => {
   useEffect(() => {
     const apiUrl =
       process.env.NEXT_PUBLIC_ENV === 'development'
-        ? 'http://localhost:8080/api/v1/articles'
-        : 'https://gophersignal.com/api/v1/articles';
+        ? 'http://localhost:8080/api/v1/articles?is_on_homepage=true'
+        : 'https://gophersignal.com/api/v1/articles?is_on_homepage=true';
 
     const fetchArticles = async () => {
       try {
