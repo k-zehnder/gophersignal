@@ -6,7 +6,7 @@ import ModeButton from "./ModeButton";
 import { siteMetaData } from "../lib/siteMetaData";
 
 const apiUrl = process.env.NEXT_PUBLIC_ENV === "development"
-    ? "http://localhost:3000/swagger/index.html#/"
+    ? "http://localhost:8080/swagger/index.html#/"
     : "https://gophersignal.com/swagger/index.html#/";
 
 const navLinks = [
