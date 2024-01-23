@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
+
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
@@ -22,8 +23,8 @@ func TestRouter_ArticlesRoute(t *testing.T) {
 	// Setup router with the handler.
 	router := SetupRouter(handler)
 
-	// Simulate a GET request.
-	req := httptest.NewRequest("GET", "/api/v1/articles", nil)
+	// Simulate a GET request with the "is_on_homepage" query parameter.
+	req := httptest.NewRequest("GET", "/api/v1/articles?is_on_homepage=true", nil)
 	rr := httptest.NewRecorder()
 
 	// Serve the request.

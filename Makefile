@@ -9,6 +9,7 @@ export FRONTEND_TAG BACKEND_TAG DOCKERHUB_REPO
 # Common Targets
 .PHONY: all
 all: build_frontend build_backend test_backend
+	@echo "Done!"
 
 .PHONY: all_push
 all_push: build_frontend build_backend test_backend docker_push_backend docker_push_frontend
@@ -16,13 +17,15 @@ all_push: build_frontend build_backend test_backend docker_push_backend docker_p
 .PHONY: run
 run:
 	$(DOCKER_COMPOSE) up -d
-	@echo "Done!"
+	@echo "Frontend running at http://localhost:3000"
+	@echo "Backend running at http://localhost:8000"
+	@echo "Swagger Docs available at http://localhost:8080/swagger/index.html"
 
 .PHONY: deploy_pull
 deploy_pull: 
 	@echo "Pulling frontend and backend, then deploying..."
-	docker pull frontend
-	docker pull backend
+	docker pull $(FRONTEND_TAG)
+	docker pull $(BACKEND_TAG)
 	$(DOCKER_COMPOSE) up -d
 	@echo "Frontend and Backend running"
 

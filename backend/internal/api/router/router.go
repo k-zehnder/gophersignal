@@ -3,7 +3,7 @@ package router
 import (
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	_ "github.com/k-zehnder/gophersignal/backend/internal/api/docs"
+	_ "github.com/k-zehnder/gophersignal/backend/docs"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -15,6 +15,7 @@ func SetupRouter(handler *routeHandlers.Handler) *mux.Router {
 	cors := handlers.CORS(
 		handlers.AllowedOrigins([]string{
 			"http://localhost:3000",
+			"http://localhost:8080",
 			"https://gophersignal.com",
 		}),
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),

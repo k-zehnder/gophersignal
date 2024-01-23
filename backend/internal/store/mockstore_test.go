@@ -12,7 +12,7 @@ func TestMockStore_GetArticles(t *testing.T) {
 	expectedArticles := []*models.Article{{Title: "Test Article 1"}}
 	mockstore := NewMockStore(expectedArticles, nil, nil)
 
-	articles, err := mockstore.GetArticles()
+	articles, err := mockstore.GetArticles(true)
 	if err != nil {
 		t.Fatalf("Expected no error, got %v", err)
 	}
@@ -53,7 +53,7 @@ func TestMockStore_GetArticles_Error(t *testing.T) {
 	expectedError := errors.New("get all error")
 	mockstore := NewMockStore(nil, nil, expectedError)
 
-	if _, err := mockstore.GetArticles(); err != expectedError {
+	if _, err := mockstore.GetArticles(true); err != expectedError {
 		t.Fatalf("Expected error '%v', got '%v'", expectedError, err)
 	}
 }

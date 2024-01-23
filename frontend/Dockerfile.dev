@@ -1,20 +1,24 @@
-# Use an official Node runtime as the base image
+# Use an official Node runtime as a parent image
 FROM node:latest
 
-# Set the working directory in the container to /app
+# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json to the working directory
+# Copy package.json and package-lock.json (or yarn.lock)
 COPY package*.json ./
 
-# Install any dependencies
+# Clearing npm cache to resolve potential conflicts and ensure fresh package installation.
+# This step can be uncommented if encountering specific dependency-related issues.
+# RUN npm cache clean --force
+
+# Install dependencies
 RUN npm install
 
-# Copy the rest of the app's source code from the host to the image filesystem.
+# Bundle app source
 COPY . .
 
-# The app binds to port 3000 so use the EXPOSE instruction to have it mapped by the docker daemon
+# Expose port 3000 to access server
 EXPOSE 3000
 
-# Define the command to run your app using CMD which defines your runtime
+# Command to run the app
 CMD ["npm", "run", "dev"]
