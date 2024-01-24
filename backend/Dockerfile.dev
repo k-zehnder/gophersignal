@@ -13,8 +13,6 @@ RUN go mod download
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
-# Build
-RUN go build -o main .
-
-# Start
+# Command to build and run the Go application directly.
+# 'go run main.go' compiles and runs the application on the fly, which is ideal for development.
 CMD ["go", "run", "main.go"]

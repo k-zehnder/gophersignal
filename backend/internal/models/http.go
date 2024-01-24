@@ -1,12 +1,6 @@
 package models
 
-type CreateArticleRequest struct {
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	Link    string `json:"link"`
-	Summary string `json:"summary"`
-	Source  string `json:"source"`
-}
+import "time"
 
 type Response struct {
 	Code   int         `json:"code"`
@@ -15,16 +9,13 @@ type Response struct {
 }
 
 type ArticleResponse struct {
-	ID      int    `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
-	Link    string `json:"link"`
-	Summary string `json:"summary"`
-	Source  string `json:"source"`
-}
-
-type UpdateArticleRequest struct {
-	ID      int    `json:"id"`
-	Title   string `json:"title"`
-	Content string `json:"content"`
+	ID           int       `json:"id"`
+	Title        string    `json:"title"`
+	Content      string    `json:"content"`
+	Link         string    `json:"link"`
+	Summary      string    `json:"summary"`
+	Source       string    `json:"source"`
+	IsOnHomepage bool      `json:"is_on_homepage"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
 }

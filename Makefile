@@ -40,9 +40,9 @@ dev:
 dev_data:
 	@echo "Setting up development data..."
 	@echo "Example command to set up development data with custom values:"
-	@echo "make dev_data HUGGING_FACE_API_KEY=your_api_key_here SCRAPER_MYSQL_DSN=mysql_dsn_here"
+	@echo "make dev_data HUGGING_FACE_API_KEY=your_api_key_here MYSQL_DSN=mysql_dsn_here"
 	@HUGGING_FACE_API_KEY=$(HUGGING_FACE_API_KEY) \
-	SCRAPER_MYSQL_DSN="$(SCRAPER_MYSQL_DSN)" \
+	MYSQL_DSN="$(MYSQL_DSN)" \
 	cd backend && make scrape
 	@echo "Data scraping complete."
 	@echo "Hugging Face API key has been set."
