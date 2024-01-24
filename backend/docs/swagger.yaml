@@ -47,6 +47,11 @@ paths:
         in: query
         name: is_on_homepage
         type: boolean
+      - default: 100
+        description: Maximum number of articles to return
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
@@ -56,6 +61,15 @@ paths:
             items:
               $ref: '#/definitions/models.ArticleResponse'
             type: array
+        "400":
+          description: Invalid Query Parameter
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
         "500":
           description: Internal Server Error
           schema:

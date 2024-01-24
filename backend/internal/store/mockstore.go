@@ -4,10 +4,11 @@ import "github.com/k-zehnder/gophersignal/backend/internal/models"
 
 // MockStore satisfies the Store interface.
 type MockStore struct {
-	Articles     []*models.Article
-	SaveError    error
+	Articles         []*models.Article
+	SaveError        error
 	GetArticlesError error
-	IsOnHomepage bool
+	IsOnHomepage     bool
+	Limit            int
 }
 
 // NewMockStore creates and returns a new instance of MockStore.
@@ -27,10 +28,16 @@ func (ms *MockStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-func (ms *MockStore) GetArticles(IsOnHomepage bool) ([]*models.Article, error) {
+func (ms *MockStore) GetArticles(isOnHomepage bool, limit int) ([]*models.Article, error) {
 	if ms.GetArticlesError != nil {
 		return nil, ms.GetArticlesError
 	}
-	ms.IsOnHomepage = IsOnHomepage
+	ms.IsOnHomepage = isOnHomepage
+	ms.Limit = limit
+
+	if limit > 0 && len(ms.Articles) > limit {
+		return ms.Articles[:limit], nil
+	}
+
 	return ms.Articles, nil
 }

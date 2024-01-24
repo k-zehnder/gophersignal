@@ -29,6 +29,13 @@
                         "description": "Filter by is_on_homepage",
                         "name": "is_on_homepage",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Maximum number of articles to return",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -39,6 +46,24 @@
                             "items": {
                                 "$ref": "#/definitions/models.ArticleResponse"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid Query Parameter",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/models.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "500": {
