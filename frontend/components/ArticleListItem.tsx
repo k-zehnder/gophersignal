@@ -9,10 +9,11 @@ interface ArticleListItemProps {
 }
 
 const ArticleListItem: React.FC<ArticleListItemProps> = ({ article }) => {
+  console.log(article)
   return (
     <ListItem sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
       <Typography sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
-        {article.createdAt} ⋅ {article.source}
+        {article.updatedAt} ⋅ {article.source}
       </Typography>
       <Typography level="h3" component="h3" sx={{ mb: '0.5rem', fontWeight: 'medium', fontSize: '1.5rem' }}>
         <Link legacyBehavior href={article.link} passHref>

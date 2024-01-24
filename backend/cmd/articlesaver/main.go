@@ -9,20 +9,20 @@ import (
 )
 
 func main() {
-	dsn := config.GetEnv("SCRAPER_MYSQL_DSN", "") 
+	dsn := config.GetEnv("MYSQL_DSN", "") 
 	if dsn == "" {
-		log.Fatal("SCRAPER_MYSQL_DSN not set in .env file")
+		log.Fatal("MYSQL_DSN not set in .env file")
 	}
 
-	dbStore, err := store.NewMySQLStore(dsn)
+	sqlstore, err := store.NewMySQLStore(dsn)
 	if err != nil {
 		log.Fatal("Error initializing DBStore:", err)
 	}
 
-	SaveArticles(dbStore)
+	SaveArticles(sqlstore)
 }
 
-func SaveArticles(dbStore *store.MySQLStore) {
+func SaveArticles(sqlstore *store.MySQLStore) {
 	hns := scraper.HackerNewsScraper{}
 	articles, err := hns.Scrape()
 	if err != nil {
@@ -30,7 +30,7 @@ func SaveArticles(dbStore *store.MySQLStore) {
 		return
 	}
 
-	if err := dbStore.SaveArticles(articles); err != nil {
+	if err := sqlstore.SaveArticles(articles); err != nil {
 		log.Printf("Error saving articles: %v\n", err)
 		return
 	}
