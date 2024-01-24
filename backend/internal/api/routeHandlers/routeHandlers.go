@@ -30,7 +30,7 @@ func NewHandler(store store.Store) *Handler {
 // @Router /articles [get]
 func (h *Handler) GetArticles(w http.ResponseWriter, r *http.Request) {
 	isOnHomepageBool := true
-	limit := 30 // Changed default limit to 30
+	limit := 30
 
 	isOnHomepageParam, ok := r.URL.Query()["is_on_homepage"]
 	if ok && len(isOnHomepageParam[0]) > 0 {
