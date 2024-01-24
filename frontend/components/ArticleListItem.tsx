@@ -9,6 +9,7 @@ interface ArticleListItemProps {
 }
 
 const ArticleListItem: React.FC<ArticleListItemProps> = ({ article }) => {
+  console.log(article)
   return (
     <ListItem sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
       <Typography sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}>
