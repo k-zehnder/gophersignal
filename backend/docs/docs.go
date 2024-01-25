@@ -99,30 +99,39 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "content": {
+                    "description": "Full content of the article (default: \"\")",
                     "type": "string"
                 },
                 "created_at": {
+                    "description": "Timestamp of when the article was created (default: current time)",
                     "type": "string"
                 },
                 "id": {
+                    "description": "Unique identifier of the article (default: 0)",
                     "type": "integer"
                 },
                 "is_on_homepage": {
+                    "description": "Flag indicating if the article is displayed on the homepage (default: false)",
                     "type": "boolean"
                 },
                 "link": {
+                    "description": "External link to the article (default: \"\")",
                     "type": "string"
                 },
                 "source": {
+                    "description": "Source from where the article was obtained (default: \"\")",
                     "type": "string"
                 },
                 "summary": {
+                    "description": "Brief summary of the article (default: \"\")",
                     "type": "string"
                 },
                 "title": {
+                    "description": "Title of the article (default: \"\")",
                     "type": "string"
                 },
                 "updated_at": {
+                    "description": "Timestamp of the last update to the article (default: current time)",
                     "type": "string"
                 }
             }
@@ -131,10 +140,14 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "code": {
+                    "description": "The HTTP status code of the response (default: 200)",
                     "type": "integer"
                 },
-                "data": {},
+                "data": {
+                    "description": "The data payload of the response"
+                },
                 "status": {
+                    "description": "The status message accompanying the code (default: \"success\")",
                     "type": "string"
                 }
             }
