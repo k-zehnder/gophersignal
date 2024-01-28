@@ -1,15 +1,19 @@
+// Import necessary dependencies.
 import * as React from "react";
 import Document, { Html, Head, Main, NextScript } from "next/document";
 import createEmotionServer from "@emotion/server/create-instance";
 import createEmotionCache from "../lib/createEmotionCache";
 import { getInitColorSchemeScript } from "@mui/joy/styles";
 
+// Define the MyDocument class which extends the Document class.
 export default class MyDocument extends Document {
   render() {
     return (
       <Html lang="en">
         <Head>
+          {/* Add a shortcut icon for the website. */}
           <link rel="shortcut icon" href="/favicon.ico" />
+
           {/* Google Analytics Script */}
           <script async src="https://www.googletagmanager.com/gtag/js?id=G-H03QDKFRJ0"></script>
           <script
@@ -22,11 +26,18 @@ export default class MyDocument extends Document {
               `,
             }}
           />
+
+          {/* Inject Emotion styles */}
           {(this.props as any).emotionStyleTags}
         </Head>
         <body>
+          {/* Initialize the color scheme script with defaultMode as "system". */}
           {getInitColorSchemeScript({ defaultMode: "system" })}
+
+          {/* Render the main content of the application. */}
           <Main />
+
+          {/* Render Next.js scripts. */}
           <NextScript />
         </body>
       </Html>
@@ -34,6 +45,7 @@ export default class MyDocument extends Document {
   }
 }
 
+// Define getInitialProps function for server-side rendering.
 MyDocument.getInitialProps = async (ctx) => {
   const originalRenderPage = ctx.renderPage;
   const cache = createEmotionCache();
