@@ -24,7 +24,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build, Test, and Push images
-        run: make all_push
+        run: make push_all
 
       - name: Upload Go coverage report
         uses: actions/upload-artifact@v3
