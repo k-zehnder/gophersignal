@@ -1,6 +1,6 @@
 .PHONY: build_backend
 build_backend:
-	docker build -t $(BACKEND_TAG) .
+	docker build -t $(BACKEND_IMAGE_TAG) .
 
 .PHONY: run_backend
 run_backend:
