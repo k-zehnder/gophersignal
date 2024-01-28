@@ -67,7 +67,7 @@ summarize_huggingface:
 .PHONY: build_frontend
 build_frontend:
 	@echo "Building frontend..."
-	cd frontend && make build
+	cd frontend && make build_frontend
 	@echo "Frontend build complete."
 
 .PHONY: start_frontend
@@ -98,7 +98,7 @@ deploy_frontend:
 .PHONY: build_backend
 build_backend:
 	@echo "Building backend..."
-	cd backend && make build
+	cd backend && make build_backend
 	@echo "Backend build complete."
 
 .PHONY: start_backend
