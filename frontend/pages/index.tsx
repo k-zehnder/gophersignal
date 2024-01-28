@@ -4,10 +4,13 @@ import Description from '../components/Description';
 import ArticleList from '../components/ArticleList';
 import Typography from '@mui/joy/Typography';
 
+// Define the Index component.
 function Index() {
   return (
     <Layout>
+      {/* Render the Description component. */}
       <Description />
+      {/* Display the heading "Latest Articles". */}
       <Typography
         level="h2"
         component="h2"
@@ -15,6 +18,7 @@ function Index() {
       >
         Latest Articles
       </Typography>
+      {/* Render the ArticleList component. */}
       <ArticleList />
     </Layout>
   );

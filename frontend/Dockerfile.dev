@@ -7,10 +7,6 @@ WORKDIR /app
 # Copy package.json and package-lock.json (or yarn.lock)
 COPY package*.json ./
 
-# Clearing npm cache to resolve potential conflicts and ensure fresh package installation.
-# This step can be uncommented if encountering specific dependency-related issues.
-# RUN npm cache clean --force
-
 # Install dependencies
 RUN npm install
 
