@@ -128,7 +128,7 @@ deploy_backend:
 .PHONY: test_backend
 test_backend:
 	@echo "Running backend tests..."
-	cd backend && make test
+	cd backend && make test_backend
 	@echo "Backend tests completed."
 
 .PHONY: test_coverage
