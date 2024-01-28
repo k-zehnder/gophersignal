@@ -28,22 +28,6 @@ const docTemplate = `{
                     "Articles"
                 ],
                 "summary": "Get articles",
-                "parameters": [
-                    {
-                        "type": "boolean",
-                        "default": true,
-                        "description": "Filter by is_on_homepage",
-                        "name": "is_on_homepage",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 100,
-                        "description": "Maximum number of articles to return",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -55,39 +39,15 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Invalid Query Parameter",
+                        "description": "Bad Request",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/models.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/models.Response"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/models.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "string"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/models.Response"
                         }
                     }
                 }
@@ -99,39 +59,35 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "content": {
-                    "description": "Full content of the article (default: \"\")",
+                    "description": "Full content of the article (default: \"\"), example: \"Sample content...\"",
                     "type": "string"
                 },
                 "created_at": {
-                    "description": "Timestamp of when the article was created (default: current time)",
+                    "description": "Timestamp of when the article was created (default: current time), example: \"2022-01-01T12:00:00Z\"",
                     "type": "string"
                 },
                 "id": {
-                    "description": "Unique identifier of the article (default: 0)",
+                    "description": "Unique identifier of the article (default: 0), example: 1",
                     "type": "integer"
                 },
-                "is_on_homepage": {
-                    "description": "Flag indicating if the article is displayed on the homepage (default: false)",
-                    "type": "boolean"
-                },
                 "link": {
-                    "description": "External link to the article (default: \"\")",
+                    "description": "External link to the article (default: \"\"), example: \"https://example.com\"",
                     "type": "string"
                 },
                 "source": {
-                    "description": "Source from where the article was obtained (default: \"\")",
+                    "description": "Source from where the article was obtained (default: \"\"), example: \"Sample Source\"",
                     "type": "string"
                 },
                 "summary": {
-                    "description": "Brief summary of the article (default: \"\")",
+                    "description": "Brief summary of the article (default: \"\"), example: \"This is a sample summary.\"",
                     "type": "string"
                 },
                 "title": {
-                    "description": "Title of the article (default: \"\")",
+                    "description": "Title of the article (default: \"\"), example: \"Sample Title\"",
                     "type": "string"
                 },
                 "updated_at": {
-                    "description": "Timestamp of the last update to the article (default: current time)",
+                    "description": "Timestamp of the last update to the article (default: current time), example: \"2022-01-01T12:30:00Z\"",
                     "type": "string"
                 }
             }
@@ -162,7 +118,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "GopherSignal API",
-	Description:      "This is the GopherSignal API server.",
+	Description:      "API server for the GopherSignal application.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

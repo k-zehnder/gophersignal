@@ -1,25 +1,29 @@
+// Package store provides an interface and implementations for article storage and retrieval.
+// It includes a MockStore type, which serves as a testing double for the Store interface.
 package store
 
 import "github.com/k-zehnder/gophersignal/backend/internal/models"
 
-// MockStore satisfies the Store interface.
+// MockStore serves as a testing double for the Store interface.
+// It enables the specification of responses and errors for controlled testing scenarios.
 type MockStore struct {
-	Articles         []*models.Article
-	SaveError        error
-	GetArticlesError error
-	IsOnHomepage     bool
-	Limit            int
+	Articles    []*models.Article
+	SaveError   error
+	GetAllError error
 }
 
-// NewMockStore creates and returns a new instance of MockStore.
-func NewMockStore(articles []*models.Article, saveError error, getArticlesError error) *MockStore {
+// NewMockStore initializes a MockStore with predefined articles and potential errors.
+// It's designed for setting up tests with controlled data and error handling.
+func NewMockStore(articles []*models.Article, saveError error, getAllError error) *MockStore {
 	return &MockStore{
-		Articles:         articles,
-		SaveError:        saveError,
-		GetArticlesError: getArticlesError,
+		Articles:    articles,
+		SaveError:   saveError,
+		GetAllError: getAllError,
 	}
 }
 
+// SaveArticles simulates storing articles, returning a predefined error if set.
+// On success, it updates the internal slice of articles.
 func (ms *MockStore) SaveArticles(articles []*models.Article) error {
 	if ms.SaveError != nil {
 		return ms.SaveError
@@ -28,16 +32,11 @@ func (ms *MockStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-func (ms *MockStore) GetArticles(isOnHomepage bool, limit int) ([]*models.Article, error) {
-	if ms.GetArticlesError != nil {
-		return nil, ms.GetArticlesError
+// GetArticles simulates fetching articles, returning a predefined error if set.
+// On success, it returns a slice of pointers to the internal articles.
+func (ms *MockStore) GetArticles() ([]*models.Article, error) {
+	if ms.GetAllError != nil {
+		return nil, ms.GetAllError
 	}
-	ms.IsOnHomepage = isOnHomepage
-	ms.Limit = limit
-
-	if limit > 0 && len(ms.Articles) > limit {
-		return ms.Articles[:limit], nil
-	}
-
 	return ms.Articles, nil
 }

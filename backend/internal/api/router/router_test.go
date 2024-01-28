@@ -1,3 +1,4 @@
+// Package router provides unit tests for the router configuration and route handling.
 package router
 
 import (
@@ -6,40 +7,43 @@ import (
 	"testing"
 
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
-
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
+// TestRouter_ArticlesRoute tests the articles route in the router.
 func TestRouter_ArticlesRoute(t *testing.T) {
-	// Create a MockStore with some sample data.
+	// Set up a mock store with no articles to simulate database interaction.
 	mockStore := store.NewMockStore([]*models.Article{}, nil, nil)
 
-	// Initialize the Handler with the MockStore.
+	// Initialize the Handler with the mock store.
 	handler := &routeHandlers.Handler{
 		Store: mockStore,
 	}
 
-	// Setup router with the handler.
+	// Set up the router with the initialized handler.
 	router := SetupRouter(handler)
 
-	// Simulate a GET request with the "is_on_homepage" query parameter.
-	req := httptest.NewRequest("GET", "/api/v1/articles?is_on_homepage=true", nil)
+	// Create a new HTTP request to test the articles route.
+	// This request simulates a GET request to the articles route.
+	req := httptest.NewRequest("GET", "/api/v1/articles", nil)
 	rr := httptest.NewRecorder()
 
-	// Serve the request.
+	// Serve the request using the router and record the response.
 	router.ServeHTTP(rr, req)
 
-	// Assert the response status code.
+	// Check if the response status code is as expected (200 OK).
 	if status := rr.Code; status != http.StatusOK {
-		t.Errorf("Expected status code %v, got %v", http.StatusOK, status)
+		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
 
-	// Validate existence of the route.
+	// Validate that the 'GetArticles' route exists in the router.
+	// This ensures that the route is correctly registered and can be retrieved.
 	route := router.GetRoute("GetArticles")
 	if route == nil {
 		t.Error("Expected GetArticles route to exist")
 	} else {
-		t.Logf("Route: %v", route.GetName())
+		// Log the route name for verification.
+		t.Logf("Route found: %v", route.GetName())
 	}
 }

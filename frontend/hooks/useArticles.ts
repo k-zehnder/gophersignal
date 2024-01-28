@@ -1,26 +1,33 @@
 import { useState, useEffect } from 'react';
-import { ApiArticle, Article } from '../types';
+import { Article } from '../types'; 
 import { processSummary, formatDate } from '../lib/stringUtils';
 
+// Custom React hook to fetch and manage a list of articles
 const useArticles = () => {
+  // State to store the list of articles
   const [articles, setArticles] = useState<Article[]>([]);
 
+  // Use effect to fetch articles when the component mounts
   useEffect(() => {
+    // Determine the API URL for fetching articles
     const apiUrl =
       process.env.NEXT_PUBLIC_ENV === 'development'
-        ? 'http://localhost:8080/api/v1/articles?is_on_homepage=true'
-        : 'https://gophersignal.com/api/v1/articles?is_on_homepage=true';
+        ? 'http://localhost:8080/api/v1/articles'
+        : 'https://gophersignal.com/api/v1/articles';
 
+    // Function to fetch articles from the backend
     const fetchArticles = async () => {
       try {
+        // Fetch articles from the backend
         const response = await fetch(apiUrl);
+        
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        const json = await response.json();
-        const apiArticles = json.data as ApiArticle[]; 
-
-        const articlesData: Article[] = apiArticles.map((item) => ({
+        
+        // Parse backend response into articles data
+        const apiArticles = await response.json();
+        const articlesData: Article[] = apiArticles.map((item: any) => ({
           id: item.id,
           title: item.title,
           source: item.source,
@@ -28,18 +35,21 @@ const useArticles = () => {
           updatedAt: formatDate(item.updated_at),
           summary: processSummary(item.summary),
           link: item.link,
-          isOnHomepage: item.is_on_homepage,
         }));
 
+        // Update the state with the fetched articles
         setArticles(articlesData);
       } catch (error) {
+        // Handle any errors that occur during fetching
         console.error('Error fetching articles:', error);
       }
     };
 
+    // Call the fetchArticles function
     fetchArticles();
   }, []);
 
+  // Return the list of articles
   return articles;
 };
 

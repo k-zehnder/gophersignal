@@ -142,3 +142,6 @@ nginx-dev.conf/
 mysql_setup.log
 ssl
 nginx
+insert.sql
+tmp.txt
+.goph.env

@@ -1,67 +1,59 @@
+// Package routeHandlers provides HTTP handler functions for the routes of the GopherSignal application.
+// It defines a Handler struct that holds a reference to the store for database interactions.
 package routeHandlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
+// Handler struct holds a reference to the store to interact with the database.
 type Handler struct {
 	Store store.Store
 }
 
+// NewHandler initializes a new Handler with the given store.
 func NewHandler(store store.Store) *Handler {
 	return &Handler{Store: store}
 }
 
+// GetArticles handles the HTTP request to retrieve articles. It fetches articles from the store and sends a JSON response.
 // @Summary Get articles
 // @Description Retrieve a list of articles from the database.
 // @Tags Articles
 // @Accept json
 // @Produce json
-// @Param is_on_homepage query boolean false "Filter by is_on_homepage" default(true)
-// @Param limit query int false "Maximum number of articles to return" default(100)
 // @Success 200 {array} models.ArticleResponse
-// @Failure 400 {object} models.Response{data=string} "Invalid Query Parameter"
-// @Failure 500 {object} models.Response{data=string} "Internal Server Error"
+// @Failure 400 {object} models.Response
+// @Failure 500 {object} models.Response
 // @Router /articles [get]
 func (h *Handler) GetArticles(w http.ResponseWriter, r *http.Request) {
-	isOnHomepageBool := true
-	limit := 30
-
-	isOnHomepageParam, ok := r.URL.Query()["is_on_homepage"]
-	if ok && len(isOnHomepageParam[0]) > 0 {
-		var err error
-		isOnHomepageBool, err = strconv.ParseBool(isOnHomepageParam[0])
-		if err != nil {
-			h.jsonResponse(w, models.Response{Code: http.StatusBadRequest, Status: "error", Data: "Invalid is_on_homepage parameter"}, http.StatusBadRequest)
-			return
-		}
-	}
-
-	limitParam, ok := r.URL.Query()["limit"]
-	if ok && len(limitParam[0]) > 0 {
-		var err error
-		limit, err = strconv.Atoi(limitParam[0])
-		if err != nil || limit <= 0 || limit > 100 {
-			limit = 100 // Enforce a maximum limit of 100
-		}
-	}
-
-	articles, err := h.Store.GetArticles(isOnHomepageBool, limit)
+	articles, err := h.Store.GetArticles()
 	if err != nil {
-		h.jsonResponse(w, models.Response{Code: http.StatusInternalServerError, Status: "error", Data: "Failed to retrieve articles from the store"}, http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	h.jsonResponse(w, models.Response{Code: http.StatusOK, Status: "success", Data: articles}, http.StatusOK)
+	// Set cache-related headers for the response with a 30-minute cache duration
+	setCacheHeaders(w, 1800)
+
+	// Return articles as JSON response
+	h.jsonResponse(w, articles, http.StatusOK)
 }
 
+// jsonResponse sends a JSON response with the given data and HTTP status code.
 func (h *Handler) jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(data)
+}
+
+// setCacheHeaders sets cache-related headers in the HTTP response with the specified max age in seconds.
+func setCacheHeaders(w http.ResponseWriter, maxAgeSeconds int) {
+	// Set Cache-Control header to enable caching for the specified duration
+	cacheControl := fmt.Sprintf("public, max-age=%d", maxAgeSeconds)
+	w.Header().Set("Cache-Control", cacheControl)
 }

@@ -1,6 +1,6 @@
 .PHONY: build_frontend
 build_frontend:
-	docker build -t $(FRONTEND_TAG) .
+	docker build -t $(FRONTEND_IMAGE_TAG) .
 
 .PHONY: run_frontend
 run_frontend:
