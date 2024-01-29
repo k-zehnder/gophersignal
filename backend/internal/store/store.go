@@ -5,6 +5,7 @@ package store
 import (
 	"database/sql"
 	"fmt"
+	"unicode/utf8"
 
 	// Import the MySQL driver with a blank identifier to ensure its `init()` function is executed.
 	_ "github.com/go-sql-driver/mysql"
@@ -61,6 +62,12 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 
 	// Execute the statement for each article.
 	for _, article := range articles {
+		// Skip articles with invalid UTF-8 content
+		if !utf8.ValidString(article.Content) {
+			fmt.Printf("Skipping article '%s' due to invalid UTF-8 content\n", article.Title)
+			continue
+		}
+
 		_, err := stmt.Exec(article.Title, article.Link, article.Content, article.Summary, article.Source, article.CreatedAt, article.UpdatedAt)
 		if err != nil {
 			tx.Rollback()
@@ -72,10 +79,10 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return tx.Commit()
 }
 
-// GetArticles retrieves the latest 30 articles, sorted by their update timestamp.
+// GetArticles retrieves the latest 30 articles, sorted by their unique identifier (id) in ascending order.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
-	// Query to fetch articles.
-	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles ORDER BY updated_at DESC LIMIT 30;"
+	// Query to fetch articles sorted by id in ascending order.
+	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles ORDER BY id LIMIT 30;"
 
 	rows, err := store.db.Query(query)
 	if err != nil {
@@ -98,5 +105,6 @@ func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 
+	// Return a slice of Article pointers.
 	return articles, nil
 }
