@@ -43,7 +43,7 @@ func main() {
 
 	// Open database connection.
 	db := openDatabaseConnection(appConfig.DataSourceName)
-	defer db.Close() // Ensure the response body is closed after processing.
+	defer db.Close() // Close the database connection after processing.
 
 	// Process articles for summarization.
 	processArticles(db, appConfig.HuggingFaceAPIKey)
@@ -65,29 +65,35 @@ func processArticles(db *sql.DB, apiKey string) {
 	if err != nil {
 		log.Fatal("Error querying database:", err)
 	}
-	defer rows.Close()
+	defer rows.Close() // Close the rows when done processing.
 
+	// Iterate through the articles.
 	for rows.Next() {
+		// Declare variables for article ID and content.
 		var id int
 		var content string
 		if err := rows.Scan(&id, &content); err != nil {
 			log.Fatal("Error scanning database rows:", err)
 		}
 
+		// Check if content is empty, and if so, skip processing.
 		if content == "" {
 			log.Printf("Skipping Article ID %d: content is empty", id)
 			continue
 		}
 
+		// Summarize the article content.
 		summary, err := summarizeContent(apiKey, content)
 		if err != nil {
 			log.Printf("Error summarizing Article ID %d: %v", id, err)
 			continue
 		}
 
+		// Update the article summary in the database.
 		updateArticleSummary(db, id, summary)
 	}
 
+	// Check if there was an error during iteration over database rows.
 	if err := rows.Err(); err != nil {
 		log.Fatal("Error iterating over database rows:", err)
 	}
