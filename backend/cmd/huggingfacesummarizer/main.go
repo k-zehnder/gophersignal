@@ -65,11 +65,13 @@ func processArticles(db *sql.DB, apiKey string) {
 	if err != nil {
 		log.Fatal("Error querying database:", err)
 	}
-	defer rows.Close()
+	defer rows.Close() // Ensure the response body is closed after processing.
 
+	// Iterate through the retrieved articles.
 	for rows.Next() {
 		var id int
 		var content string
+		// Scan the database row into id and content variables.
 		if err := rows.Scan(&id, &content); err != nil {
 			log.Fatal("Error scanning database rows:", err)
 		}
@@ -79,15 +81,18 @@ func processArticles(db *sql.DB, apiKey string) {
 			continue
 		}
 
+		// Summarize the content.
 		summary, err := summarizeContent(apiKey, content)
 		if err != nil {
 			log.Printf("Error summarizing Article ID %d: %v", id, err)
 			continue
 		}
 
+		// Update the article's summary in the database.
 		updateArticleSummary(db, id, summary)
 	}
 
+	// Check if there was an error during iteration over database rows.
 	if err := rows.Err(); err != nil {
 		log.Fatal("Error iterating over database rows:", err)
 	}
@@ -158,7 +163,7 @@ func parseSummaryResponse(body []byte) (string, error) {
 	}
 
 	if len(apiResps) > 0 && apiResps[0].SummaryText != "" {
-		// Assuming the first item in the array is the desired summary.
+		// The irst item in the array is the desired summary.
 		return apiResps[0].SummaryText, nil
 	}
 	return "", nil

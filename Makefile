@@ -40,7 +40,7 @@ dev:
 .PHONY: setup_dev
 setup_dev:
 	@echo "Setting up development data..."
-	@echo "Use 'make setup_dev_data HUGGING_FACE_API_KEY=<key> MYSQL_DSN=<dsn>' to customize."
+	@echo "Use 'make setup_dev HUGGING_FACE_API_KEY=<key> MYSQL_DSN=<dsn>' to customize."
 	HUGGING_FACE_API_KEY=$(HUGGING_FACE_API_KEY) MYSQL_DSN="$(MYSQL_DSN)" cd backend && make scrape
 	@echo "Data scraping and setup complete."
 
