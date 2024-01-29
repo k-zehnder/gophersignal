@@ -60,13 +60,17 @@ func openDatabaseConnection(dsn string) *sql.DB {
 
 // processArticles processes each article for summarization.
 func processArticles(db *sql.DB, apiKey string) {
+	// SQL query to fetch articles with missing or empty summaries.
 	query := "SELECT id, content FROM articles WHERE (summary IS NULL OR summary = '');"
+
+	// Execute the SQL query to retrieve articles.
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Fatal("Error querying database:", err)
 	}
 	defer rows.Close()
 
+	// Iterate through the retrieved articles.
 	for rows.Next() {
 		var id int
 		var content string
@@ -74,22 +78,21 @@ func processArticles(db *sql.DB, apiKey string) {
 			log.Fatal("Error scanning database rows:", err)
 		}
 
+		// Skip articles with empty content.
 		if content == "" {
 			log.Printf("Skipping Article ID %d: content is empty", id)
 			continue
 		}
 
+		// Summarize the content of the article using the Hugging Face API.
 		summary, err := summarizeContent(apiKey, content)
 		if err != nil {
 			log.Printf("Error summarizing Article ID %d: %v", id, err)
 			continue
 		}
 
+		// Update the database with the generated summary.
 		updateArticleSummary(db, id, summary)
-	}
-
-	if err := rows.Err(); err != nil {
-		log.Fatal("Error iterating over database rows:", err)
 	}
 }
 

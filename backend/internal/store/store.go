@@ -72,10 +72,10 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return tx.Commit()
 }
 
-// GetArticles retrieves the latest 30 articles, sorted by their update timestamp.
+// GetArticles retrieves the latest 30 articles, sorted by their unique identifier (id).
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 	// Query to fetch articles.
-	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles ORDER BY updated_at DESC LIMIT 30;"
+	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles ORDER BY id DESC LIMIT 30;"
 
 	rows, err := store.db.Query(query)
 	if err != nil {
@@ -98,5 +98,6 @@ func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 
+	// Return a slice of Article pointers
 	return articles, nil
 }
