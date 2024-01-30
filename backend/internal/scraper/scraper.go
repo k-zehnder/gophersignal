@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gocolly/colly/v2"
@@ -18,12 +19,13 @@ import (
 	"golang.org/x/text/transform"
 )
 
+// maxContentLength defines the maximum length of content that can be fetched from an article.
 const maxContentLength = 10000
 
 // HackerNewsScraper is a struct for scraping articles from Hacker News.
 type HackerNewsScraper struct{}
 
-// Scrape performs the scraping of articles from Hacker News. It returns a slice of articles or an error.
+// Scrape performs the scraping of articles from Hacker News. It returns a slice of article pointers or an error.
 func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 	var articles []*models.Article
 
@@ -81,6 +83,13 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 		return nil, err
 	}
 
+	// Reverse the order of articles before returning.
+	// This is done to ensure that newer articles have higher ID values,
+	// while older articles have lower ID values. Consequently, when querying
+	// in descending order by ID (ORDER BY id DESC), the most recent articles
+	// will be returned first.
+	reverseArticles(articles)
+
 	// Wait for scraping to be completed.
 	c.Wait()
 	return articles, nil
@@ -122,6 +131,12 @@ func fetchArticleContent(url string) (string, error) {
 		return "", nil
 	}
 
+	// Check if the converted content is valid UTF-8.
+	if !utf8.ValidString(utf8Body) {
+		fmt.Printf("Invalid UTF-8 content for %s\n", url)
+		return "", nil
+	}
+
 	// Parse the HTML content using goquery.
 	doc, err := goquery.NewDocumentFromReader(strings.NewReader(utf8Body))
 	if err != nil {
@@ -153,13 +168,27 @@ func detectAndConvertToUTF8(content []byte) (string, error) {
 
 // removeExtraWhitespace removes extra whitespace from a text.
 func removeExtraWhitespace(text string) string {
+	// Split text into lines
 	lines := strings.Split(text, "\n")
 	var cleanedLines []string
+
+	// Remove extra whitespace from each line
 	for _, line := range lines {
 		trimmedLine := strings.TrimSpace(line)
 		if trimmedLine != "" {
 			cleanedLines = append(cleanedLines, trimmedLine)
 		}
 	}
+
+	// Join the cleaned lines and return the result
 	return strings.Join(cleanedLines, "\n")
+}
+
+// reverseArticles reverses the order of articles in a slice.
+func reverseArticles(articles []*models.Article) {
+	// Iterate through half of the slice and swap elements to reverse the order
+	for i := 0; i < len(articles)/2; i++ {
+		j := len(articles) - i - 1
+		articles[i], articles[j] = articles[j], articles[i]
+	}
 }

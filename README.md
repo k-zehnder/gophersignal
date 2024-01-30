@@ -15,7 +15,7 @@
 
 3. **Launch Services with Docker:**
    ```
-   make dev
+   make dev_env
    ```
 
 Your development environment should now be running.
