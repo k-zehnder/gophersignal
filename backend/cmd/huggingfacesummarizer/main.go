@@ -43,7 +43,7 @@ func main() {
 
 	// Open database connection.
 	db := openDatabaseConnection(appConfig.DataSourceName)
-	defer db.Close() // Ensure the response body is closed after processing.
+	defer db.Close() // Ensure the database connection is closed after processing.
 
 	// Process articles for summarization.
 	processArticles(db, appConfig.HuggingFaceAPIKey)
@@ -60,34 +60,44 @@ func openDatabaseConnection(dsn string) *sql.DB {
 
 // processArticles processes each article for summarization.
 func processArticles(db *sql.DB, apiKey string) {
+	// Query to select articles that have not been summarized yet.
 	query := "SELECT id, content FROM articles WHERE (summary IS NULL OR summary = '');"
+
+	// Executing the SQL query to retrieve articles.
 	rows, err := db.Query(query)
 	if err != nil {
 		log.Fatal("Error querying database:", err)
 	}
 	defer rows.Close()
 
+	// Iterating over each row in the query result.
 	for rows.Next() {
 		var id int
 		var content string
+
+		// Scanning the row into the id and content variables.
 		if err := rows.Scan(&id, &content); err != nil {
 			log.Fatal("Error scanning database rows:", err)
 		}
 
+		// Skipping articles with empty content.
 		if content == "" {
 			log.Printf("Skipping Article ID %d: content is empty", id)
 			continue
 		}
 
+		// Generating a summary for the article content.
 		summary, err := summarizeContent(apiKey, content)
 		if err != nil {
 			log.Printf("Error summarizing Article ID %d: %v", id, err)
 			continue
 		}
 
+		// Updating the article with the generated summary.
 		updateArticleSummary(db, id, summary)
 	}
 
+	// Handling any errors that occur during row iteration.
 	if err := rows.Err(); err != nil {
 		log.Fatal("Error iterating over database rows:", err)
 	}
@@ -135,13 +145,13 @@ func summarizeContent(apiKey, content string) (string, error) {
 // sendRequestWithRetries attempts to send an HTTP request with retries.
 func sendRequestWithRetries(client *http.Client, req *http.Request) (*http.Response, error) {
 	const maxRetries = 3
-	const retryWaitTime = 5 * time.Second // Wait time between retries.
+	const retryWaitTime = 5 * time.Second
 
 	// Attempt to send the request up to the maximum number of retries.
 	for retryCount := 0; retryCount < maxRetries; retryCount++ {
 		resp, err := client.Do(req)
 		if err == nil {
-			return resp, nil // Return the response if request is successful.
+			return resp, nil
 		}
 
 		// Wait for a specified time before retrying the request.
@@ -158,7 +168,7 @@ func parseSummaryResponse(body []byte) (string, error) {
 	}
 
 	if len(apiResps) > 0 && apiResps[0].SummaryText != "" {
-		// Assuming the first item in the array is the desired summary.
+		// The first item in the array is the desired summary.
 		return apiResps[0].SummaryText, nil
 	}
 	return "", nil
@@ -167,7 +177,6 @@ func parseSummaryResponse(body []byte) (string, error) {
 // updateArticleSummary updates the database with the provided summary for the given article ID.
 func updateArticleSummary(db *sql.DB, id int, summary string) {
 	if summary == "" {
-		// Output a message if no summary is available for the article.
 		fmt.Printf("No summary available for Article ID %d\n", id)
 		return
 	}

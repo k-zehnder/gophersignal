@@ -37,10 +37,10 @@ func (h *Handler) GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set cache-related headers for the response with a 30-minute cache duration
-	setCacheHeaders(w, 1800)
+	// Set cache-related headers for the response with a 10-minute cache duration (i.e., 600 seconds).
+	h.setCacheHeaders(w, 600)
 
-	// Return articles as JSON response
+	// Return articles as a JSON response with an HTTP status code of OK.
 	h.jsonResponse(w, articles, http.StatusOK)
 }
 
@@ -52,7 +52,7 @@ func (h *Handler) jsonResponse(w http.ResponseWriter, data interface{}, statusCo
 }
 
 // setCacheHeaders sets cache-related headers in the HTTP response with the specified max age in seconds.
-func setCacheHeaders(w http.ResponseWriter, maxAgeSeconds int) {
+func (h *Handler) setCacheHeaders(w http.ResponseWriter, maxAgeSeconds int) {
 	// Set Cache-Control header to enable caching for the specified duration
 	cacheControl := fmt.Sprintf("public, max-age=%d", maxAgeSeconds)
 	w.Header().Set("Cache-Control", cacheControl)
