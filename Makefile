@@ -24,23 +24,24 @@ run_services:
 .PHONY: deploy
 deploy: 
 	@echo "Deploying frontend and backend..."
+	$(DOCKER_COMPOSE_CMD) down
 	docker pull $(FRONTEND_IMAGE_TAG)
 	docker pull $(BACKEND_IMAGE_TAG)
 	$(DOCKER_COMPOSE_CMD) up -d
 	@echo "Services deployed successfully."
 
 # Development Environment
-.PHONY: dev
-dev:
+.PHONY: dev_env
+dev_env:
 	@echo "Starting backend services..."
 	$(DOCKER_COMPOSE_CMD) -f docker-compose.dev.yml up -d --build
 	@echo "Frontend initializing at http://localhost:3000"
 	@echo "Development environment ready."
 
-.PHONY: setup_dev
-setup_dev:
+.PHONY: setup_dev_env
+setup_dev_env:
 	@echo "Setting up development data..."
-	@echo "Use 'make setup_dev_data HUGGING_FACE_API_KEY=<key> MYSQL_DSN=<dsn>' to customize."
+	@echo "Use 'make setup_dev_env HUGGING_FACE_API_KEY=<key> MYSQL_DSN=<dsn>' to customize."
 	HUGGING_FACE_API_KEY=$(HUGGING_FACE_API_KEY) MYSQL_DSN="$(MYSQL_DSN)" cd backend && make scrape
 	@echo "Data scraping and setup complete."
 
