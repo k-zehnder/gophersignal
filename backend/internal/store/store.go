@@ -41,47 +41,38 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 
 // SaveArticles handles the addition or update of articles in the database.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
-	// Start a transaction.
-	tx, err := store.db.Begin()
-	if err != nil {
-		return fmt.Errorf("failed to start transaction: %w", err)
-	}
-
 	// Prepare SQL statement for article insertion or update.
-	stmt, err := tx.Prepare(`
+	stmt, err := store.db.Prepare(`
         INSERT INTO articles (title, link, content, summary, source, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE title=VALUES(title), link=VALUES(link), content=VALUES(content),
-        summary=VALUES(summary), source=VALUES(source), updated_at=VALUES(updated_at);`)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+	`)
 	if err != nil {
-		tx.Rollback()
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
-	defer stmt.Close()
+	defer stmt.Close() // Ensure resource release after query execution.
 
 	// Execute the statement for each article.
 	for _, article := range articles {
 		_, err := stmt.Exec(article.Title, article.Link, article.Content, article.Summary, article.Source, article.CreatedAt, article.UpdatedAt)
 		if err != nil {
-			tx.Rollback()
-			return fmt.Errorf("failed for article '%s': %w", article.Title, err)
+			fmt.Printf("Failed for article '%s': %v\n", article.Title, err)
+			// Continue with the next article in case of an error.
+			continue
 		}
 	}
-
-	// Commit the transaction after successful execution.
-	return tx.Commit()
+	return nil
 }
 
 // GetArticles retrieves the latest 30 articles, sorted by their update timestamp.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 	// Query to fetch articles.
-	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles ORDER BY updated_at DESC LIMIT 30;"
+	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles ORDER BY id DESC LIMIT 30;"
 
 	rows, err := store.db.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
-	defer rows.Close()
+	defer rows.Close() // Ensure resource release after query execution.
 
 	// Populate articles from query results.
 	var articles []*models.Article
@@ -98,5 +89,6 @@ func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 
+	// Return a slice of article pointers.
 	return articles, nil
 }
