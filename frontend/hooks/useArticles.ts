@@ -1,3 +1,9 @@
+/**
+ * useArticles: A custom React hook for fetching and managing a list of articles.
+ * This hook encapsulates the logic for asynchronously loading articles from a backend API,
+ * including error handling and state management. It leverages the useEffect hook to fetch
+ * data when the component mounts and useState to store the fetched articles.
+ */
 import { useState, useEffect } from 'react';
 import { Article } from '../types'; 
 import { processSummary, formatDate } from '../lib/stringUtils';

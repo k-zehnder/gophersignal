@@ -1,5 +1,7 @@
-// processSummary function processes a summary object and returns a string.
-// If the summary is valid and not empty, it returns the summary; otherwise, it returns a default message.
+/**
+ * processSummary function processes a summary object and returns a string.
+ * If the summary is valid and not empty, it returns the summary; otherwise, it returns a default message.
+*/
 export const processSummary = (
   summary: { String: string; Valid: boolean } | null,
 ): string => {

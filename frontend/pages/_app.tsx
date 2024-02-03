@@ -1,3 +1,8 @@
+/**
+ * MyApp Component: The root component for the Next.js application.
+ * It wraps around all other pages and components, providing global styles, theme configurations, 
+ * and an Emotion cache for CSS-in-JS styling.
+*/
 import * as React from "react";
 import Head from "next/head";
 import { AppProps } from "next/app";

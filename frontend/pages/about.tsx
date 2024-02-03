@@ -1,3 +1,7 @@
+/* 
+ * About Component: This component serves as the informational section of the application.
+ * It provides insights into the Gopher Signal application, introducing its purpose and functionalities.
+*/
 import Layout from "../components/Layout";
 import Typography from "@mui/joy/Typography";
 import Avatar from "@mui/joy/Avatar";
@@ -5,7 +9,6 @@ import Link from "@mui/joy/Link";
 
 import { siteMetaData } from "../lib/siteMetaData";
 
-// Define the About component.
 export default function About() {
   return (
     <Layout>

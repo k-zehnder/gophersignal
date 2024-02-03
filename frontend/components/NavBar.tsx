@@ -1,3 +1,9 @@
+/**
+ * NavBar: A component for rendering the navigation bar of the application.
+ * It includes links to various sections like Home, About, and API. The NavBar
+ * also contains the ModeButton component to toggle between light and dark modes.
+ * The API URL is dynamically determined based on the environment.
+ */
 import Link from "next/link";
 import List from "@mui/joy/List";
 import ListItem from "@mui/joy/ListItem";
@@ -27,7 +33,7 @@ const navLinks = [
   },
 ];
 
-// NavBar component for rendering the navigation bar.
+// NavBar: A component for rendering the navigation bar of the application.
 export default function NavBar() {
   return (
     <>
@@ -45,10 +51,9 @@ export default function NavBar() {
           }}
         >
           {navLinks.map(({ path, name }) => {
-            // Check if the path is an external URL or a local route.
             if (path.startsWith("http")) {
+              {/* Render an external link for URLs starting with "http" */}
               return (
-                // Render an external link for URLs starting with "http".
                 <ListItem key={path}>
                   <a href={path} target="_blank" rel="noopener noreferrer">
                     {name}
@@ -56,8 +61,8 @@ export default function NavBar() {
                 </ListItem>
               );
             } else {
+              {/* Render a link to a local route for other paths */}
               return (
-                // Render a link to a local route for other paths.
                 <ListItem key={path}>
                   <Link href={path}>{name}</Link>
                 </ListItem>
@@ -65,7 +70,7 @@ export default function NavBar() {
             }
           })}
           <ListItem>
-            {/* Render the ModeButton component for light/dark mode toggle. */}
+            {/* Render the ModeButton component for light/dark mode toggle */}
             <ModeButton />
           </ListItem>
         </List>

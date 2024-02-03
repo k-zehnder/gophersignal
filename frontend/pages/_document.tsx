@@ -1,4 +1,11 @@
-// Import necessary dependencies.
+/**
+ * MyDocument: A custom Document class for Next.js.
+ * This class extends the standard Next.js Document to include additional global settings for the HTML document.
+ * It includes settings for the language, SEO optimization, favicon, Google Analytics script,
+ * and Emotion CSS-in-JS styling for server-side rendering.
+ * The getInitialProps method is overridden to enhance the app with Emotion's cache for consistent server-side styling.
+ * This setup ensures a consistent and optimized rendering of the application across different client environments.
+*/
 import * as React from "react";
 import Document, { Html, Head, Main, NextScript } from "next/document";
 import createEmotionServer from "@emotion/server/create-instance";
