@@ -4,18 +4,16 @@ import * as React from "react";
 import LightModeIcon from "@mui/icons-material/LightMode";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
 
-// ModeButton component allows users to toggle between light and dark modes.
 export default function ModeButton() {
   const { mode, setMode } = useColorScheme();
   const [mounted, setMounted] = React.useState<boolean>(false);
 
   React.useEffect(() => {
-    // Set `mounted` to `true` when the component is mounted.
     setMounted(true);
   }, []);
 
   if (!mounted) {
-    // Render a placeholder button to avoid layout shift before mounting.
+    // to avoid layout shift, render a placeholder button
     return (
       <IconButton
         variant="plain"
@@ -25,8 +23,6 @@ export default function ModeButton() {
       />
     );
   }
-  
-  // Render the mode toggle button based on the current mode.
   return (
     <IconButton
       variant="plain"

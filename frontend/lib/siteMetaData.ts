@@ -1,3 +1,8 @@
+/**
+ * siteMetaData: A central configuration for site-wide metadata.
+ * This object includes information like site title, author, description, and images,
+ * used primarily for SEO optimization and social media sharing (Open Graph and Twitter cards).
+*/
 export const siteMetaData = {
   title: "Gopher Signal",
   author: "Mr. Ritchie",

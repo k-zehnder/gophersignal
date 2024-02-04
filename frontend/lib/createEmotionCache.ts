@@ -1,3 +1,9 @@
+/**
+ * createEmotionCache: A utility to customize the insertion point for Emotion's style tag.
+ * This configuration ensures Material UI styles are loaded first in the <head> section,
+ * enabling developers to override these styles using other CSS solutions.
+ * The cache is configured for client-side rendering, where the browser environment is available.
+*/
 import createCache from "@emotion/cache";
 
 const isBrowser = typeof document !== "undefined";

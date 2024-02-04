@@ -1,5 +1,12 @@
-// processSummary function processes a summary object and returns a string.
-// If the summary is valid and not empty, it returns the summary; otherwise, it returns a default message.
+/**
+ * This file contains utility functions for processing article data and formatting dates.
+ * It includes two functions: processSummary and formatDate.
+ */
+
+/**
+ * processSummary function processes a summary object and returns a string.
+ * If the summary is valid and not empty, it returns the summary; otherwise, it returns a default message.
+ */
 export const processSummary = (
   summary: { String: string; Valid: boolean } | null,
 ): string => {
@@ -8,12 +15,13 @@ export const processSummary = (
     : 'No summary available';
 };
 
-// formatDate function takes a date string and formats it to a human-readable date.
-// If the input date string is invalid or empty, it returns appropriate messages.
+/**
+ * formatDate function takes a date string and formats it to a human-readable date.
+ * If the input date string is invalid or empty, it returns appropriate messages.
+ */
 export const formatDate = (dateStr: string): string => {
-  if (!dateStr) {
-    return 'Date not available';
-  }
+  // Formatting date strings for better readability
+  if (!dateStr) return 'Date not available';
   const date = new Date(dateStr);
   return isNaN(date.getTime())
     ? 'Invalid Date'
@@ -21,5 +29,5 @@ export const formatDate = (dateStr: string): string => {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
-    });
+      });
 };
