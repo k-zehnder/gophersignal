@@ -12,6 +12,7 @@
     "@emotion/styled": "^11.10.5",
     "@mui/icons-material": "^5.11.0",
     "@mui/joy": "^5.0.0-alpha.65",
+    "@playwright/test": "^1.41.2",
     "date-fns": "^2.29.3",
     "gray-matter": "^4.0.3",
     "next": "latest",
