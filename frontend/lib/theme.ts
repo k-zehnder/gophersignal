@@ -1,3 +1,8 @@
+/**
+ * theme: Customizes the default Material-UI theme.
+ * This theme configuration creates a custom theme by extending the default Material-UI theme.
+ * It defines custom font family settings for the 'body' text, ensuring a consistent typography style.
+*/
 import { extendTheme } from "@mui/joy/styles";
 
 // Create a custom theme by extending the default Material-UI theme.
