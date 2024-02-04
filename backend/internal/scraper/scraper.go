@@ -97,6 +97,7 @@ func (hns *HackerNewsScraper) Scrape() ([]*models.Article, error) {
 
 // fetchArticleContent fetches and processes the content of an article given its URL.
 func fetchArticleContent(url string) (string, error) {
+	// Set a 10-second timeout for the HTTP request to prevent hanging.
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -149,11 +150,13 @@ func fetchArticleContent(url string) (string, error) {
 	// Remove extra whitespace and return the cleaned text content.
 	cleanedText := removeExtraWhitespace(textContent)
 
+	// Return the processed content of the article.
 	return cleanedText, nil
 }
 
 // detectAndConvertToUTF8 detects the character encoding of content and converts it to UTF-8.
 func detectAndConvertToUTF8(content []byte) (string, error) {
+	// Initialize a byte reader for the content and determine its encoding.
 	r := bytes.NewReader(content)
 	e, _, _ := charset.DetermineEncoding(content, "")
 	utf8Reader := transform.NewReader(r, e.NewDecoder())
@@ -163,6 +166,8 @@ func detectAndConvertToUTF8(content []byte) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	// Return the UTF-8 encoded content.
 	return string(transformedContent), nil
 }
 

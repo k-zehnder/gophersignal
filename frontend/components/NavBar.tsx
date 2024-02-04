@@ -1,3 +1,9 @@
+/**
+ * NavBar: A component for rendering the navigation bar of the application.
+ * It includes links to various sections like Home, About, and API. The NavBar
+ * also contains the ModeButton component to toggle between light and dark modes.
+ * The API URL is dynamically determined based on the environment.
+*/
 import Link from "next/link";
 import List from "@mui/joy/List";
 import ListItem from "@mui/joy/ListItem";
