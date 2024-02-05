@@ -16,7 +16,7 @@
 
    **Obtain API Keys:**
    To use third-party services, you need to obtain API keys. Follow these steps to get your API keys:
-   - **Hugging Face API Key:** Visit [Hugging Face](https://huggingface.co/) to create an account and obtain your API key.
+   - **Hugging Face API Key:** Visit [Hugging Face](https://huggingface.co/) to create an account and obtain your API key. Set it as `HUGGING_FACE_API_KEY` in your `.env` file.
    - **OpenAI API Key:** Visit [OpenAI](https://openai.com/) to create an account and obtain your API key. Set it as `OPEN_AI_API_KEY` in your `.env` file.
 
 3. **Launch Services with Docker:**
