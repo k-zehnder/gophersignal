@@ -22,12 +22,13 @@ const huggingFaceURL = "https://api-inference.huggingface.co/models/facebook/bar
 
 // HuggingFaceRequest defines the structure expected by the Hugging Face API.
 type HuggingFaceRequest struct {
-	Inputs string `json:"inputs"`
+	Inputs     string                 `json:"inputs"`
+	Parameters map[string]interface{} `json:"parameters,omitempty"`
 }
 
 // HuggingFaceResponseItem represents a single response item from the Hugging Face API.
 type HuggingFaceResponseItem struct {
-	SummaryText string `json:"summary_text"`
+	GeneratedText string `json:"generated_text"`
 }
 
 // main is the entry point of the application. It begins by loading the application configuration,
@@ -106,7 +107,12 @@ func processArticles(db *sql.DB, apiKey string) {
 // summarizeContent sends content to the Hugging Face API for summarization.
 func summarizeContent(apiKey, content string) (string, error) {
 	// Construct the request body with the content to be summarized.
-	reqBody := HuggingFaceRequest{Inputs: content}
+	reqBody := HuggingFaceRequest{
+		Inputs: content,
+		Parameters: map[string]interface{}{
+			"truncation": "only_first",
+		},
+	}
 	reqBytes, err := json.Marshal(reqBody)
 	if err != nil {
 		return "", err
@@ -167,9 +173,9 @@ func parseSummaryResponse(body []byte) (string, error) {
 		return "", fmt.Errorf("error parsing JSON: %w", err)
 	}
 
-	if len(apiResps) > 0 && apiResps[0].SummaryText != "" {
+	if len(apiResps) > 0 && apiResps[0].GeneratedText != "" {
 		// The first item in the array is the desired summary.
-		return apiResps[0].SummaryText, nil
+		return apiResps[0].GeneratedText, nil
 	}
 	return "", nil
 }
