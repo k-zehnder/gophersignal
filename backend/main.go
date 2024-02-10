@@ -34,7 +34,7 @@ func main() {
 		log.Fatalf("Database initialization failed: %v", err)
 	}
 
-	// Create the server handler
+	// Create the server handler using the store interface.
 	handler := api.NewServer(cfg, sqlStore)
 
 	// Configure the HTTP server
