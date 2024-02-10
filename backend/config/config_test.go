@@ -1,4 +1,5 @@
 // Package config (testing suite) contains tests for the configuration management functionalities in the GopherSignal application.
+
 package config
 
 import (

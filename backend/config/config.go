@@ -1,5 +1,6 @@
 // Package config handles the configuration management for the GopherSignal application.
 // It provides functionalities to initialize the application configuration and retrieve environment variables,
+
 // with support for default values.
 package config
 
@@ -9,12 +10,12 @@ import (
 
 // AppConfig represents the application's configuration.
 type AppConfig struct {
-	DataSourceName    string
-	Environment       string
-	ServerAddress     string
-	SwaggerHost       string
-	HuggingFaceAPIKey string
-	OpenAIAPIKey      string
+	DataSourceName    string // Database connection string
+	Environment       string // Application environment (e.g., "dev", "prod")
+	ServerAddress     string // Address on which the server should listen
+	SwaggerHost       string // Host for Swagger documentation
+	HuggingFaceAPIKey string // API key for Hugging Face service
+	OpenAIAPIKey      string // API key for OpenAI service
 }
 
 // NewConfig initializes and returns a new AppConfig with default values obtained from environment variables.

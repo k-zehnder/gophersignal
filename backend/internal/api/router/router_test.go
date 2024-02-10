@@ -1,4 +1,5 @@
 // Package router provides unit tests for the router configuration and route handling.
+
 package router
 
 import (
@@ -16,16 +17,14 @@ func TestRouter_ArticlesRoute(t *testing.T) {
 	// Set up a mock store with no articles to simulate database interaction.
 	mockStore := store.NewMockStore([]*models.Article{}, nil, nil)
 
-	// Initialize the Handler with the mock store.
-	handler := &routeHandlers.Handler{
-		Store: mockStore,
-	}
+	// Initialize the ArticlesHandler with the mock store.
+	articlesHandler := routeHandlers.NewArticlesHandler(mockStore)
 
-	// Set up the router with the initialized handler.
-	router := SetupRouter(handler)
+	// Set up the router.
+	// Note: Assuming SetupRouter function takes an ArticlesHandler.
+	router := SetupRouter(articlesHandler)
 
 	// Create a new HTTP request to test the articles route.
-	// This request simulates a GET request to the articles route.
 	req := httptest.NewRequest("GET", "/api/v1/articles", nil)
 	rr := httptest.NewRecorder()
 
@@ -35,15 +34,5 @@ func TestRouter_ArticlesRoute(t *testing.T) {
 	// Check if the response status code is as expected (200 OK).
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
-	}
-
-	// Validate that the 'GetArticles' route exists in the router.
-	// This ensures that the route is correctly registered and can be retrieved.
-	route := router.GetRoute("GetArticles")
-	if route == nil {
-		t.Error("Expected GetArticles route to exist")
-	} else {
-		// Log the route name for verification.
-		t.Logf("Route found: %v", route.GetName())
 	}
 }

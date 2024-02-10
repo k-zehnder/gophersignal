@@ -1,5 +1,6 @@
 // Package store defines an interface and an implementation for article storage and retrieval.
 // It includes the Store interface for defining methods to interact with the article data in the database.
+
 package store
 
 import (

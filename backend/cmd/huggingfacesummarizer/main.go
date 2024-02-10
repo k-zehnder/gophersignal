@@ -1,5 +1,6 @@
 // Package main for the Hugging Face summarizer tool.
 // It connects to a MySQL database to fetch articles and uses the Hugging Face API to generate summaries.
+
 package main
 
 import (
