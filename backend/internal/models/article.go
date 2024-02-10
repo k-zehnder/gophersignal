@@ -1,5 +1,6 @@
 // Package models defines the data models used in the system.
 // It includes the Article struct and a constructor function for creating Article instances.
+
 package models
 
 import (

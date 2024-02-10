@@ -1,6 +1,7 @@
 // Package main for the article saving tool.
 // It initializes a database connection, scrapes articles from HackerNews,
 // and saves them into a MySQL database.
+
 package main
 
 import (

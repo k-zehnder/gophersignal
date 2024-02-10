@@ -1,5 +1,6 @@
-// Package routeHandlers provides HTTP handler functions for the routes of the GopherSignal application.
-// It defines a Handler struct that holds a reference to the store for database interactions.
+// Package routeHandlers provides specialized HTTP handler functions for the GopherSignal application routes.
+// Includes a struct 'ArticlesHandler' to handle article-related database interactions.
+
 package routeHandlers
 
 import (
@@ -10,17 +11,33 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
-// Handler struct holds a reference to the store to interact with the database.
-type Handler struct {
+// Handler interface for HTTP handlers.
+type Handler interface {
+	ServeHTTP(http.ResponseWriter, *http.Request)
+}
+
+// ArticlesHandler struct holds a reference to the store to interact with the database.
+type ArticlesHandler struct {
 	Store store.Store
 }
 
-// NewHandler initializes a new Handler with the given store.
-func NewHandler(store store.Store) *Handler {
-	return &Handler{Store: store}
+// NewArticlesHandler initializes a new ArticlesHandler with the given store.
+func NewArticlesHandler(store store.Store) *ArticlesHandler {
+	return &ArticlesHandler{Store: store}
 }
 
-// GetArticles handles the HTTP request to retrieve articles. It fetches articles from the store and sends a JSON response.
+// ServeHTTP implements the HTTP request routing for the ArticlesHandler.
+func (h *ArticlesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// Route different HTTP requests to appropriate methods
+	if r.Method == "GET" {
+		h.GetArticles(w, r)
+	} else {
+		// Respond with Method Not Allowed for non-GET requests
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+// GetArticles handles the HTTP request to retrieve articles.
 // @Summary Get articles
 // @Description Retrieve a list of articles from the database.
 // @Tags Articles
@@ -30,30 +47,30 @@ func NewHandler(store store.Store) *Handler {
 // @Failure 400 {object} models.Response
 // @Failure 500 {object} models.Response
 // @Router /articles [get]
-func (h *Handler) GetArticles(w http.ResponseWriter, r *http.Request) {
+func (h *ArticlesHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 	articles, err := h.Store.GetArticles()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Set cache-related headers for the response with a 10-minute cache duration (i.e., 600 seconds).
+	// Set cache headers for the response for 600 seconds (i.e., 10 minutes).
 	h.setCacheHeaders(w, 600)
 
-	// Return articles as a JSON response with an HTTP status code of OK.
+	// Send a JSON response with the retrieved articles and HTTP status OK (200).
 	h.jsonResponse(w, articles, http.StatusOK)
+
 }
 
 // jsonResponse sends a JSON response with the given data and HTTP status code.
-func (h *Handler) jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
+func (h *ArticlesHandler) jsonResponse(w http.ResponseWriter, data interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(data)
 }
 
-// setCacheHeaders sets cache-related headers in the HTTP response with the specified max age in seconds.
-func (h *Handler) setCacheHeaders(w http.ResponseWriter, maxAgeSeconds int) {
-	// Set Cache-Control header to enable caching for the specified duration
+// setCacheHeaders sets cache-related headers in the HTTP response.
+func (h *ArticlesHandler) setCacheHeaders(w http.ResponseWriter, maxAgeSeconds int) {
 	cacheControl := fmt.Sprintf("public, max-age=%d", maxAgeSeconds)
 	w.Header().Set("Cache-Control", cacheControl)
 }
