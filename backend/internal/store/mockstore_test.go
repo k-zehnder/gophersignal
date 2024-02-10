@@ -1,5 +1,6 @@
 // Package store provides an interface and implementations for article storage and retrieval.
 // It includes tests for the MockStore type, which simulates a testing double for the Store interface.
+
 package store
 
 import (

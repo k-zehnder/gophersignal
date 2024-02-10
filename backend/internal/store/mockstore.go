@@ -1,5 +1,6 @@
 // Package store provides an interface and implementations for article storage and retrieval.
 // It includes a MockStore type, which serves as a testing double for the Store interface.
+
 package store
 
 import "github.com/k-zehnder/gophersignal/backend/internal/models"
