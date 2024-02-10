@@ -1,5 +1,6 @@
 // Package scraper provides a Hacker News scraper for fetching articles from the website.
 // It includes the HackerNewsScraper struct, Scrape method for scraping articles, and supporting functions.
+
 package scraper
 
 import (

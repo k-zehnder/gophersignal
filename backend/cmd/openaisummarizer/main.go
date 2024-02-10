@@ -1,5 +1,6 @@
 // Package main for the OpenAI summarizer tool.
 // It connects to a MySQL database to fetch articles and uses the OpenAI API to generate summaries.
+
 package main
 
 import (

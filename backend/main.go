@@ -1,6 +1,7 @@
-// Package main for the GopherSignal API server.
-// This server application initializes configuration, database connections, and API routing.
-// It also sets up a Swagger documentation endpoint and starts an HTTP server for handling API requests.
+// Package main is the entry point of the GopherSignal API server. It is responsible for the overall
+// initialization and startup of the server. This includes setting up the application configuration,
+// establishing database connectivity, defining API routes via the api package, and launching the HTTP server.
+
 package main
 
 import (
@@ -9,8 +10,7 @@ import (
 
 	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/docs"
-	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
-	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
+	"github.com/k-zehnder/gophersignal/backend/internal/api"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
@@ -20,28 +20,32 @@ import (
 // @BasePath /api/v1
 // @host gophersignal.com
 
-// main is the entry point of the application.
-// It orchestrates the initialization of the application configuration, database store, HTTP router, and starts the server.
+// main function: Initializes and starts the GopherSignal API server.
 func main() {
 	// Initialize application configuration.
-	appConfig := config.NewConfig()
+	cfg := config.NewConfig()
 
-	// Configure Swagger host based on the application configuration.
-	docs.SwaggerInfo.Host = appConfig.SwaggerHost
+	// Set Swagger documentation host using the application configuration.
+	docs.SwaggerInfo.Host = cfg.SwaggerHost
 
-	// Initialize database store using configuration data.
-	sqlstore, err := store.NewMySQLStore(appConfig.DataSourceName)
+	// Establish database connection.
+	sqlStore, err := store.NewMySQLStore(cfg.DataSourceName)
 	if err != nil {
-		log.Fatalf("Failed to initialize database store: %v", err)
+		log.Fatalf("Database initialization failed: %v", err)
 	}
 
-	// Set up API handlers and router.
-	handler := routeHandlers.NewHandler(sqlstore)
-	router := router.SetupRouter(handler)
+	// Create the server handler using the store interface.
+	handler := api.NewServer(cfg, sqlStore)
 
-	// Start the HTTP server using the address from the configuration.
-	log.Printf("Starting server on %s\n", appConfig.ServerAddress)
-	if err := http.ListenAndServe(appConfig.ServerAddress, router); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+	// Configure the HTTP server
+	httpServer := &http.Server{
+		Addr:    cfg.ServerAddress,
+		Handler: handler,
+	}
+
+	// Start the HTTP server
+	log.Printf("Server starting on %s\n", cfg.ServerAddress)
+	if err := httpServer.ListenAndServe(); err != nil {
+		log.Fatalf("Server start-up failed: %v", err)
 	}
 }
