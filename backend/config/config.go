@@ -1,7 +1,7 @@
 // Package config handles the configuration management for the GopherSignal application.
 // It provides functionalities to initialize the application configuration and retrieve environment variables,
-
 // with support for default values.
+
 package config
 
 import (

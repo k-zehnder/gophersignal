@@ -21,7 +21,6 @@ func TestRouter_ArticlesRoute(t *testing.T) {
 	articlesHandler := routeHandlers.NewArticlesHandler(mockStore)
 
 	// Set up the router.
-	// Note: Assuming SetupRouter function takes an ArticlesHandler.
 	router := SetupRouter(articlesHandler)
 
 	// Create a new HTTP request to test the articles route.
