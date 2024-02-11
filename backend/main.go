@@ -37,13 +37,13 @@ func main() {
 	// Create the server handler using the store interface.
 	handler := api.NewServer(cfg, sqlStore)
 
-	// Configure the HTTP server
+	// Configure the HTTP server.
 	httpServer := &http.Server{
 		Addr:    cfg.ServerAddress,
 		Handler: handler,
 	}
 
-	// Start the HTTP server
+	// Start the HTTP server.
 	log.Printf("Server starting on %s\n", cfg.ServerAddress)
 	if err := httpServer.ListenAndServe(); err != nil {
 		log.Fatalf("Server start-up failed: %v", err)
