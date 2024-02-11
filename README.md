@@ -24,7 +24,7 @@
    make dev_env
    ```
 
-4. **Access the MySQL Docker Container:**
+4. **Determine the MySQL Container ID:**
    Find the running MySQL container ID using the following command:
    ```bash
    docker ps | grep mysql | awk '{print $1}'
@@ -58,6 +58,12 @@
    Once you have set up your database, you can exit the MySQL shell by typing:
    ```sql
    exit
+   ```
+
+8. **Setting up Development Data:**
+   To initialize the development data, such as scraping and summarizing information with HuggingFace, execute the following command on the host environment:
+   ```bash
+   make setup_dev_env HUGGING_FACE_API_KEY=<key> MYSQL_DSN=<dsn>
    ```
 
 Your development environment should now be running.
