@@ -14,10 +14,10 @@ import (
 )
 
 func NewServer(store store.Store) http.Handler {
-	// Instantiate route handlers
+	// Initialize route handlers using the provided store.
 	articlesHandler := routeHandlers.NewArticlesHandler(store)
 
-	// Set up the router
+	// Configure the router with the route handlers.
 	router := router.SetupRouter(articlesHandler)
 
 	// Return the configured router as an http.Handler
