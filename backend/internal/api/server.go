@@ -8,13 +8,12 @@ package api
 import (
 	"net/http"
 
-	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
-func NewServer(cfg *config.AppConfig, store store.Store) http.Handler {
+func NewServer(store store.Store) http.Handler {
 	// Instantiate route handlers
 	articlesHandler := routeHandlers.NewArticlesHandler(store)
 
