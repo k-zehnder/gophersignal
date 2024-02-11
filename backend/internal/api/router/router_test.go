@@ -1,4 +1,6 @@
-// Package router provides unit tests for the router configuration and route handling.
+// Package router contains the unit tests for verifying the router configuration and route handling in the GopherSignal application.
+// It includes tests to ensure the router correctly routes requests to their respective handlers, particularly focusing on the articles route.
+// These tests validate the effectiveness of the router in managing HTTP request traffic and delivering appropriate responses.
 
 package router
 

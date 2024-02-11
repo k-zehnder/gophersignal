@@ -1,4 +1,6 @@
-// Package routeHandlers provides HTTP handler functions for the routes of the GopherSignal application.
+// Package routeHandlers contains unit tests for HTTP handler functions in the GopherSignal application.
+// It includes tests for the ArticlesHandler's functionalities such as handling successful responses,
+// error scenarios, and method not allowed situations, ensuring robustness and reliability of the handler.
 
 package routeHandlers
 

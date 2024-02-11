@@ -1,5 +1,5 @@
-// Package router provides a router configuration for the GopherSignal API service.
-// It initializes a Gorilla Mux router with configured routes, CORS settings, and Swagger documentation.
+// Package router provides the configuration for the HTTP router of the GopherSignal API.
+// It focuses on initializing a Gorilla Mux router with configured routes, CORS settings, and Swagger documentation support.
 
 package router
 

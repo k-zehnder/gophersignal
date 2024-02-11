@@ -1,5 +1,6 @@
 // Package routeHandlers provides specialized HTTP handler functions for the GopherSignal application routes.
-// Includes a struct 'ArticlesHandler' to handle article-related database interactions.
+// This includes the ArticlesHandler struct and associated methods for managing article-related
+// HTTP requests, ensuring efficient interaction with the database and proper response formatting.
 
 package routeHandlers
 

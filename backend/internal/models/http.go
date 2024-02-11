@@ -1,5 +1,4 @@
-// Package models defines the data models used in the system.
-// It includes Response, a standard format for API responses, and ArticleResponse, which represents detailed information about an article.
+// Package models defines the core data structures used within the GopherSignal application.
 
 package models
 

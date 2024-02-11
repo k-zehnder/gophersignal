@@ -1,6 +1,7 @@
-// Package api contains the core HTTP server initialization and testing logic for the GopherSignal application.
-// It includes the NewServer function which sets up the HTTP server with routes and middleware,
-// and a unit test for NewServer which ensures correct server behavior and route handling using mock data.
+// Package api includes the unit test for the NewServer function of the GopherSignal application.
+// This test ensures correct server behavior and route handling using mock data.
+// The TestNewServer function simulates HTTP requests and verifies the server responses,
+// focusing on the correctness and consistency of API outputs.
 
 package api
 
