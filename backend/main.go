@@ -1,51 +1,45 @@
-// Package main is the entry point of the GopherSignal API server. It is responsible for the overall
-// initialization and startup of the server. This includes setting up the application configuration,
-// establishing database connectivity, defining API routes via the api package, and launching the HTTP server.
+// Package main is the entry point for the GopherSignal API server, handling
+// initialization and startup tasks including configuration setup, database
+// connectivity, API routing, and HTTP server launch.
 
 package main
 
 import (
-	"log"
-	"net/http"
+    "log"
+    "net/http"
 
-	"github.com/k-zehnder/gophersignal/backend/config"
-	"github.com/k-zehnder/gophersignal/backend/docs"
-	"github.com/k-zehnder/gophersignal/backend/internal/api"
-	"github.com/k-zehnder/gophersignal/backend/internal/store"
+    "github.com/k-zehnder/gophersignal/backend/config"
+    "github.com/k-zehnder/gophersignal/backend/docs"
+    "github.com/k-zehnder/gophersignal/backend/internal/api"
+    "github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
-// @title GopherSignal API
-// @description API server for the GopherSignal application.
-// @version 1
-// @BasePath /api/v1
-// @host gophersignal.com
-
-// main function: Initializes and starts the GopherSignal API server.
+// Main function initializes and starts the GopherSignal API server.
 func main() {
-	// Initialize application configuration.
-	cfg := config.NewConfig()
+    // Initialize application configuration from environment variables.
+    cfg := config.NewConfig()
 
-	// Set Swagger documentation host using the application configuration.
-	docs.SwaggerInfo.Host = cfg.SwaggerHost
+    // Configure Swagger documentation host per application settings.
+    docs.SwaggerInfo.Host = cfg.SwaggerHost
 
-	// Establish database connection.
-	sqlStore, err := store.NewMySQLStore(cfg.DataSourceName)
-	if err != nil {
-		log.Fatalf("Database initialization failed: %v", err)
-	}
+    // Establish connection to the SQL database.
+    sqlStore, err := store.NewMySQLStore(cfg.DataSourceName)
+    if err != nil {
+        log.Fatalf("Failed to initialize database: %v", err)
+    }
 
-	// Create the server handler using the store interface.
-	handler := api.NewServer(cfg, sqlStore)
+    // Instantiate the server handler with database access.
+    handler := api.NewServer(sqlStore)
 
-	// Configure the HTTP server.
-	httpServer := &http.Server{
-		Addr:    cfg.ServerAddress,
-		Handler: handler,
-	}
+    // Set up the HTTP server with configured address and handler.
+    httpServer := &http.Server{
+        Addr:    cfg.ServerAddress,
+        Handler: handler,
+    }
 
-	// Start the HTTP server.
-	log.Printf("Server starting on %s\n", cfg.ServerAddress)
-	if err := httpServer.ListenAndServe(); err != nil {
-		log.Fatalf("Server start-up failed: %v", err)
-	}
+    // Launch the HTTP server and handle potential start-up errors.
+    log.Printf("Server starting on %s\n", cfg.ServerAddress)
+    if err := httpServer.ListenAndServe(); err != nil {
+        log.Fatalf("Failed to start server: %v", err)
+    }
 }

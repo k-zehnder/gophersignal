@@ -1,7 +1,5 @@
 // Package api includes the unit test for the NewServer function of the GopherSignal application.
-// This test ensures correct server behavior and route handling using mock data.
-// The TestNewServer function simulates HTTP requests and verifies the server responses,
-// focusing on the correctness and consistency of API outputs.
+// This test ensures correct server with appropriate route handling and response consistency. 
 
 package api
 
@@ -11,11 +9,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
+// TestNewServer validates the server's behavior by simulating HTTP requests with mock data 
+// and verifying the responses, thus confirming the accuracy and reliability of the API's outputs.
 func TestNewServer(t *testing.T) {
 	// Initialize your test articles here
 	mockArticles := []*models.Article{
@@ -34,18 +33,8 @@ func TestNewServer(t *testing.T) {
 	// Create a MockStore with the mock data
 	mockStore := store.NewMockStore(mockArticles, nil, nil)
 
-	// Create a minimal config for testing
-	cfg := &config.AppConfig{
-		DataSourceName:    "test_dsn",
-		Environment:       "test",
-		ServerAddress:     "localhost:8080",
-		SwaggerHost:       "testswaggerhost.com",
-		HuggingFaceAPIKey: "test_huggingface_api_key",
-		OpenAIAPIKey:      "test_openai_api_key",
-	}
-
 	// Initialize the server with the mock store
-	handler := NewServer(cfg, mockStore)
+	handler := NewServer(mockStore)
 
 	// Adjust the request URL to include the API prefix
 	req, err := http.NewRequest("GET", "/api/v1/articles", nil)
