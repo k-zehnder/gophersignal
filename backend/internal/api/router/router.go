@@ -38,6 +38,6 @@ func SetupRouter(articlesHandler *routeHandlers.ArticlesHandler) *mux.Router {
 	// Serve Swagger documentation.
 	r.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
-	// Return the configured router as an http.Handler.
+	// Return the configured router as a mux.Router.
 	return r
 }
