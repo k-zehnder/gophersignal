@@ -35,8 +35,9 @@ func SetupRouter(articlesHandler *routeHandlers.ArticlesHandler) *mux.Router {
 	// Associate API routes with their respective handlers.
 	apiRouter.Handle("/articles", articlesHandler)
 
-	// Serve Swagger documentation
+	// Serve Swagger documentation.
 	r.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
+	// Return the configured router.
 	return r
 }

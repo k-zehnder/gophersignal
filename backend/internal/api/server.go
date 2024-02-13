@@ -20,6 +20,6 @@ func NewServer(store store.Store) http.Handler {
 	// Configure the router with the route handlers.
 	router := router.SetupRouter(articlesHandler)
 
-	// Return the configured router as an http.Handler
+	// Return the configured router as an http.Handler.
 	return router
 }

@@ -29,7 +29,7 @@ type HuggingFaceRequest struct {
 
 // HuggingFaceResponseItem represents a single response item from the Hugging Face API.
 type HuggingFaceResponseItem struct {
-	GeneratedText string `json:"generated_text"`
+	SummaryText string `json:"summary_text"`
 }
 
 // main is the entry point of the application. It begins by loading the application configuration,
@@ -174,9 +174,9 @@ func parseSummaryResponse(body []byte) (string, error) {
 		return "", fmt.Errorf("error parsing JSON: %w", err)
 	}
 
-	if len(apiResps) > 0 && apiResps[0].GeneratedText != "" {
+	if len(apiResps) > 0 && apiResps[0].SummaryText != "" {
 		// The first item in the array is the desired summary.
-		return apiResps[0].GeneratedText, nil
+		return apiResps[0].SummaryText, nil
 	}
 	return "", nil
 }
