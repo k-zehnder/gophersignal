@@ -7,28 +7,29 @@
     "export": "next export"
   },
   "dependencies": {
-    "@babel/traverse": "^7.23.7",
+    "@babel/traverse": "^7.23.9",
     "@emotion/react": "^11.10.5",
-    "@emotion/server": "^11.10.0",
-    "@emotion/styled": "^11.10.5",
-    "@mui/icons-material": "^5.11.0",
+    "@emotion/server": "^11.11.0",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.11",
     "@mui/joy": "^5.0.0-alpha.65",
-    "date-fns": "^2.29.3",
+    "date-fns": "^3.3.1",
     "gray-matter": "^4.0.3",
-    "next": "latest",
-    "npm": "^10.3.0",
-    "postcss": "^8.4.33",
+    "ip": "^2.0.1",
+    "next": "^14.1.0",
+    "npm": "^10.4.0",
+    "postcss": "^8.4.35",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "remark": "^14.0.2",
-    "remark-html": "^15.0.1",
-    "semver": "^7.5.4"
+    "remark": "^15.0.1",
+    "remark-html": "^16.0.1",
+    "semver": "^7.6.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.40.1",
-    "@types/node": "18.11.18",
-    "@types/react": "18.0.27",
-    "prettier": "2.8.3",
-    "typescript": "4.9.5"
+    "@playwright/test": "^1.42.0",
+    "@types/node": "^20.11.20",
+    "@types/react": "^18.2.60",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
   }
 }
