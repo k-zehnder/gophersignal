@@ -55,7 +55,7 @@ func (h *ArticlesHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set cache headers for the response for 600 seconds (i.e., 15 minutes).
+	// Set cache headers for the response for 900 seconds (i.e., 15 minutes).
 	h.setCacheHeaders(w, 900)
 
 	// Send a JSON response with the retrieved articles and HTTP status OK (200).
