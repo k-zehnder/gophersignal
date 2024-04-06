@@ -21,6 +21,7 @@ func SetupRouter(articlesHandler *routeHandlers.ArticlesHandler) *mux.Router {
 			"http://localhost:3000",    // Allow local frontend development server
 			"http://localhost:8080",    // Allow local development server
 			"https://gophersignal.com", // Allow production frontend
+			"https://www.gophersignal.com",  // Allow production frontend with www
 		}),
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 		handlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
