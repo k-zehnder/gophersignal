@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  frontend:
+    image: kjzehnder3/gophersignal:frontend-latest
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - backend
+    networks:
+      - app-network
+
+  backend:
+    image: kjzehnder3/gophersignal:backend-latest
+    ports:
+      - 8080:8080
+    networks:
+      - app-network
+    env_file:
+      - .env
+    environment:
+      - MYSQL_DSN
+      - SERVER_ADDRESS
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:latest
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_gophersignal:/var/lib/mysql
+    networks:
+      - app-network
+    env_file:
+      - .env
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+      - MYSQL_HOST
+      - MYSQL_PORT
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_gophersignal:
+    driver: local
