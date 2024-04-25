@@ -1,13 +1,20 @@
-// Import necessary dependencies.
-import * as React from "react";
-import Document, { Html, Head, Main, NextScript } from "next/document";
-import createEmotionServer from "@emotion/server/create-instance";
-import createEmotionCache from "../lib/createEmotionCache";
-import { getInitColorSchemeScript } from "@mui/joy/styles";
+import Document, {
+  Html,
+  Head,
+  Main,
+  NextScript,
+  DocumentContext,
+} from 'next/document';
+import { ReactElement } from 'react';
 
-// Define the MyDocument class which extends the Document class.
+// Extends Next.js's default Document to customize the HTML document structure, allowing inclusion of global elements like favicon for branding and Google Analytics for traffic analysis.
 export default class MyDocument extends Document {
-  render() {
+  static async getInitialProps(ctx: DocumentContext): Promise<any> {
+    const initialProps = await Document.getInitialProps(ctx);
+    return { ...initialProps };
+  }
+
+  render(): ReactElement {
     return (
       <Html lang="en">
         <Head>
@@ -15,7 +22,10 @@ export default class MyDocument extends Document {
           <link rel="shortcut icon" href="/favicon.ico" />
 
           {/* Google Analytics Script */}
-          <script async src="https://www.googletagmanager.com/gtag/js?id=G-H03QDKFRJ0"></script>
+          <script
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=G-H03QDKFRJ0"
+          ></script>
           <script
             dangerouslySetInnerHTML={{
               __html: `
@@ -26,14 +36,8 @@ export default class MyDocument extends Document {
               `,
             }}
           />
-
-          {/* Inject Emotion styles */}
-          {(this.props as any).emotionStyleTags}
         </Head>
         <body>
-          {/* Initialize the color scheme script with defaultMode as "system". */}
-          {getInitColorSchemeScript({ defaultMode: "system" })}
-
           {/* Render the main content of the application. */}
           <Main />
 
@@ -44,34 +48,3 @@ export default class MyDocument extends Document {
     );
   }
 }
-
-// Define getInitialProps function for server-side rendering.
-MyDocument.getInitialProps = async (ctx) => {
-  const originalRenderPage = ctx.renderPage;
-  const cache = createEmotionCache();
-  const { extractCriticalToChunks } = createEmotionServer(cache);
-
-  ctx.renderPage = () =>
-    originalRenderPage({
-      enhanceApp: (App: any) =>
-        function EnhanceApp(props) {
-          return <App emotionCache={cache} {...props} />;
-        },
-    });
-
-  const initialProps = await Document.getInitialProps(ctx);
-  const emotionStyles = extractCriticalToChunks(initialProps.html);
-  const emotionStyleTags = emotionStyles.styles.map((style) => (
-    <style
-      data-emotion={`${style.key} ${style.ids.join(" ")}`}
-      key={style.key}
-      // eslint-disable-next-line react/no-danger
-      dangerouslySetInnerHTML={{ __html: style.css }}
-    />
-  ));
-
-  return {
-    ...initialProps,
-    emotionStyleTags,
-  };
-};
