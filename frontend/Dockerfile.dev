@@ -1,0 +1,20 @@
+# Use an official Node runtime as a parent image
+FROM node:latest
+
+# Set the working directory in the container
+WORKDIR /app
+
+# Copy package.json and package-lock.json (or yarn.lock)
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Bundle app source
+COPY . .
+
+# Expose port 3000 to access server
+EXPOSE 3000
+
+# Command to run the app
+CMD ["npm", "run", "dev"]
