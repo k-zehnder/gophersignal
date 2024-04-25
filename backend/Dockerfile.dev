@@ -1,0 +1,18 @@
+# Use the official Go image as the base image
+FROM golang:latest
+
+# Set the working directory for your application
+WORKDIR /app
+
+# Copy go mod and sum files
+COPY go.mod go.sum ./
+
+# Download all dependencies
+RUN go mod download
+
+# Copy the source from the current directory to the Working Directory inside the container
+COPY . .
+
+# Command to build and run the Go application directly.
+# 'go run main.go' compiles and runs the application on the fly, which is ideal for development.
+CMD ["go", "run", "main.go"]
