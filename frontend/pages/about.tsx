@@ -1,3 +1,4 @@
+import React from 'react';
 import Layout from "../components/Layout";
 import Typography from "@mui/joy/Typography";
 import Avatar from "@mui/joy/Avatar";
