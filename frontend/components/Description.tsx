@@ -1,3 +1,4 @@
+import React from 'react';
 import Typography from '@mui/joy/Typography';
 import Box from '@mui/joy/Box';
 import Link from '@mui/joy/Link';
