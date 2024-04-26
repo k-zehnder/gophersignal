@@ -8,7 +8,7 @@ export FRONTEND_IMAGE_TAG BACKEND_IMAGE_TAG DOCKERHUB_REPO
 
 # Common Targets
 .PHONY: all
-all: build_frontend build_backend test_backend
+all: build_frontend build_backend test_backend test_frontend
 	@echo "All components built and tested!"
 
 .PHONY: push_all
@@ -94,6 +94,12 @@ deploy_frontend:
 	@echo "Deploying frontend..."
 	$(DOCKER_COMPOSE_CMD) up -d frontend
 	@echo "Frontend deployed."
+
+.PHONY: test_frontend
+test_frontend:
+	@echo "Running frontend tests..."
+	cd frontend && make test_frontend
+	@echo "Frontend tests completed."
 
 # Backend Management
 .PHONY: build_backend

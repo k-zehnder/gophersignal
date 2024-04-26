@@ -8,4 +8,8 @@ run_frontend:
 
 .PHONY: dev
 dev:
-	npm install && npm run dev
+	npm run dev
+
+.PHONY: test_frontend
+test_frontend:
+	npm run test
