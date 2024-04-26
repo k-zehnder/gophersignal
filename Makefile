@@ -8,7 +8,7 @@ export FRONTEND_IMAGE_TAG BACKEND_IMAGE_TAG DOCKERHUB_REPO
 
 # Common Targets
 .PHONY: all
-all: build_frontend build_backend test_backend test_frontend
+all: build_frontend build_backend test_frontend test_backend
 	@echo "All components built and tested!"
 
 .PHONY: push_all

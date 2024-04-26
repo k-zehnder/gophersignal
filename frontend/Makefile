@@ -12,4 +12,6 @@ dev:
 
 .PHONY: test_frontend
 test_frontend:
+	npm i jest
+	npm i jest-environment-jsdom
 	npm run test
