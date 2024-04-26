@@ -12,7 +12,7 @@ all: build_frontend build_backend test_backend test_frontend
 	@echo "All components built and tested!"
 
 .PHONY: push_all
-push_all: build_frontend build_backend test_backend push_backend push_frontend
+push_all: build_frontend build_backend test_frontend test_backend push_backend push_frontend
 
 .PHONY: run_services
 run_services:
