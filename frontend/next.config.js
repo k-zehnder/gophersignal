@@ -14,11 +14,6 @@ const nextConfig = {
     
     // distDir: 'dist',
 
-    compiler: {
-      // Removes any disabling of SWC if previously set
-      styledComponents: true,
-    },
-
     swcMinify: true, // Enables SWC minification
   }
 
