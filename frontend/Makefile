@@ -15,5 +15,7 @@ run:
 
 .PHONY: test
 test:
+	@echo "Installing testing dependencies..."
+	npm install jest jest-environment-jsdom
 	@echo "Running frontend tests..."
 	npm run test
