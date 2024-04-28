@@ -1,17 +1,21 @@
-.PHONY: build_frontend
-build_frontend:
+.PHONY: build
+build:
+	@echo "Building frontend Docker image..."
 	docker build -t $(FRONTEND_IMAGE_TAG) .
 
-.PHONY: run_frontend
-run_frontend:
+.PHONY: push
+push:
+	@echo "Pushing frontend Docker image..."
+	docker push $(FRONTEND_IMAGE_TAG)
+
+.PHONY: run
+run:
+	@echo "Starting frontend service..."
 	docker-compose up -d frontend
 
-.PHONY: dev
-dev:
-	npm run dev
-
-.PHONY: test_frontend
-test_frontend:
-	npm i jest
-	npm i jest-environment-jsdom
+.PHONY: test
+test:
+	@echo "Installing testing dependencies..."
+	npm install jest jest-environment-jsdom
+	@echo "Running frontend tests..."
 	npm run test
