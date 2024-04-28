@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [staging]
+    branches: [main, staging]
   pull_request:
     branches: [main]
 
@@ -23,8 +23,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build, Test, and Push images
-        run: make push_all
+      - name: Build, Test, and Push All Components
+        run: make all
 
       - name: Upload Go coverage report
         uses: actions/upload-artifact@v4
