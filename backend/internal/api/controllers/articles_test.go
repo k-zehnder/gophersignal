@@ -1,8 +1,7 @@
-// Package routeHandlers contains unit tests for HTTP handler functions in the GopherSignal application.
+// Package controllers contains unit tests for HTTP handler functions in the GopherSignal application.
 // It includes tests for the ArticlesHandler's functionalities such as handling successful responses,
 // error scenarios, and method not allowed situations, ensuring robustness and reliability of the handler.
-
-package routeHandlers
+package controllers
 
 import (
 	"errors"
@@ -20,7 +19,7 @@ func TestGetArticles_Success(t *testing.T) {
 	mockStore := store.NewMockStore([]*models.Article{{Title: "Test Article 1"}}, nil, nil)
 
 	// Initialize the handler with the mock store.
-	handler := NewArticlesHandler(mockStore)
+	handler := NewArticlesController(mockStore)
 
 	// Create a new HTTP GET request for the articles endpoint.
 	req := httptest.NewRequest("GET", "/dummy-url", nil)
@@ -41,7 +40,7 @@ func TestGetArticles_Error(t *testing.T) {
 	mockStore := store.NewMockStore(nil, nil, errors.New("database error"))
 
 	// Initialize the handler with the mock store.
-	handler := NewArticlesHandler(mockStore)
+	handler := NewArticlesController(mockStore)
 
 	// Create a new HTTP GET request for the articles endpoint.
 	req := httptest.NewRequest("GET", "/dummy-url", nil)
@@ -59,7 +58,7 @@ func TestGetArticles_Error(t *testing.T) {
 // TestServeHTTP_MethodNotAllowed tests the ServeHTTP method for non-GET requests.
 func TestServeHTTP_MethodNotAllowed(t *testing.T) {
 	// Initialize the handler with a mock store (can be nil as it's not used in this test).
-	handler := NewArticlesHandler(nil)
+	handler := NewArticlesController(nil)
 
 	// Create a new HTTP POST request (or any non-GET request).
 	req := httptest.NewRequest("POST", "/dummy-url", nil)
