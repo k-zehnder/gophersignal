@@ -14,111 +14,17 @@ const docTemplate = `{
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
-    "paths": {
-        "/articles": {
-            "get": {
-                "description": "Retrieve a list of articles from the database.",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Articles"
-                ],
-                "summary": "Get articles",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.ArticleResponse"
-                            }
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/models.Response"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/models.Response"
-                        }
-                    }
-                }
-            }
-        }
-    },
-    "definitions": {
-        "models.ArticleResponse": {
-            "type": "object",
-            "properties": {
-                "content": {
-                    "description": "Full content of the article (default: \"\"), example: \"Sample content...\"",
-                    "type": "string"
-                },
-                "created_at": {
-                    "description": "Timestamp of when the article was created (default: current time), example: \"2022-01-01T12:00:00Z\"",
-                    "type": "string"
-                },
-                "id": {
-                    "description": "Unique identifier of the article (default: 0), example: 1",
-                    "type": "integer"
-                },
-                "link": {
-                    "description": "External link to the article (default: \"\"), example: \"https://example.com\"",
-                    "type": "string"
-                },
-                "source": {
-                    "description": "Source from where the article was obtained (default: \"\"), example: \"Sample Source\"",
-                    "type": "string"
-                },
-                "summary": {
-                    "description": "Brief summary of the article (default: \"\"), example: \"This is a sample summary.\"",
-                    "type": "string"
-                },
-                "title": {
-                    "description": "Title of the article (default: \"\"), example: \"Sample Title\"",
-                    "type": "string"
-                },
-                "updated_at": {
-                    "description": "Timestamp of the last update to the article (default: current time), example: \"2022-01-01T12:30:00Z\"",
-                    "type": "string"
-                }
-            }
-        },
-        "models.Response": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "The HTTP status code of the response (default: 200)",
-                    "type": "integer"
-                },
-                "data": {
-                    "description": "The data payload of the response"
-                },
-                "status": {
-                    "description": "The status message accompanying the code (default: \"success\")",
-                    "type": "string"
-                }
-            }
-        }
-    }
+    "paths": {}
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
-	Version:          "1",
-	Host:             "gophersignal.com",
-	BasePath:         "/api/v1",
+	Version:          "",
+	Host:             "",
+	BasePath:         "",
 	Schemes:          []string{},
-	Title:            "GopherSignal API",
-	Description:      "API server for the GopherSignal application.",
+	Title:            "",
+	Description:      "",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
