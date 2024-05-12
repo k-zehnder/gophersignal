@@ -10,18 +10,18 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/k-zehnder/gophersignal/backend/internal/api/routeHandlers"
+	"github.com/k-zehnder/gophersignal/backend/internal/api/controllers"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
-// NewServer constructs an http.Handler with necessary route handlers and configurations.
+// NewServer creates an http.Handler with configured routes and controllers.
 func NewServer(store store.Store) http.Handler {
-	articlesHandler := routeHandlers.NewArticlesHandler(store)
-	return router.SetupRouter(articlesHandler)
+	articlesController := controllers.NewArticlesController(store)
+	return router.SetupRouter(articlesController)
 }
 
-// StartServer launches an HTTP server on the specified address with the given request handler.
+// StartServer launches an HTTP server on the specified address.
 func StartServer(addr string, handler http.Handler) *http.Server {
 	server := &http.Server{
 		Addr:    addr,
@@ -35,7 +35,7 @@ func StartServer(addr string, handler http.Handler) *http.Server {
 	return server
 }
 
-// GracefulShutdown waits for interrupt or termination signals and shuts down the server gracefully.
+// GracefulShutdown handles server shutdown on receiving interrupt or termination signals.
 func GracefulShutdown(server *http.Server) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)

@@ -1,4 +1,8 @@
 // Package main is the entry point for the GopherSignal API server.
+// @title GopherSignal API
+// @description API server for the GopherSignal application.
+// @version 1
+// @BasePath /api/v1
 package main
 
 import (

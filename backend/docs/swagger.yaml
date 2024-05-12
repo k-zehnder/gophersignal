@@ -43,7 +43,6 @@ definitions:
         description: 'The status message accompanying the code (default: "success")'
         type: string
     type: object
-host: gophersignal.com
 info:
   contact: {}
   description: API server for the GopherSignal application.
