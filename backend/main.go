@@ -1,4 +1,7 @@
 // Package main is the entry point for the GopherSignal API server.
+// @title GopherSignal API
+// @description This is the server for managing articles data.
+// @BasePath /api/v1
 package main
 
 import (

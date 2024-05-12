@@ -1,7 +1,10 @@
 {
     "swagger": "2.0",
     "info": {
+        "description": "This is the server for managing articles data.",
+        "title": "GopherSignal API",
         "contact": {}
     },
+    "basePath": "/api/v1",
     "paths": {}
 }
