@@ -39,7 +39,7 @@ func StartServer(addr string, handler http.Handler) *http.Server {
 func GracefulShutdown(server *http.Server) {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-	<-quit
+	<-quit // Blocks until a signal is received
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
