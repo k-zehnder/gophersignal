@@ -6,7 +6,6 @@
         "contact": {},
         "version": "1"
     },
-    "host": "gophersignal.com",
     "basePath": "/api/v1",
     "paths": {
         "/articles": {
