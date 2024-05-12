@@ -1,7 +1,5 @@
-// Package api includes the unit test for the NewServer function of the GopherSignal application.
-// This test ensures correct server with appropriate route handling and response consistency. 
-
-package api
+// Package server includes the unit test for the NewServer function of the GopherSignal application.
+package server
 
 import (
 	"encoding/json"
@@ -13,7 +11,7 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
-// TestNewServer validates the server's behavior by simulating HTTP requests with mock data 
+// TestNewServer validates the server's behavior by simulating HTTP requests with mock data
 // and verifying the responses, thus confirming the accuracy and reliability of the API's outputs.
 func TestNewServer(t *testing.T) {
 	// Initialize your test articles here
