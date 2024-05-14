@@ -46,7 +46,7 @@ const resetDatabase = async (connection) => {
 // Initializes the database by connecting and optionally resetting it based on the configuration.
 const initializeDatabase = async (config) => {
   const connection = await connectToDatabase();
-  if (config.debugMode) {
+  if (config.debugMode === 'true') {
     await resetDatabase(connection);
   }
   return connection;
