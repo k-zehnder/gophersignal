@@ -1,0 +1,22 @@
+{
+  "name": "hackernews_scraper",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "debug": "node src/index.js DEBUG_MODE=true",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@types/mysql": "^2.15.26",
+    "@types/node": "^20.12.11"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "puppeteer": "^22.8.1"
+  }
+}
