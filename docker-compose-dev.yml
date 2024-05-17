@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   frontend:
     build:
@@ -8,36 +6,49 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    ports:
-      - 3000:3000
-    depends_on:
-      - backend
     networks:
       - app-network
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      - backend
 
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     volumes:
       - ./backend:/app
-    ports:
-      - 8080:8080
     networks:
       - app-network
+    ports:
+      - 8080:8080
     env_file:
       - .env
-    environment:
-      - MYSQL_DSN
-      - SERVER_ADDRESS
     depends_on:
       mysql:
         condition: service_healthy
 
+  hackernews_scraper:
+    build:
+      context: ./hackernews_scraper
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./hackernews_scraper:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+    env_file:
+      - .env
+
   mysql:
     image: mysql:latest
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,13 +60,6 @@ services:
       - app-network
     env_file:
       - .env
-    environment:
-      - MYSQL_ROOT_PASSWORD
-      - MYSQL_DATABASE
-      - MYSQL_USER
-      - MYSQL_PASSWORD
-      - MYSQL_HOST
-      - MYSQL_PORT
 
 networks:
   app-network:
