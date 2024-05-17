@@ -10,9 +10,17 @@ COPY go.mod go.sum ./
 # Download all dependencies
 RUN go mod download
 
+# Install netcat
+RUN apt-get update && apt-get install -y netcat-traditional
+
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
-# Command to build and run the Go application directly.
-# 'go run main.go' compiles and runs the application on the fly, which is ideal for development.
-CMD ["go", "run", "main.go"]
+# Copy the entrypoint script
+COPY bin/entrypoint.sh /entrypoint.sh
+
+# Make the entrypoint script executable
+RUN chmod +x /entrypoint.sh
+
+# Set the entrypoint to the script
+ENTRYPOINT ["/entrypoint.sh"]

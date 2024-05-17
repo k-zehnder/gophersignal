@@ -13,18 +13,21 @@ build:
 	@echo "Building all components..."
 	$(MAKE) -C frontend build
 	$(MAKE) -C backend build
+	$(MAKE) -C hackernews_scraper build
 
 .PHONY: test
 test:
 	@echo "Running tests for all components..."
 	$(MAKE) -C frontend test
 	$(MAKE) -C backend test
+	$(MAKE) -C hackernews_scraper test
 
 .PHONY: push
 push:
 	@echo "Pushing all images..."
 	$(MAKE) -C frontend push
 	$(MAKE) -C backend push
+	$(MAKE) -C hackernews_scraper push
 
 .PHONY: deploy
 deploy:
@@ -32,5 +35,16 @@ deploy:
 	docker compose down
 	docker pull $(FRONTEND_IMAGE_TAG)
 	docker pull $(BACKEND_IMAGE_TAG)
+	docker pull $(HACKERNEWS_SCRAPER_IMAGE_TAG)
 	docker compose up -d
 	@echo "Application deployed successfully."
+
+.PHONY: dev
+dev:
+	@echo "Starting development environment..."
+	docker compose -f docker-compose-dev.yml up -d --build
+
+.PHONY: scrape
+scrape:
+	@echo "Running HackerNews scraper manually..."
+	$(MAKE) -C hackernews_scraper scrape
