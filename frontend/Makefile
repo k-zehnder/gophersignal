@@ -11,7 +11,7 @@ push:
 .PHONY: run
 run:
 	@echo "Starting frontend service..."
-	docker-compose up -d frontend
+	docker compose up -d frontend
 
 .PHONY: test
 test:
