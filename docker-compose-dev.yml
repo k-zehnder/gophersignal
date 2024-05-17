@@ -1,0 +1,70 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+    networks:
+      - app-network
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  hackernews_scraper:
+    build:
+      context: ./hackernews_scraper
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./hackernews_scraper:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    depends_on:
+      - mysql
+    env_file:
+      - .env
+
+  mysql:
+    image: mysql:latest
+    healthcheck:
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_gophersignal:/var/lib/mysql
+    networks:
+      - app-network
+    env_file:
+      - .env
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_gophersignal:
+    driver: local
