@@ -64,10 +64,10 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-// GetArticles retrieves the latest 30 articles from the database, sorted in descending order by their ID.
+// GetArticles retrieves the latest 30 articles with summaries from the database, sorted in descending order by their ID.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
-	// Query to fetch the latest 30 articles, sorted by their IDs in descending order.
-	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles ORDER BY id DESC LIMIT 30;"
+	// Query to fetch the latest 30 articles with non-empty summaries, sorted by their IDs in descending order.
+	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles WHERE summary IS NOT NULL AND summary != '' ORDER BY id DESC LIMIT 30;"
 
 	rows, err := store.db.Query(query)
 	if err != nil {

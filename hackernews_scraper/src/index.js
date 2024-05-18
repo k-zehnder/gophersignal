@@ -10,7 +10,7 @@ const { connectToDatabase } = require('./database/connection');
 const { createHackerNewsScraper } = require('./services/articleScraper');
 const { createContentFetcher } = require('./services/articleContentFetcher');
 const { createArticleProcessor } = require('./services/articleProcessor');
-const { createSummarizer } = require('./services/articleSummarizer');
+const { createArticleSummarizer } = require('./services/articleSummarizer');
 const config = require('./config/config');
 
 /**
@@ -42,22 +42,13 @@ const main = async () => {
       contentFetcher,
       db
     );
-    const summarizer = createSummarizer(axios, config, db);
-
-    // Begin a transaction to keep data consistent during updates.
-    // This prevents indeterminate database states and ensures Cloudflare
-    // doesn't cache incomplete data, maintaining synchronization between
-    // the database and cached content.
-    await db.connection.beginTransaction();
+    const articleSummarizer = createArticleSummarizer(axios, config, db);
 
     // Scrape top stories from Hacker News and fetch their content
     await articleProcessor.processTopStories();
 
     // Summarize the content of the fetched articles
-    await summarizer.summarizeFetchedArticles();
-
-    // Commit the transaction to finalize the changes
-    await db.connection.commit();
+    await articleSummarizer.summarizeFetchedArticles();
 
     // Close the browser
     await browser.close();
@@ -75,5 +66,4 @@ const main = async () => {
   }
 };
 
-// Execute the main function
 main();
