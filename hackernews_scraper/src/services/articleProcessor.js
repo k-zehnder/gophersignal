@@ -3,7 +3,7 @@
 
 const createArticleProcessor = (scraper, contentFetcher, db) => {
   /**
-   * Scrapes top stories from Hacker News, fetches their content, and saves them to the database.
+   * Scrapes top stories from Hacker News, fetches their content, and returns the articles.
    */
   const processTopStories = async () => {
     try {
@@ -17,11 +17,10 @@ const createArticleProcessor = (scraper, contentFetcher, db) => {
         await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
-      for (const article of articles) {
-        await db.saveArticle(article);
-      }
+      return articles;
     } catch (error) {
       console.error('Error processing top stories:', error);
+      return [];
     }
   };
 

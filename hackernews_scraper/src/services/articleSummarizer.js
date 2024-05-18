@@ -1,7 +1,7 @@
 // Summarizes the content of articles fetched from top Hacker News stories using the Hugging Face API,
 // and updates the database with the summaries.
 
-const createSummarizer = (axios, config, db) => {
+const createArticleSummarizer = (axios, config, db) => {
   /**
    * Summarizes content using the Hugging Face API with retry logic.
    */
@@ -75,4 +75,4 @@ const createSummarizer = (axios, config, db) => {
   };
 };
 
-module.exports = { createSummarizer };
+module.exports = { createArticleSummarizer };
