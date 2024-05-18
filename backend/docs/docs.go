@@ -30,24 +30,21 @@ const docTemplate = `{
                 "summary": "Get articles",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Articles data",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.ArticleResponse"
-                            }
+                            "$ref": "#/definitions/models.ArticlesResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/models.Response"
+                            "$ref": "#/definitions/models.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/models.Response"
+                            "$ref": "#/definitions/models.ErrorResponse"
                         }
                     }
                 }
@@ -55,55 +52,80 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "models.ArticleResponse": {
+        "models.Article": {
             "type": "object",
             "properties": {
                 "content": {
-                    "description": "Full content of the article (default: \"\"), example: \"Sample content...\"",
+                    "description": "Full content of the article.",
                     "type": "string"
                 },
                 "created_at": {
-                    "description": "Timestamp of when the article was created (default: current time), example: \"2022-01-01T12:00:00Z\"",
+                    "description": "Timestamp when the article was created.",
                     "type": "string"
                 },
                 "id": {
-                    "description": "Unique identifier of the article (default: 0), example: 1",
+                    "description": "Unique identifier for the article.",
                     "type": "integer"
                 },
                 "link": {
-                    "description": "External link to the article (default: \"\"), example: \"https://example.com\"",
+                    "description": "URL link to the article.",
                     "type": "string"
                 },
                 "source": {
-                    "description": "Source from where the article was obtained (default: \"\"), example: \"Sample Source\"",
+                    "description": "Source from where the article was fetched.",
                     "type": "string"
                 },
                 "summary": {
-                    "description": "Brief summary of the article (default: \"\"), example: \"This is a sample summary.\"",
+                    "description": "Summary of the article, nullable.",
                     "type": "string"
                 },
                 "title": {
-                    "description": "Title of the article (default: \"\"), example: \"Sample Title\"",
+                    "description": "Title of the article.",
                     "type": "string"
                 },
                 "updated_at": {
-                    "description": "Timestamp of the last update to the article (default: current time), example: \"2022-01-01T12:30:00Z\"",
+                    "description": "Timestamp when the article was last updated.",
                     "type": "string"
                 }
             }
         },
-        "models.Response": {
+        "models.ArticlesResponse": {
+            "type": "object",
+            "properties": {
+                "articles": {
+                    "description": "List of articles.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Article"
+                    }
+                },
+                "code": {
+                    "description": "HTTP status code.",
+                    "type": "integer"
+                },
+                "status": {
+                    "description": "Status message.",
+                    "type": "string"
+                },
+                "total_count": {
+                    "description": "Total count of articles.",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.ErrorResponse": {
             "type": "object",
             "properties": {
                 "code": {
-                    "description": "The HTTP status code of the response (default: 200)",
+                    "description": "HTTP status code.",
                     "type": "integer"
                 },
-                "data": {
-                    "description": "The data payload of the response"
+                "message": {
+                    "description": "Detailed error message.",
+                    "type": "string"
                 },
                 "status": {
-                    "description": "The status message accompanying the code (default: \"success\")",
+                    "description": "Error status message.",
                     "type": "string"
                 }
             }
