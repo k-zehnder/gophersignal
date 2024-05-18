@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Article } from '../types'; 
+import { Article, ArticlesResponse } from '../types';
 import { processSummary, formatDate } from '../lib/stringUtils';
 
 // Custom React hook to fetch and manage a list of articles
@@ -20,22 +20,24 @@ const useArticles = () => {
       try {
         // Fetch articles from the backend
         const response = await fetch(apiUrl);
-        
+
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-        
+
         // Parse backend response into articles data
-        const apiArticles = await response.json();
-        const articlesData: Article[] = apiArticles.map((item: any) => ({
-          id: item.id,
-          title: item.title,
-          source: item.source,
-          createdAt: formatDate(item.created_at),
-          updatedAt: formatDate(item.updated_at),
-          summary: processSummary(item.summary),
-          link: item.link,
-        }));
+        const apiResponse: ArticlesResponse = await response.json();
+        const articlesData: Article[] = apiResponse.articles.map(
+          (item: any) => ({
+            id: item.id,
+            title: item.title,
+            source: item.source,
+            createdAt: formatDate(item.created_at),
+            updatedAt: formatDate(item.updated_at),
+            summary: processSummary(item.summary),
+            link: item.link,
+          })
+        );
 
         // Update the state with the fetched articles
         setArticles(articlesData);

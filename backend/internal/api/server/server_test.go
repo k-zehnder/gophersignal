@@ -50,17 +50,17 @@ func TestNewServer(t *testing.T) {
 	}
 
 	// Parse the response body to check if it returns the correct articles
-	var articles []models.Article
-	err = json.Unmarshal(rr.Body.Bytes(), &articles)
+	var articlesResponse models.ArticlesResponse
+	err = json.Unmarshal(rr.Body.Bytes(), &articlesResponse)
 	if err != nil {
 		t.Fatalf("Failed to unmarshal response: %v", err)
 	}
 
 	// Assert the content of the response
-	if len(articles) != len(mockArticles) {
-		t.Errorf("Expected %d articles, got %d", len(mockArticles), len(articles))
+	if len(articlesResponse.Articles) != len(mockArticles) {
+		t.Errorf("Expected %d articles, got %d", len(mockArticles), len(articlesResponse.Articles))
 	}
-	for i, article := range articles {
+	for i, article := range articlesResponse.Articles {
 		if article.ID != mockArticles[i].ID || article.Title != mockArticles[i].Title {
 			t.Errorf("Expected article %v, got %v", mockArticles[i], article)
 		}
