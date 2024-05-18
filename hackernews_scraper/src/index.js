@@ -10,7 +10,7 @@ const { connectToDatabase } = require('./database/connection');
 const { createHackerNewsScraper } = require('./services/articleScraper');
 const { createContentFetcher } = require('./services/articleContentFetcher');
 const { createArticleProcessor } = require('./services/articleProcessor');
-const { createSummarizer } = require('./services/articleSummarizer');
+const { createArticleSummarizer } = require('./services/articleSummarizer');
 const config = require('./config/config');
 
 /**
@@ -39,25 +39,20 @@ const main = async () => {
     const contentFetcher = createContentFetcher(browser);
     const articleProcessor = createArticleProcessor(
       hackerNewsScraper,
-      contentFetcher,
-      db
+      contentFetcher
     );
-    const summarizer = createSummarizer(axios, config, db);
-
-    // Begin a transaction to keep data consistent during updates.
-    // This prevents indeterminate database states and ensures Cloudflare
-    // doesn't cache incomplete data, maintaining synchronization between
-    // the database and cached content.
-    await db.connection.beginTransaction();
+    const articleSummarizer = createArticleSummarizer(axios, config);
 
     // Scrape top stories from Hacker News and fetch their content
-    await articleProcessor.processTopStories();
+    const articles = await articleProcessor.processTopStories();
 
     // Summarize the content of the fetched articles
-    await summarizer.summarizeFetchedArticles();
+    const summarizedArticles = await articleSummarizer.summarizeArticles(
+      articles
+    );
 
-    // Commit the transaction to finalize the changes
-    await db.connection.commit();
+    // Save the summarized articles to the database
+    await db.saveArticles(summarizedArticles);
 
     // Close the browser
     await browser.close();
@@ -66,12 +61,11 @@ const main = async () => {
   } catch (error) {
     console.error('Error in main function:', error);
 
-    // Roll back the transaction and close the browser in case of an error
-    if (db) await db.connection.rollback();
+    // Close the browser in case of an error
     if (browser) await browser.close();
   } finally {
     // Ensure the database connection is closed
-    if (db) await db.closeDatabaseConnection(db.connection);
+    if (db) await db.closeDatabaseConnection();
   }
 };
 

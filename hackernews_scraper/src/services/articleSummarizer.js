@@ -1,7 +1,6 @@
-// Summarizes the content of articles fetched from top Hacker News stories using the Hugging Face API,
-// and updates the database with the summaries.
+// Summarizes the content of articles fetched from top Hacker News stories using the Hugging Face API.
 
-const createSummarizer = (axios, config, db) => {
+const createArticleSummarizer = (axios, config) => {
   /**
    * Summarizes content using the Hugging Face API with retry logic.
    */
@@ -53,26 +52,27 @@ const createSummarizer = (axios, config, db) => {
   };
 
   /**
-   * Fetches unsummarized articles from the database, summarizes them, and updates the database.
+   * Summarizes a list of articles.
    */
-  const summarizeFetchedArticles = async () => {
-    const rows = await db.fetchUnsummarizedArticles();
-    for (const { id, content } of rows) {
-      if (!content) {
-        console.warn(`Skipping Article ID ${id}: content is empty`);
+  const summarizeArticles = async (articles) => {
+    for (const article of articles) {
+      if (!article.content) {
+        console.warn(`Skipping article with missing content: ${article.title}`);
         continue;
       }
 
-      const summary = await summarizeContentWithRetry(content);
-      await db.updateArticleSummary(id, summary);
+      console.log(`Summarizing article: ${article.title}`);
+      article.summary = await summarizeContentWithRetry(article.content);
       await new Promise((resolve) => setTimeout(resolve, 1000)); // Delay between summaries
     }
+
+    return articles;
   };
 
   return {
     summarizeContentWithRetry,
-    summarizeFetchedArticles,
+    summarizeArticles,
   };
 };
 
-module.exports = { createSummarizer };
+module.exports = { createArticleSummarizer };

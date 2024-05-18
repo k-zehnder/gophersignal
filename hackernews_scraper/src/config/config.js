@@ -16,7 +16,6 @@ const config = {
     password: process.env.MYSQL_PASSWORD,
     database: process.env.MYSQL_DATABASE,
   },
-  debugMode: process.env.DEBUG_MODE || 'false',
 };
 
 module.exports = config;
