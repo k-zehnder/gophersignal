@@ -4,13 +4,14 @@ import Description from '../components/Description';
 import ArticleList from '../components/ArticleList';
 import Typography from '@mui/joy/Typography';
 
-// Define the Index component.
-function Index() {
+// Index component renders the main page layout, including description and article list.
+const Index: React.FC = () => {
   return (
     <Layout>
-      {/* Render the Description component. */}
+      {/* Description of the website or application. */}
       <Description />
-      {/* Display the heading "Latest Articles". */}
+
+      {/* Heading for the latest articles section. */}
       <Typography
         level="h2"
         component="h2"
@@ -18,10 +19,11 @@ function Index() {
       >
         Latest Articles
       </Typography>
-      {/* Render the ArticleList component. */}
+
+      {/* List of the latest articles. */}
       <ArticleList />
     </Layout>
   );
-}
+};
 
 export default Index;
