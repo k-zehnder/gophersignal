@@ -30,7 +30,7 @@ const main = async () => {
 
     // Launch a new Puppeteer browser instance
     browser = await puppeteer.launch({
-      headless: true,
+      headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
