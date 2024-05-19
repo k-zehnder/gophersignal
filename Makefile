@@ -36,7 +36,7 @@ deploy:
 	docker pull $(FRONTEND_IMAGE_TAG)
 	docker pull $(BACKEND_IMAGE_TAG)
 	docker pull $(HACKERNEWS_SCRAPER_IMAGE_TAG)
-	docker compose up -d
+	docker compose up -d --build
 	@echo "Application deployed successfully."
 
 .PHONY: dev
