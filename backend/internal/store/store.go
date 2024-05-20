@@ -64,16 +64,38 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-// GetArticles retrieves the latest 30 articles with summaries from the database, sorted in descending order by their ID.
+// GetArticles retrieves the latest 30 articles with summaries from the database,
+// ensuring that only articles from the most recent run are included by using a
+// one-minute time window around the timestamp of the most recent article with a summary.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
-	// Query to fetch the latest 30 articles with non-empty summaries, sorted by their IDs in descending order.
-	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles WHERE summary IS NOT NULL AND summary != '' ORDER BY id DESC LIMIT 30;"
+	// Query to get the timestamp of the most recent article with a summary.
+	latestArticleTimestampQuery := `
+        SELECT created_at FROM articles
+        WHERE summary IS NOT NULL AND summary != ''
+        ORDER BY created_at DESC
+        LIMIT 1
+    `
+	var latestTimestamp string
+	err := store.db.QueryRow(latestArticleTimestampQuery).Scan(&latestTimestamp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get the latest timestamp: %w", err)
+	}
 
-	rows, err := store.db.Query(query)
+	// Define a one-minute time window around the latest timestamp.
+	timeWindowQuery := `
+        SELECT id, title, link, content, summary, source, created_at, updated_at
+        FROM articles
+        WHERE summary IS NOT NULL AND summary != '' 
+        AND created_at BETWEEN DATE_SUB(?, INTERVAL 1 MINUTE) AND DATE_ADD(?, INTERVAL 1 MINUTE)
+        ORDER BY id DESC
+        LIMIT 30;
+    `
+
+	rows, err := store.db.Query(timeWindowQuery, latestTimestamp, latestTimestamp)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
-	defer rows.Close() // Ensure resource release after query execution.
+	defer rows.Close()
 
 	// Populate articles from query results.
 	var articles []*models.Article
@@ -90,6 +112,6 @@ func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 
-	// Return a slice of article pointers.
+	// Return a slice of pointers to articles.
 	return articles, nil
 }
