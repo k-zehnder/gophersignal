@@ -13,7 +13,7 @@ run:
 	@echo "Starting HackerNews scraper service..."
 	docker compose up -d hackernews_scraper
 
-.PHONY: scrape
-run:
-	@echo "Starting HackerNews scraper service..."
-	npm run start	
+.PHONY: scrape 
+scrape:
+	@echo "Running HackerNews scraper..."
+	docker exec -it $(shell docker ps -qf "name=hackernews_scraper") npm run start

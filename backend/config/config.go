@@ -11,7 +11,7 @@ import (
 // AppConfig represents the application's configuration.
 type AppConfig struct {
 	DataSourceName    string // Database connection string
-	Environment       string // Application environment (e.g., "dev", "prod")
+	Environment       string // Application environment (e.g., "development", "production")
 	ServerAddress     string // Address on which the server should listen
 	SwaggerHost       string // Host for Swagger documentation
 	HuggingFaceAPIKey string // API key for Hugging Face service
@@ -22,9 +22,9 @@ type AppConfig struct {
 func NewConfig() *AppConfig {
 	return &AppConfig{
 		DataSourceName:    GetEnv("MYSQL_DSN", "default_dsn"),
-		Environment:       GetEnv("GO_ENV", "dev"),
+		Environment:       GetEnv("GO_ENV", "development"),
 		ServerAddress:     GetEnv("SERVER_ADDRESS", "0.0.0.0:8080"),
-		SwaggerHost:       GetDefaultSwaggerHost(GetEnv("GO_ENV", "dev")), // Pass the environment directly
+		SwaggerHost:       GetDefaultSwaggerHost(GetEnv("GO_ENV", "development")), // Pass the environment directly
 		HuggingFaceAPIKey: GetEnv("HUGGING_FACE_API_KEY", ""),
 		OpenAIAPIKey:      GetEnv("OPEN_AI_API_KEY", ""),
 	}
@@ -41,7 +41,7 @@ func GetEnv(key, fallback string) string {
 // GetDefaultSwaggerHost returns the default Swagger host based on the environment.
 func GetDefaultSwaggerHost(env string) string {
 	switch env {
-	case "dev":
+	case "development":
 		return "localhost:8080"
 	default:
 		return "gophersignal.com"

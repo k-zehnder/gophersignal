@@ -13,5 +13,6 @@ RUN npm install
 # Bundle app source
 COPY . .
 
-# Command to run the app
-CMD ["npm", "run", "start"]
+# Keep the container running without doing anything
+# This facilitates manually triggering the scraper as needed
+CMD ["tail", "-f", "/dev/null"]
