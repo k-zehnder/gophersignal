@@ -43,8 +43,3 @@ deploy:
 dev:
 	@echo "Starting development environment..."
 	docker compose -f docker-compose-dev.yml up -d --build
-
-.PHONY: scrape
-scrape:
-	@echo "Running HackerNews scraper manually..."
-	$(MAKE) -C hackernews_scraper scrape
