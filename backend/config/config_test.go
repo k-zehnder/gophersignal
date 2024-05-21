@@ -51,13 +51,13 @@ func TestNewConfig(t *testing.T) {
 // TestGetDefaultSwaggerHost verifies the behavior of the GetDefaultSwaggerHost function.
 // It tests the function's ability to return the default Swagger host based on the environment.
 func TestGetDefaultSwaggerHost(t *testing.T) {
-	// Case 1: Get Swagger host for "dev" environment.
-	if got := GetDefaultSwaggerHost("dev"); got != "localhost:8080" {
-		t.Errorf("GetDefaultSwaggerHost('dev') = %s; want localhost:8080", got)
+	// Case 1: Get Swagger host for "development" environment.
+	if got := GetDefaultSwaggerHost("development"); got != "localhost:8080" {
+		t.Errorf("GetDefaultSwaggerHost('development') = %s; want localhost:8080", got)
 	}
 
 	// Case 2: Get Swagger host for any other environment.
-	if got := GetDefaultSwaggerHost("prod"); got != "gophersignal.com" {
-		t.Errorf("GetDefaultSwaggerHost('prod') = %s; want gophersignal.com", got)
+	if got := GetDefaultSwaggerHost("production"); got != "gophersignal.com" {
+		t.Errorf("GetDefaultSwaggerHost('production') = %s; want gophersignal.com", got)
 	}
 }

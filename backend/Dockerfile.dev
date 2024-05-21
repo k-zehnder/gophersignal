@@ -1,8 +1,11 @@
-# Use the official Go image as the base image
-FROM golang:latest
+# Use the official Debian-based Go image
+FROM golang:1.20
 
 # Set the working directory for your application
 WORKDIR /app
+
+# Install MySQL client using apt-get
+RUN apt-get update && apt-get install -y default-mysql-client
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -10,17 +13,17 @@ COPY go.mod go.sum ./
 # Download all dependencies
 RUN go mod download
 
-# Install netcat
-RUN apt-get update && apt-get install -y netcat-traditional
-
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
-# Copy the entrypoint script
-COPY bin/entrypoint.sh /entrypoint.sh
+# Copy the schema.sql file to the container
+COPY schema.sql /app/schema.sql
 
-# Make the entrypoint script executable
-RUN chmod +x /entrypoint.sh
+# Copy the init-db.sh script from the bin directory to the container
+COPY bin/init-db.sh /app/init-db.sh
 
-# Set the entrypoint to the script
-ENTRYPOINT ["/entrypoint.sh"]
+# Ensure init-db.sh is executable
+RUN chmod +x /app/init-db.sh
+
+# Start the main Go application
+CMD ["sh", "-c", "/app/init-db.sh && go run main.go"]

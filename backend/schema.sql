@@ -8,6 +8,6 @@ CREATE TABLE IF NOT EXISTS articles (
     content TEXT,
     summary VARCHAR(2000),
     source VARCHAR(100) NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
 );

@@ -33,18 +33,11 @@ push:
 deploy:
 	@echo "Deploying application..."
 	docker compose down
-	docker pull $(FRONTEND_IMAGE_TAG)
-	docker pull $(BACKEND_IMAGE_TAG)
-	docker pull $(HACKERNEWS_SCRAPER_IMAGE_TAG)
-	docker compose up -d --build
+	docker compose pull
+	docker compose up -d --build --force-recreate
 	@echo "Application deployed successfully."
 
 .PHONY: dev
 dev:
 	@echo "Starting development environment..."
 	docker compose -f docker-compose-dev.yml up -d --build
-
-.PHONY: scrape
-scrape:
-	@echo "Running HackerNews scraper manually..."
-	$(MAKE) -C hackernews_scraper scrape

@@ -24,17 +24,11 @@ RUN npm install && apt-get update && apt-get install -y \
     libcairo2 \
     libatspi2.0-0 \
     libgtk-3-0 \
-    libdbus-1-3 \
-    netcat-traditional
+    libdbus-1-3
 
 # Bundle app source
 COPY . .
 
-# Copy the entrypoint script
-COPY bin/entrypoint.sh /entrypoint.sh
-
-# Make the entrypoint script executable
-RUN chmod +x /entrypoint.sh
-
-# Set the entrypoint to the script
-ENTRYPOINT ["/entrypoint.sh"]
+# Keep the container running without doing anything
+# This facilitates manually triggering the scraper as needed
+CMD ["tail", "-f", "/dev/null"]
