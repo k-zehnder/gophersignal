@@ -64,16 +64,23 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-// GetArticles retrieves the latest 30 articles with summaries from the database, sorted in descending order by their ID.
+// GetArticles retrieves the latest 30 articles with non-empty summaries from the database,
+// ensuring they come from the most recent batch based on the highest `id`.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 	// Query to fetch the latest 30 articles with non-empty summaries, sorted by their IDs in descending order.
-	query := "SELECT id, title, link, content, summary, source, created_at, updated_at FROM articles WHERE summary IS NOT NULL AND summary != '' ORDER BY id DESC LIMIT 30;"
+	query := `
+        SELECT id, title, link, content, summary, source, created_at, updated_at
+        FROM articles
+        WHERE id >= (SELECT id FROM articles ORDER BY id DESC LIMIT 1) - 29
+        AND summary IS NOT NULL AND summary != ''
+        ORDER BY id DESC;
+    `
 
 	rows, err := store.db.Query(query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
-	defer rows.Close() // Ensure resource release after query execution.
+	defer rows.Close()
 
 	// Populate articles from query results.
 	var articles []*models.Article
@@ -90,6 +97,6 @@ func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 
-	// Return a slice of article pointers.
+	// Return a slice of pointers to articles.
 	return articles, nil
 }
