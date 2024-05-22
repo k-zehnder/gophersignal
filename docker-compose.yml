@@ -26,7 +26,7 @@ services:
   mysql:
     image: mysql:latest
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
       interval: 10s
       timeout: 5s
       retries: 5
@@ -38,6 +38,17 @@ services:
       - app-network
     env_file:
       - .env
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - app-network
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx/prod.conf:/etc/nginx/nginx.conf
 
 networks:
   app-network:
