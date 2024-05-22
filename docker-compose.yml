@@ -39,11 +39,13 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - '80:80'
-      - '443:443'
+      - 80:80
+      - 443:443
+    networks:
+      - app-network
     volumes:
       - /etc/letsencrypt:/etc/letsencrypt:ro
-      - ./nginx/prod.conf:/etc/nginx/nginx.conf
+      - ./nginx/production.conf:/etc/nginx/nginx.conf
 
 networks:
   app-network:
