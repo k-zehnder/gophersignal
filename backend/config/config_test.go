@@ -30,11 +30,19 @@ func TestGetEnv(t *testing.T) {
 // It sets up test environment variables, calls NewConfig to create a configuration, and validates the correctness of the config fields.
 func TestNewConfig(t *testing.T) {
 	// Preparing test environment variables.
-	os.Setenv("MYSQL_DSN", "test_mysql_dsn")
+	os.Setenv("MYSQL_USER", "test_user")
+	os.Setenv("MYSQL_PASSWORD", "test_password")
+	os.Setenv("MYSQL_HOST", "test_host")
+	os.Setenv("MYSQL_PORT", "3306")
+	os.Setenv("MYSQL_DATABASE", "test_database")
 	os.Setenv("GO_ENV", "test_go_env")
 	os.Setenv("SERVER_ADDRESS", "test_server_addr")
 	defer func() {
-		os.Unsetenv("MYSQL_DSN")
+		os.Unsetenv("MYSQL_USER")
+		os.Unsetenv("MYSQL_PASSWORD")
+		os.Unsetenv("MYSQL_HOST")
+		os.Unsetenv("MYSQL_PORT")
+		os.Unsetenv("MYSQL_DATABASE")
 		os.Unsetenv("GO_ENV")
 		os.Unsetenv("SERVER_ADDRESS")
 	}()
@@ -43,8 +51,10 @@ func TestNewConfig(t *testing.T) {
 	appConfig := NewConfig()
 
 	// Validating the config values.
-	if appConfig.DataSourceName != "test_mysql_dsn" || appConfig.Environment != "test_go_env" || appConfig.ServerAddress != "test_server_addr" {
-		t.Error("NewConfig() did not set config fields correctly")
+	expectedDSN := "test_user:test_password@tcp(test_host:3306)/test_database?parseTime=true"
+	if appConfig.DataSourceName != expectedDSN || appConfig.Environment != "test_go_env" || appConfig.ServerAddress != "test_server_addr" {
+		t.Errorf("NewConfig() = %+v; want DataSourceName=%s, Environment=%s, ServerAddress=%s",
+			appConfig, expectedDSN, "test_go_env", "test_server_addr")
 	}
 }
 

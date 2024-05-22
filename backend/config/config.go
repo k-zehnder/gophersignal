@@ -1,11 +1,13 @@
-// Package config handles the configuration management for the GopherSignal application.
-// It provides functionalities to initialize the application configuration and retrieve environment variables,
-// with support for default values.
-
+// Package config handles configuration management.
 package config
 
 import (
+	"fmt"
+	"log"
 	"os"
+
+	"github.com/joho/godotenv"
+	"github.com/k-zehnder/gophersignal/backend/docs"
 )
 
 // AppConfig represents the application's configuration.
@@ -15,22 +17,30 @@ type AppConfig struct {
 	ServerAddress     string // Address on which the server should listen
 	SwaggerHost       string // Host for Swagger documentation
 	HuggingFaceAPIKey string // API key for Hugging Face service
-	OpenAIAPIKey      string // API key for OpenAI service
 }
 
 // NewConfig initializes and returns a new AppConfig with default values obtained from environment variables.
 func NewConfig() *AppConfig {
-	return &AppConfig{
-		DataSourceName:    GetEnv("MYSQL_DSN", "default_dsn"),
+	// Load environment variables from .env file
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: Failed to load .env file: %v", err)
+	}
+
+	cfg := &AppConfig{
+		DataSourceName:    GetDataSourceName(),
 		Environment:       GetEnv("GO_ENV", "development"),
 		ServerAddress:     GetEnv("SERVER_ADDRESS", "0.0.0.0:8080"),
-		SwaggerHost:       GetDefaultSwaggerHost(GetEnv("GO_ENV", "development")), // Pass the environment directly
+		SwaggerHost:       GetDefaultSwaggerHost(GetEnv("GO_ENV", "development")),
 		HuggingFaceAPIKey: GetEnv("HUGGING_FACE_API_KEY", ""),
-		OpenAIAPIKey:      GetEnv("OPEN_AI_API_KEY", ""),
 	}
+
+	// Configure Swagger host
+	docs.SwaggerInfo.Host = cfg.SwaggerHost
+
+	return cfg
 }
 
-// GetEnv retrieves the value of an environment variable or returns a fallback value if the variable is not set.
+// GetEnv retrieves the value of an environment variable or returns a fallback if it doesn't exist.
 func GetEnv(key, fallback string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
@@ -46,4 +56,14 @@ func GetDefaultSwaggerHost(env string) string {
 	default:
 		return "gophersignal.com"
 	}
+}
+
+// GetDataSourceName constructs the MYSQL_DSN from individual environment variables.
+func GetDataSourceName() string {
+	user := GetEnv("MYSQL_USER", "user")
+	password := GetEnv("MYSQL_PASSWORD", "password")
+	host := GetEnv("MYSQL_HOST", "mysql")
+	port := GetEnv("MYSQL_PORT", "3306")
+	database := GetEnv("MYSQL_DATABASE", "airaccidentdata")
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", user, password, host, port, database)
 }

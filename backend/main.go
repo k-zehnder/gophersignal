@@ -9,7 +9,6 @@ import (
 	"log"
 
 	"github.com/k-zehnder/gophersignal/backend/config"
-	"github.com/k-zehnder/gophersignal/backend/docs"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/server"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
@@ -19,14 +18,16 @@ func main() {
 	// Load server configuration
 	cfg := config.NewConfig()
 
-	// Configure Swagger and initialize the database
-	docs.SwaggerInfo.Host = cfg.SwaggerHost
+	// Initialize the database store
 	store, err := store.NewMySQLStore(cfg.DataSourceName)
 	if err != nil {
 		log.Fatalf("Failed to create store: %v", err)
 	}
 
-	// Create and start the HTTP server
-	srv := server.StartServer(cfg.ServerAddress, server.NewServer(store))
+	// Create the router
+	router := server.NewServer(store)
+
+	// Start the HTTP server
+	srv := server.StartServer(cfg.ServerAddress, router)
 	defer server.GracefulShutdown(srv)
 }
