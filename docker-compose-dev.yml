@@ -62,6 +62,18 @@ services:
     env_file:
       - .env
 
+  nginx:
+    image: nginx:latest
+    volumes:
+      - ./nginx/development.conf:/etc/nginx/nginx.conf
+    ports:
+      - 80:80
+    networks:
+      - app-network
+    depends_on:
+      - frontend
+      - backend
+
 networks:
   app-network:
     driver: bridge
