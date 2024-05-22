@@ -2,10 +2,7 @@ services:
   frontend:
     image: kjzehnder3/gophersignal:frontend-latest
     ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - 3000:3000
     depends_on:
       - backend
     networks:
