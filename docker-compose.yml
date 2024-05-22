@@ -2,10 +2,7 @@ services:
   frontend:
     image: kjzehnder3/gophersignal:frontend-latest
     ports:
-      - 80:80
-      - 443:443
-    volumes:
-      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - '3000:3000'
     depends_on:
       - backend
     networks:
@@ -14,7 +11,7 @@ services:
   backend:
     image: kjzehnder3/gophersignal:backend-latest
     ports:
-      - 8080:8080
+      - '8080:8080'
     networks:
       - app-network
     env_file:
@@ -26,18 +23,32 @@ services:
   mysql:
     image: mysql:latest
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
       interval: 10s
       timeout: 5s
       retries: 5
     ports:
-      - 3306:3306
+      - '3306:3306'
     volumes:
       - mysql_gophersignal:/var/lib/mysql
     networks:
       - app-network
     env_file:
       - .env
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - '80:80'
+      - '443:443'
+    networks:
+      - app-network
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./nginx/production.conf:/etc/nginx/nginx.conf
+      - ./frontend/out:/usr/share/nginx/html
+    depends_on:
+      - backend
 
 networks:
   app-network:

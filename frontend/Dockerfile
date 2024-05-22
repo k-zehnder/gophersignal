@@ -9,5 +9,4 @@ RUN npm run build
 # Stage 2: Setup Nginx to serve the static files
 FROM nginx:latest
 RUN rm -rf /usr/share/nginx/html/*
-COPY ./nginx.conf /etc/nginx/nginx.conf
 COPY --from=build /app/out /usr/share/nginx/html
