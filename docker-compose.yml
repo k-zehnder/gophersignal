@@ -1,17 +1,17 @@
 services:
   frontend:
-    image: kjzehnder3/gophersignal:frontend-latest
+    image: kjzehnder3/gophersignal-frontend:latest
     ports:
-      - '3000:3000'
+      - 3000:3000
     depends_on:
       - backend
     networks:
       - app-network
 
   backend:
-    image: kjzehnder3/gophersignal:backend-latest
+    image: kjzehnder3/gophersignal-backend:latest
     ports:
-      - '8080:8080'
+      - 8080:8080
     networks:
       - app-network
     env_file:
@@ -19,6 +19,13 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+
+  hackernews_scraper:
+    image: kjzehnder3/gophersignal-hackernews_scraper:latest
+    networks:
+      - app-network
+    env_file:
+      - .env
 
   mysql:
     image: mysql:latest
@@ -28,7 +35,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - '3306:3306'
+      - 3306:3306
     volumes:
       - mysql_gophersignal:/var/lib/mysql
     networks:
@@ -39,8 +46,8 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - '80:80'
-      - '443:443'
+      - 80:80
+      - 443:443
     networks:
       - app-network
     volumes:
