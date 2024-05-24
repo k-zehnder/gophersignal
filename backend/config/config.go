@@ -19,7 +19,7 @@ type AppConfig struct {
 	HuggingFaceAPIKey string // API key for Hugging Face service
 }
 
-// NewConfig initializes and returns a new AppConfig with default values obtained from environment variables.
+// NewConfig initializes and returns a new AppConfig, loading environment variables from .env file with defaults if not present.
 func NewConfig() *AppConfig {
 	// Load environment variables
 	err := godotenv.Load()
