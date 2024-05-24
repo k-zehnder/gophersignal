@@ -3,11 +3,20 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/controllers"
+	"github.com/k-zehnder/gophersignal/backend/internal/store"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
+
+// NewRouter creates an http.Handler with configured routes and controllers.
+func NewRouter(store store.Store) http.Handler {
+	articlesController := controllers.NewArticlesController(store)
+	return SetupRouter(articlesController)
+}
 
 // SetupRouter initializes and returns a configured mux.Router.
 func SetupRouter(articlesController *controllers.ArticlesController) *mux.Router {

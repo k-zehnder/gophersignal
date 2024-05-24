@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
@@ -32,7 +33,7 @@ func TestNewServer(t *testing.T) {
 	mockStore := store.NewMockStore(mockArticles, nil, nil)
 
 	// Initialize the server with the mock store
-	handler := NewServer(mockStore)
+	handler := router.NewRouter(mockStore)
 
 	// Adjust the request URL to include the API prefix
 	req, err := http.NewRequest("GET", "/api/v1/articles", nil)
