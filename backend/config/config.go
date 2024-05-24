@@ -21,9 +21,10 @@ type AppConfig struct {
 
 // NewConfig initializes and returns a new AppConfig with default values obtained from environment variables.
 func NewConfig() *AppConfig {
-	// Load environment variables from .env file
-	if err := godotenv.Load(); err != nil {
-		log.Printf("Warning: Failed to load .env file: %v", err)
+	// Load environment variables
+	err := godotenv.Load()
+	if err != nil && !os.IsNotExist(err) {
+		log.Printf("Warning: Failed to load environment variables: %v", err)
 	}
 
 	cfg := &AppConfig{
