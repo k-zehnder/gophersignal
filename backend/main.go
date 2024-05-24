@@ -9,6 +9,7 @@ import (
 	"log"
 
 	"github.com/k-zehnder/gophersignal/backend/config"
+	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/server"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
@@ -25,7 +26,7 @@ func main() {
 	}
 
 	// Create the router
-	router := server.NewServer(store)
+	router := router.NewRouter(store)
 
 	// Start the HTTP server
 	srv := server.StartServer(cfg.ServerAddress, router)
