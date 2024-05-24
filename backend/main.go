@@ -25,7 +25,7 @@ func main() {
 	}
 
 	// Create the router
-	router := server.NewServer(store)
+	router := server.NewRouter(store)
 
 	// Start the HTTP server
 	srv := server.StartServer(cfg.ServerAddress, router)

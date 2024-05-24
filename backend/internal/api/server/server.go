@@ -15,8 +15,8 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
-// NewServer creates an http.Handler with configured routes and controllers.
-func NewServer(store store.Store) http.Handler {
+// NewRouter creates an http.Handler with configured routes and controllers.
+func NewRouter(store store.Store) http.Handler {
 	articlesController := controllers.NewArticlesController(store)
 	return router.SetupRouter(articlesController)
 }
@@ -46,4 +46,5 @@ func GracefulShutdown(server *http.Server) {
 	if err := server.Shutdown(ctx); err != nil {
 		log.Fatalf("Failed to shutdown server: %v", err)
 	}
+	log.Println("Server exited cleanly")
 }
