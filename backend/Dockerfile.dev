@@ -1,5 +1,5 @@
-# Use the official Debian-based Go image
-FROM golang:1.20
+# Use the official Go image as the base image
+FROM golang:latest
 
 # Set the working directory for the application
 WORKDIR /app
