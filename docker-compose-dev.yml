@@ -4,8 +4,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.dev
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - ./frontend:/app # Mounts the host frontend directory to /app in the container
+      - /app/node_modules # An anonymous volume to prevent overwriting node_modules from the container
     networks:
       - app-network
     ports:
@@ -20,8 +20,7 @@ services:
       context: ./backend
       dockerfile: Dockerfile.dev
     volumes:
-      - ./backend:/app
-      - ./backend/bin/init-db.sh:/app/init-db.sh
+      - ./backend:/app # Mounts the host backend directory to /app in the container
     networks:
       - app-network
     ports:
@@ -37,8 +36,8 @@ services:
       context: ./hackernews_scraper
       dockerfile: Dockerfile.dev
     volumes:
-      - ./hackernews_scraper:/app
-      - /app/node_modules
+      - ./hackernews_scraper:/app # Mounts the host hackernews_scraper directory to /app in the container
+      - /app/node_modules # An anonymous volume to prevent overwriting node_modules from the container
     networks:
       - app-network
     depends_on:

@@ -1,11 +1,16 @@
-# Use the official Debian-based Go image
-FROM golang:1.20
+# Use the official Golang image as the base image
+FROM golang:latest
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    wget
+
+# Install swag CLI for generating Swagger docs
+RUN go install github.com/swaggo/swag/cmd/swag@latest
 
 # Set the working directory for your application
 WORKDIR /app
-
-# Install MySQL client using apt-get
-RUN apt-get update && apt-get install -y default-mysql-client
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
@@ -16,14 +21,17 @@ RUN go mod download
 # Copy the source from the current directory to the Working Directory inside the container
 COPY . .
 
-# Copy the schema.sql file to the container
-COPY schema.sql /app/schema.sql
+# Generate Swagger docs
+RUN swag init
 
-# Copy the init-db.sh script from the bin directory to the container
-COPY bin/init-db.sh /app/init-db.sh
+# Verify Swagger docs generation
+RUN test -f docs/swagger.json && test -f docs/swagger.yaml
 
 # Ensure init-db.sh is executable
-RUN chmod +x /app/init-db.sh
+RUN chmod +x /app/bin/init-db.sh
 
-# Start the main Go application
-CMD ["sh", "-c", "/app/init-db.sh && go run main.go"]
+# Expose port 8080
+EXPOSE 8080
+
+# Run the initialization script and start the Go application
+CMD ["/app/bin/init-db.sh"]
