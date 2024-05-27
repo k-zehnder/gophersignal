@@ -21,7 +21,6 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./backend:/app
-      - ./backend/bin/init-db.sh:/app/init-db.sh
     networks:
       - app-network
     ports:
