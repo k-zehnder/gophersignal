@@ -30,7 +30,7 @@ services:
   mysql:
     image: mysql:latest
     healthcheck:
-      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
+      test: ['CMD-SHELL', 'mysqladmin ping -h localhost -u$${MYSQL_ROOT_USER} -p$${MYSQL_ROOT_PASSWORD}']
       interval: 10s
       timeout: 5s
       retries: 5
