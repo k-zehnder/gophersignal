@@ -19,3 +19,8 @@ test:
 	go test -v -coverprofile=coverage.out ./...
 	@echo "Generating coverage report..."
 	go tool cover -html=coverage.out -o coverage.html
+
+.PHONY: pull
+pull:
+	@echo "Pulling backend Docker image..."
+	docker pull $(BACKEND_IMAGE_TAG)
