@@ -33,9 +33,9 @@ push:
 deploy:
 	@echo "Deploying application..."
 	docker compose down
-	docker pull $(FRONTEND_IMAGE_TAG)
-	docker pull $(BACKEND_IMAGE_TAG)
-	docker pull $(HACKERNEWS_SCRAPER_IMAGE_TAG)
+	$(MAKE) -C frontend pull
+	$(MAKE) -C backend pull
+	$(MAKE) -C hackernews_scraper pull
 	docker compose up -d --build
 	@echo "Application deployed successfully."
 

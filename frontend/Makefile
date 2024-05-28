@@ -19,3 +19,8 @@ test:
 	npm install jest jest-environment-jsdom
 	@echo "Running frontend tests..."
 	npm run test
+
+.PHONY: pull
+pull:
+	@echo "Pulling frontend Docker image..."
+	docker pull $(FRONTEND_IMAGE_TAG)

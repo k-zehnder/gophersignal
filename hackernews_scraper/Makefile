@@ -13,6 +13,11 @@ run:
 	@echo "Starting HackerNews scraper service..."
 	docker compose up -d hackernews_scraper
 
+.PHONY: pull
+pull:
+	@echo "Pulling hackernews_scraper Docker image..."
+	docker pull $(HACKERNEWS_SCRAPER_IMAGE_TAG)
+
 .PHONY: scrape 
 scrape:
 	@echo "Running HackerNews scraper..."
