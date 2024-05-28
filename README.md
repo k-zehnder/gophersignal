@@ -30,7 +30,6 @@
    SERVER_ADDRESS=0.0.0.0:8080
 
    # MySQL
-   MYSQL_ROOT_USER=root
    MYSQL_ROOT_PASSWORD=password
    MYSQL_PASSWORD=password
    MYSQL_DATABASE=gophersignal
