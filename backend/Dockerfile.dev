@@ -22,11 +22,14 @@ COPY . .
 # Generate Swagger docs
 RUN swag init
 
-# Ensure init-db.sh is executable
-RUN chmod +x /app/bin/init-db.sh 
+# Ensure entrypoint.sh is executable
+RUN chmod +x /app/bin/entrypoint.sh 
+
+# Set environment to development
+ENV ENVIRONMENT=development
 
 # Expose port 8080
 EXPOSE 8080
 
-# Run the initialization script and start the Go application
-CMD ["/app/bin/init-db.sh"]
+# Run the entrypoint script
+ENTRYPOINT ["/app/bin/entrypoint.sh"]

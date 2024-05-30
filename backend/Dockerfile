@@ -22,11 +22,18 @@ RUN test -f docs/swagger.json && test -f docs/swagger.yaml
 FROM alpine:latest
 WORKDIR /root/
 
-# Copy the built application binary from the build stage
+# Copy the built application binary and entrypoint script from the build stage
 COPY --from=build /app/main .
+COPY --from=build /app/bin/entrypoint.sh .
+
+# Ensure entrypoint.sh is executable
+RUN chmod +x /root/entrypoint.sh
+
+# Set environment to production
+ENV ENVIRONMENT=production
 
 # Expose the application port
 EXPOSE 8080
 
-# Run the application binary
-CMD ["./main"]
+# Run the entrypoint script
+ENTRYPOINT ["/root/entrypoint.sh"]
