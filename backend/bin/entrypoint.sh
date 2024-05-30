@@ -22,4 +22,9 @@ echo "Database initialization completed."
 
 # Start the main application
 echo "Starting Go application..."
-exec go run main.go
+
+if [ "$ENVIRONMENT" = "development" ]; then
+    exec go run main.go
+else
+    exec ./main
+fi
