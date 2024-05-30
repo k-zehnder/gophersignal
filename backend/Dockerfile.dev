@@ -1,11 +1,11 @@
 # Use the official Go image as the base image
 FROM golang:latest
 
+# Install necessary packages
+RUN apt-get update && apt-get install -y default-mysql-client
+
 # Set the working directory for the application
 WORKDIR /app
-
-# Install MySQL client using apt-get
-RUN apt-get update && apt-get install -y default-mysql-client
 
 # Install swag CLI for generating Swagger docs
 RUN go install github.com/swaggo/swag/cmd/swag@latest
@@ -22,11 +22,11 @@ COPY . .
 # Generate Swagger docs
 RUN swag init
 
-# Ensure init-db.sh is executable
-RUN chmod +x /app/bin/init-db.sh 
+# Ensure entrypoint.sh is executable
+RUN chmod +x /app/bin/entrypoint.sh
 
 # Expose port 8080
 EXPOSE 8080
 
-# Run the initialization script and start the Go application
-CMD ["/app/bin/init-db.sh"]
+# Run the entrypoint script
+ENTRYPOINT ["/app/bin/entrypoint.sh"]
