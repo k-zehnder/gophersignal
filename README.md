@@ -1,5 +1,7 @@
 # gophersignal
 
+[![CI/CD Pipeline](https://github.com/k-zehnder/gophersignal/actions/workflows/workflow.yml/badge.svg)](https://github.com/k-zehnder/gophersignal/actions/workflows/workflow.yml)
+
 ## Quickstart
 
 1. **Clone the Repository:**
