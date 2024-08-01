@@ -5,13 +5,17 @@
 require('dotenv').config();
 
 const axios = require('axios');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { connectToDatabase } = require('./database/connection');
 const { createHackerNewsScraper } = require('./services/articleScraper');
 const { createContentFetcher } = require('./services/articleContentFetcher');
 const { createArticleProcessor } = require('./services/articleProcessor');
 const { createArticleSummarizer } = require('./services/articleSummarizer');
 const config = require('./config/config');
+
+// Apply the stealth plugin to puppeteer
+puppeteer.use(StealthPlugin());
 
 /**
  * Main function to:
@@ -28,7 +32,7 @@ const main = async () => {
     // Initialize the database connection
     db = await connectToDatabase(config);
 
-    // Launch a new Puppeteer browser instance
+    // Launch a new Puppeteer browser instance with Stealth plugin
     browser = await puppeteer.launch({
       headless: 'new',
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -62,10 +66,14 @@ const main = async () => {
     console.error('Error in main function:', error);
 
     // Close the browser in case of an error
-    if (browser) await browser.close();
+    if (browser) {
+      await browser.close();
+    }
   } finally {
     // Ensure the database connection is closed
-    if (db) await db.closeDatabaseConnection();
+    if (db) {
+      await db.closeDatabaseConnection();
+    }
   }
 };
 
