@@ -9,17 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/k-zehnder/gophersignal/backend/internal/api/controllers"
-	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
-	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
-
-// NewRouter creates an http.Handler with configured routes and controllers.
-func NewRouter(store store.Store) http.Handler {
-	articlesController := controllers.NewArticlesController(store)
-	return router.SetupRouter(articlesController)
-}
 
 // StartServer launches an HTTP server on the specified address.
 func StartServer(addr string, handler http.Handler) *http.Server {
