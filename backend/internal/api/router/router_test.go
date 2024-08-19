@@ -1,5 +1,4 @@
 // Package router contains the unit tests for verifying the router configuration and route handling in the GopherSignal application.
-
 package router
 
 import (
@@ -7,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/k-zehnder/gophersignal/backend/internal/api/controllers"
+	"github.com/k-zehnder/gophersignal/backend/internal/api/handlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
@@ -18,7 +17,7 @@ func TestRouter_ArticlesRoute(t *testing.T) {
 	mockStore := store.NewMockStore([]*models.Article{}, nil, nil)
 
 	// Initialize the ArticlesHandler with the mock store.
-	articlesHandler := controllers.NewArticlesController(mockStore)
+	articlesHandler := handlers.NewArticlesHandler(mockStore)
 
 	// Set up the router.
 	router := SetupRouter(articlesHandler)

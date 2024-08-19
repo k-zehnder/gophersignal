@@ -1,5 +1,5 @@
-// Package controllers handles HTTP requests for the GopherSignal application.
-package controllers
+// Package handlers handles HTTP requests for the GopherSignal application.
+package handlers
 
 import (
 	"encoding/json"
@@ -10,24 +10,24 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
-// Controller defines the interface for controllers that handle HTTP requests.
+// Handler defines the interface for handlers that manage HTTP requests.
 // It extends the http.Handler interface by expecting implementation of ServeHTTP.
-type Controller interface {
+type Handler interface {
 	http.Handler
 }
 
-// ArticlesController manages article-related HTTP requests.
-type ArticlesController struct {
+// ArticlesHandler manages article-related HTTP requests.
+type ArticlesHandler struct {
 	Store store.Store // Store provides access to the data layer.
 }
 
-// NewArticlesController creates a new ArticlesController with the provided store.
-func NewArticlesController(store store.Store) *ArticlesController {
-	return &ArticlesController{Store: store}
+// NewArticlesHandler creates a new ArticlesHandler with the provided store.
+func NewArticlesHandler(store store.Store) *ArticlesHandler {
+	return &ArticlesHandler{Store: store}
 }
 
-// ServeHTTP routes HTTP requests to the appropriate controller methods.
-func (h *ArticlesController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+// ServeHTTP routes HTTP requests to the appropriate handler methods.
+func (h *ArticlesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		h.GetArticles(w, r)
 	} else {
@@ -45,7 +45,7 @@ func (h *ArticlesController) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} models.ErrorResponse "Bad Request"
 // @Failure 500 {object} models.ErrorResponse "Internal Server Error"
 // @Router /articles [get]
-func (h *ArticlesController) GetArticles(w http.ResponseWriter, r *http.Request) {
+func (h *ArticlesHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 	articles, err := h.Store.GetArticles()
 	if err != nil {
 		h.jsonErrorResponse(w, models.ErrorResponse{
@@ -66,20 +66,20 @@ func (h *ArticlesController) GetArticles(w http.ResponseWriter, r *http.Request)
 }
 
 // setCacheHeaders adds caching headers to the HTTP response.
-func (h *ArticlesController) setCacheHeaders(w http.ResponseWriter, maxAgeSeconds int) {
+func (h *ArticlesHandler) setCacheHeaders(w http.ResponseWriter, maxAgeSeconds int) {
 	cacheControl := fmt.Sprintf("public, max-age=%d", maxAgeSeconds)
 	w.Header().Set("Cache-Control", cacheControl)
 }
 
 // jsonResponse sends a JSON response with the specified data and status code.
-func (h *ArticlesController) jsonResponse(w http.ResponseWriter, response interface{}, statusCode int) {
+func (h *ArticlesHandler) jsonResponse(w http.ResponseWriter, response interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(response)
 }
 
 // jsonErrorResponse sends a JSON error response with the specified data and status code.
-func (h *ArticlesController) jsonErrorResponse(w http.ResponseWriter, response models.ErrorResponse, statusCode int) {
+func (h *ArticlesHandler) jsonErrorResponse(w http.ResponseWriter, response models.ErrorResponse, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(response)
