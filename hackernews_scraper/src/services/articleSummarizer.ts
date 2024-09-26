@@ -23,12 +23,13 @@ function createArticleSummarizer(config: OllamaConfig) {
     summary: z.string(),
   });
 
-  async function summarizeContent(
+  const summarizeContent = async (
     title: string,
     content: string
-  ): Promise<string> {
+  ): Promise<string> => {
     try {
-      const MAX_CONTENT_LENGTH = 5000;
+      const MAX_CONTENT_LENGTH = 2000;
+      const MAX_OUTPUT_TOKENS = 150;
 
       // Truncate content if it exceeds the maximum length
       let truncatedContent = content;
@@ -39,22 +40,22 @@ function createArticleSummarizer(config: OllamaConfig) {
         );
       }
 
-      const prompt = `Please provide a concise summary of the following article in JSON format.
+      const prompt = `Provide a concise summary (max 150 words) of the article below.
 
-Article Title: ${title}
+Title: ${title}
 
 Content:
 ${truncatedContent}
 
-Please output the summary in the following JSON format:
-
-{
-  "summary": "Your summary here"
-}`;
+Summary:
+`;
 
       const response = await client.chat.completions.create({
         model: config.model,
         messages: [{ role: 'user', content: prompt }],
+        max_tokens: MAX_OUTPUT_TOKENS,
+        temperature: 0.5,
+        top_p: 0.9,
         response_model: { schema: SummarySchema, name: 'SummarySchema' },
       });
 
@@ -66,11 +67,11 @@ Please output the summary in the following JSON format:
       console.error('Error summarizing content:', error);
       return '';
     }
-  }
+  };
 
-  async function summarizeArticles(
+  const summarizeArticles = async (
     articles: Required<Article>[]
-  ): Promise<Article[]> {
+  ): Promise<Article[]> => {
     for (const article of articles) {
       console.log(`Summarizing article: ${article.title}`);
       const summary = await summarizeContent(article.title, article.content);
@@ -85,7 +86,7 @@ Please output the summary in the following JSON format:
     }
 
     return articles;
-  }
+  };
 
   return {
     summarizeArticles,
