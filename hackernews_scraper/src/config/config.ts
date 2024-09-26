@@ -14,7 +14,8 @@ const config: Config = {
     database: process.env.MYSQL_DATABASE || 'database_name',
   },
   ollama: {
-    baseUrl: process.env.OLLAMA_BASE_URL || 'http://localhost:11434/v1',
+    baseUrl:
+      process.env.OLLAMA_BASE_URL || 'http://localhost:11434/api/generate',
     model: process.env.OLLAMA_MODEL || 'llama3:instruct',
     apiKey: process.env.OLLAMA_API_KEY || 'ollama',
   },

@@ -39,17 +39,43 @@
    MYSQL_PASSWORD=password
    MYSQL_ROOT_PASSWORD=password
 
-   # Third Party
-   HUGGING_FACE_API_KEY=
+   # Ollama Configuration
+   OLLAMA_BASE_URL=http://localhost:11434/api/generate
+   OLLAMA_MODEL=llama3:instruct
+   MAX_CONTENT_LENGTH=5000
    ```
 
-   **Obtain API Key:**
+   **Set Up Ollama:**
 
-   To summarize articles, you need a Hugging Face API key. Visit [Hugging Face](https://huggingface.co/) to create an account and obtain your API key. Then, add it to your `.env` file:
+   The project uses [Ollama](https://ollama.ai/) to summarize articles. Follow these steps to set up Ollama:
 
-   ```dotenv
-   HUGGING_FACE_API_KEY=your-huggingface-api-key
-   ```
+   - **Install Ollama:**
+
+     Visit the [Ollama installation page](https://ollama.ai/download) and download the installer for your operating system. Alternatively, for macOS users with Homebrew:
+
+     ```bash
+     brew install ollama/tap/ollama
+     ```
+
+   - **Start the Ollama Server:**
+
+     Ollama runs as a local server. Start it by running:
+
+     ```bash
+     ollama serve
+     ```
+
+   - **Download the Required Model:**
+
+     The default model used is `llama3:instruct`. Pull the model using:
+
+     ```bash
+     ollama pull llama3:instruct
+     ```
+
+     If you specified a different model in your `.env` file under `OLLAMA_MODEL`, make sure to pull that model instead.
+
+   **Note:** Ensure that Ollama is running whenever you run the scraper or the application components that require summarization.
 
 3. **Ensure Docker is Installed and Running:**
 
