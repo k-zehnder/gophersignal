@@ -1,11 +1,13 @@
 // Fetches the full content of articles linked from top Hacker News stories,
 // including handling cookie consents and popups on web pages.
 
-const createContentFetcher = (browser) => {
+import { Browser, Page } from 'puppeteer';
+
+const createContentFetcher = (browser: Browser) => {
   /**
    * Handles cookie consent on web pages by clicking on common cookie consent buttons.
    */
-  const acceptCookieConsent = async (page) => {
+  const acceptCookieConsent = async (page: Page): Promise<boolean> => {
     const commonSelectors = [
       'cookie-banner',
       '.cookie-consent',
@@ -25,7 +27,7 @@ const createContentFetcher = (browser) => {
   /**
    * Handles popups and modal dialogs on web pages.
    */
-  const handlePopups = async (page) => {
+  const handlePopups = async (page: Page): Promise<boolean> => {
     const popupSelectors = ['.popup', '.overlay', '.modal', '.modal-dialog'];
     for (const selector of popupSelectors) {
       const elements = await page.$$(selector);
@@ -36,7 +38,7 @@ const createContentFetcher = (browser) => {
       }
     }
 
-    page.on('dialog', async (dialog) => {
+    page.on('dialog', async (dialog: any) => {
       console.log('Dialog message:', dialog.message());
       await dialog.accept();
     });
@@ -48,13 +50,13 @@ const createContentFetcher = (browser) => {
   /**
    * Fetches the main content of an article from a given URL using Puppeteer.
    */
-  const fetchArticleContent = async (url) => {
+  const fetchArticleContent = async (url: string): Promise<string> => {
     const navigationTimeout = 30000;
 
     try {
       const page = await browser.newPage();
       await page.setRequestInterception(true);
-      page.on('request', (req) => {
+      page.on('request', (req: any) => {
         if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
           req.abort();
         } else {
@@ -96,8 +98,8 @@ const createContentFetcher = (browser) => {
             .forEach((el) => el.remove());
         }
 
-        const paragraphs = mainContent.querySelectorAll('p');
-        return Array.from(paragraphs)
+        const paragraphs = mainContent?.querySelectorAll('p');
+        return Array.from(paragraphs!)
           .map((p) => p.innerText.trim())
           .join('\n\n');
       });
@@ -119,4 +121,4 @@ const createContentFetcher = (browser) => {
   return { fetchArticleContent };
 };
 
-module.exports = { createContentFetcher };
+export { createContentFetcher };

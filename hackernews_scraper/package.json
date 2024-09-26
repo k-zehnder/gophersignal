@@ -13,12 +13,20 @@
   "description": "",
   "devDependencies": {
     "@types/mysql": "^2.15.26",
-    "@types/node": "^20.12.11"
+    "@types/node": "^20.12.11",
+    "@types/puppeteer": "^5.4.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
   },
   "dependencies": {
+    "@instructor-ai/instructor": "^1.5.0",
     "axios": "^1.6.8",
     "dotenv": "^16.4.5",
     "mysql2": "^3.9.7",
-    "puppeteer": "^22.8.1"
+    "openai": "^4.64.0",
+    "puppeteer": "^22.15.0",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "zod": "^3.23.8"
   }
 }

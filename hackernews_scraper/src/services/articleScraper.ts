@@ -1,10 +1,13 @@
 // Scrapes top stories from Hacker News, extracting their titles and links.
 
-const createHackerNewsScraper = (browser) => {
+import { Browser } from 'puppeteer';
+import { Article } from '../types/index';
+
+const createHackerNewsScraper = (browser: Browser) => {
   /**
    * Scrapes top stories from Hacker News and returns an array of articles with title and link.
    */
-  const scrapeTopStories = async () => {
+  const scrapeTopStories = async (): Promise<Article[]> => {
     try {
       const page = await browser.newPage();
       await page.setUserAgent(
@@ -15,10 +18,12 @@ const createHackerNewsScraper = (browser) => {
       });
 
       // Extract article titles and links from the page
-      const articles = await page.evaluate(() => {
+      const articles: Article[] = await page.evaluate(() => {
         const rows = Array.from(document.querySelectorAll('tr.athing'));
         return rows.map((row) => {
-          const titleElement = row.querySelector('.titleline a');
+          const titleElement = row.querySelector(
+            '.titleline a'
+          ) as HTMLAnchorElement;
           const title = titleElement
             ? titleElement.innerText
             : 'No title found';
@@ -42,4 +47,4 @@ const createHackerNewsScraper = (browser) => {
   return { scrapeTopStories };
 };
 
-module.exports = { createHackerNewsScraper };
+export { createHackerNewsScraper, Article };

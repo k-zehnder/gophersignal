@@ -1,18 +1,20 @@
 // Main script to scrape articles from Hacker News, fetch their content,
-// summarize the content using the Hugging Face API, and save the articles
+// summarize the content using Instructor and Ollama, and save the articles
 // and their summaries to a MySQL database.
 
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const axios = require('axios');
-const puppeteer = require('puppeteer-extra');
-const StealthPlugin = require('puppeteer-extra-plugin-stealth');
-const { connectToDatabase } = require('./database/connection');
-const { createHackerNewsScraper } = require('./services/articleScraper');
-const { createContentFetcher } = require('./services/articleContentFetcher');
-const { createArticleProcessor } = require('./services/articleProcessor');
-const { createArticleSummarizer } = require('./services/articleSummarizer');
-const config = require('./config/config');
+import puppeteer from 'puppeteer-extra';
+import { Browser } from 'puppeteer';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { connectToDatabase } from './database/connection';
+import { createHackerNewsScraper } from './services/articleScraper';
+import { createContentFetcher } from './services/articleContentFetcher';
+import { createArticleProcessor } from './services/articleProcessor';
+import { createArticleSummarizer } from './services/articleSummarizer';
+import { Article } from './types/index';
+import config from './config/config';
 
 // Apply the stealth plugin to puppeteer
 puppeteer.use(StealthPlugin());
@@ -21,20 +23,20 @@ puppeteer.use(StealthPlugin());
  * Main function to:
  * 1. Scrape top stories from Hacker News.
  * 2. Fetch the full content of the top stories.
- * 3. Summarize the fetched content using the Hugging Face API.
+ * 3. Summarize the fetched content using Instructor and Ollama.
  * 4. Save the articles and their summaries to a MySQL database.
  */
 const main = async () => {
-  let db;
-  let browser;
+  let db: any;
+  let browser: Browser | null = null;
 
   try {
     // Initialize the database connection
-    db = await connectToDatabase(config);
+    db = await connectToDatabase(config.mysql);
 
     // Launch a new Puppeteer browser instance with Stealth plugin
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
 
@@ -45,14 +47,19 @@ const main = async () => {
       hackerNewsScraper,
       contentFetcher
     );
-    const articleSummarizer = createArticleSummarizer(axios, config);
+    const articleSummarizer = createArticleSummarizer(config.ollama);
 
     // Scrape top stories from Hacker News and fetch their content
     const articles = await articleProcessor.processTopStories();
 
+    // Filter articles with defined content
+    const articlesWithContent = articles.filter(
+      (article): article is Required<Article> => article.content !== undefined
+    );
+
     // Summarize the content of the fetched articles
     const summarizedArticles = await articleSummarizer.summarizeArticles(
-      articles
+      articlesWithContent
     );
 
     // Save the summarized articles to the database
