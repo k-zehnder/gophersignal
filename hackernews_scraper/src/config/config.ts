@@ -13,11 +13,9 @@ const config: Config = {
     password: process.env.MYSQL_PASSWORD || '',
     database: process.env.MYSQL_DATABASE || 'database_name',
   },
-  ollama: {
-    baseUrl:
-      process.env.OLLAMA_BASE_URL || 'http://localhost:11434/api/generate',
-    model: process.env.OLLAMA_MODEL || 'llama3:instruct',
-    apiKey: process.env.OLLAMA_API_KEY || 'ollama',
+  huggingFace: {
+    apiKey: process.env.HUGGING_FACE_API_KEY || '',
+    model: process.env.HUGGING_FACE_MODEL || 'facebook/bart-large-cnn',
   },
 };
 

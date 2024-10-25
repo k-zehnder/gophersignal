@@ -47,7 +47,7 @@ const main = async () => {
       hackerNewsScraper,
       contentFetcher
     );
-    const articleSummarizer = createArticleSummarizer(config.ollama);
+    const articleSummarizer = createArticleSummarizer(config.huggingFace);
 
     // Scrape top stories from Hacker News and fetch their content
     const articles = await articleProcessor.processTopStories();
