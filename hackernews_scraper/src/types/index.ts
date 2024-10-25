@@ -13,13 +13,12 @@ export interface MySQLConfig {
   database: string;
 }
 
-export interface OllamaConfig {
-  baseUrl: string;
+export interface HuggingFaceConfig {
+  apiKey: string;
   model: string;
-  apiKey?: string;
 }
 
 export interface Config {
   mysql: MySQLConfig;
-  ollama: OllamaConfig;
+  huggingFace: HuggingFaceConfig;
 }
