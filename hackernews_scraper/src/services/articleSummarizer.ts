@@ -4,7 +4,7 @@ import fetch from 'node-fetch';
 import { z } from 'zod';
 import { Article, HuggingFaceConfig } from '../types/index';
 
-// Function to create the summarizer using Hugging Face API
+// Factory to create the summarizer using the Hugging Face API
 function createArticleSummarizer(config: HuggingFaceConfig) {
   const HUGGING_FACE_API_URL = 'https://api-inference.huggingface.co/models';
 
