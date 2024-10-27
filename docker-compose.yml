@@ -2,7 +2,7 @@ services:
   frontend:
     image: kjzehnder3/gophersignal-frontend:latest
     ports:
-      - '3000:3000'
+      - 3000:300
     depends_on:
       - backend
     networks:
@@ -13,7 +13,7 @@ services:
   backend:
     image: kjzehnder3/gophersignal-backend:latest
     ports:
-      - '8080:8080'
+      - 8080:8080
     networks:
       - app-network
     env_file:
@@ -43,7 +43,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - '3306:3306'
+      - 3306:3306
     volumes:
       - mysql_gophersignal:/var/lib/mysql
     networks:
@@ -56,8 +56,8 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - '80:80'
-      - '443:443'
+      - 80:80
+      - 443:443
     networks:
       - app-network
     volumes:
