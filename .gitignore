@@ -136,3 +136,4 @@ dist
 .DS_Store
 coverage.out
 coverage.html
+debug-docker-compose.yml
