@@ -2,7 +2,7 @@ services:
   frontend:
     image: kjzehnder3/gophersignal-frontend:latest
     ports:
-      - 3000:300
+      - 3000:3000
     depends_on:
       - backend
     networks:
