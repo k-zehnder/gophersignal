@@ -2,7 +2,7 @@ services:
   frontend:
     image: kjzehnder3/gophersignal-frontend:latest
     ports:
-      - 3000:3000
+      - '3000:3000'
     depends_on:
       - backend
     networks:
@@ -13,14 +13,13 @@ services:
   backend:
     image: kjzehnder3/gophersignal-backend:latest
     ports:
-      - 8080:8080
+      - '8080:8080'
     networks:
       - app-network
     env_file:
       - .env
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     restart: always
 
   hackernews_scraper:
@@ -31,33 +30,11 @@ services:
       - .env
     restart: always
 
-  mysql:
-    image: mysql:8.0
-    healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'mysqladmin ping -h localhost -uroot -p${MYSQL_ROOT_PASSWORD}',
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    ports:
-      - 3306:3306
-    volumes:
-      - mysql_gophersignal:/var/lib/mysql
-    networks:
-      - app-network
-    env_file:
-      - .env
-    command: --bind-address=0.0.0.0
-    restart: always
-
   nginx:
     image: nginx:latest
     ports:
-      - 80:80
-      - 443:443
+      - '80:80'
+      - '443:443'
     networks:
       - app-network
     volumes:
@@ -71,7 +48,3 @@ services:
 networks:
   app-network:
     driver: bridge
-
-volumes:
-  mysql_gophersignal:
-    driver: local
