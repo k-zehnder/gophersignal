@@ -4,9 +4,6 @@ import { Browser } from 'puppeteer';
 import { Article } from '../types/index';
 
 const createHackerNewsScraper = (browser: Browser) => {
-  /**
-   * Scrapes top stories from Hacker News and returns an array of articles with title and link.
-   */
   const scrapeTopStories = async (): Promise<Article[]> => {
     try {
       const page = await browser.newPage();
