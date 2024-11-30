@@ -1,4 +1,4 @@
-// Loads environment variables and provides configuration settings for the application.
+// Loads environment variables and provides configuration settings.
 
 import dotenv from 'dotenv';
 dotenv.config();
@@ -13,9 +13,13 @@ const config: Config = {
     password: process.env.MYSQL_PASSWORD || '',
     database: process.env.MYSQL_DATABASE || 'database_name',
   },
-  huggingFace: {
-    apiKey: process.env.HUGGING_FACE_API_KEY || '',
-    model: process.env.HUGGING_FACE_MODEL || 'facebook/bart-large-cnn',
+  ollama: {
+    baseUrl:
+      process.env.OLLAMA_BASE_URL || 'http://localhost:11434/api/generate',
+    model: process.env.OLLAMA_MODEL || 'llama3:instruct',
+    apiKey: process.env.OLLAMA_API_KEY || 'ollama',
+    maxContentLength: parseInt(process.env.MAX_CONTENT_LENGTH || '2000'),
+    maxSummaryLength: parseInt(process.env.MAX_SUMMARY_LENGTH || '500'),
   },
 };
 

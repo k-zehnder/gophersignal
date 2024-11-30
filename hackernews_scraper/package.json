@@ -5,25 +5,37 @@
   "scripts": {
     "start": "ts-node src/index.ts",
     "debug": "DEBUG_MODE=true ts-node src/index.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "NODE_ENV=test npx nyc mocha --require ts-node/register tests/**/*.test.ts",
+    "coverage": "nyc report --reporter=text --reporter=html"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "^1.0.2",
+    "@types/chai": "^5.0.1",
+    "@types/mocha": "^10.0.10",
     "@types/mysql": "^2.15.26",
     "@types/node": "^20.12.11",
     "@types/puppeteer": "^5.4.7",
+    "@types/sinon": "^17.0.3",
+    "chai": "^5.1.2",
+    "mocha": "^10.8.2",
+    "nock": "^13.5.6",
+    "nyc": "^17.1.0",
+    "sinon": "^19.0.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.2"
+    "typescript": "^5.7.2"
   },
   "dependencies": {
     "@instructor-ai/instructor": "^1.5.0",
+    "@types/cli-progress": "^3.11.6",
     "axios": "^1.6.8",
+    "cli-progress": "^3.12.0",
     "dotenv": "^16.4.5",
     "mysql2": "^3.9.7",
-    "openai": "^4.64.0",
+    "openai": "^4.73.1",
     "puppeteer": "^22.15.0",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",

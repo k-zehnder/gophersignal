@@ -3,6 +3,11 @@ build:
 	@echo "Building HackerNews scraper Docker image..."
 	docker build -t $(HACKERNEWS_SCRAPER_IMAGE_TAG) .
 
+.PHONY: test
+test:
+	@echo "Running tests for HackerNews scraper..."
+	docker run --rm $(HACKERNEWS_SCRAPER_IMAGE_TAG) npm test
+
 .PHONY: push
 push:
 	@echo "Pushing HackerNews scraper Docker image..."
