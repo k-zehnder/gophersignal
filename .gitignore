@@ -136,3 +136,8 @@ dist
 .DS_Store
 coverage.out
 coverage.html
+debug.ts
+node_modules/
+/blob-report/
+coverage/
+downloads
