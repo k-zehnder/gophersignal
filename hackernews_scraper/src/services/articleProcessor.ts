@@ -15,9 +15,6 @@ const createArticleProcessor = (
   scraper: Scraper,
   contentFetcher: ContentFetcher
 ) => {
-  /**
-   * Scrapes top stories from Hacker News, fetches their content, and returns the articles.
-   */
   const processTopStories = async (): Promise<Article[]> => {
     try {
       const articles = await scraper.scrapeTopStories();
