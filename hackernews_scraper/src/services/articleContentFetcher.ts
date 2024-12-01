@@ -1,12 +1,9 @@
-// Fetches the full content of articles linked from top Hacker News stories,
-// including handling cookie consents and popups on web pages.
+// Fetches full article content from Hacker News links, handling cookie consents and popups.
 
 import { Browser, Page } from 'puppeteer';
 
 const createContentFetcher = (browser: Browser) => {
-  /**
-   * Handles cookie consent on web pages by clicking on common cookie consent buttons.
-   */
+  // Handles cookie consent on web pages by clicking on common cookie consent buttons
   const acceptCookieConsent = async (page: Page): Promise<boolean> => {
     const commonSelectors = [
       'cookie-banner',
@@ -24,9 +21,7 @@ const createContentFetcher = (browser: Browser) => {
     return false;
   };
 
-  /**
-   * Handles popups and modal dialogs on web pages.
-   */
+  // Handles popups and modal dialogs on web pages
   const handlePopups = async (page: Page): Promise<boolean> => {
     const popupSelectors = ['.popup', '.overlay', '.modal', '.modal-dialog'];
     for (const selector of popupSelectors) {
@@ -47,9 +42,7 @@ const createContentFetcher = (browser: Browser) => {
     return false;
   };
 
-  /**
-   * Fetches the main content of an article from a given URL using Puppeteer.
-   */
+  // Fetches the main content of an article from a given URL using Puppeteer
   const fetchArticleContent = async (url: string): Promise<string> => {
     const navigationTimeout = 30000;
 
