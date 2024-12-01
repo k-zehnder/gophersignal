@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install Node dependencies and additional system dependencies needed for scraping
-RUN npm install && apt-get update && apt-get install -y \
+RUN npm install ts-node && apt-get update && apt-get install -y \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
