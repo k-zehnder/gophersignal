@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 export interface Article {
   title: string;
   link: string;
@@ -13,12 +15,20 @@ export interface MySQLConfig {
   database: string;
 }
 
-export interface HuggingFaceConfig {
-  apiKey: string;
+export interface OllamaConfig {
+  baseUrl: string;
   model: string;
+  apiKey?: string;
+  maxContentLength: number;
+  maxSummaryLength: number;
 }
 
 export interface Config {
   mysql: MySQLConfig;
-  huggingFace: HuggingFaceConfig;
+  ollama: OllamaConfig;
 }
+
+export const SummarySchema = z.object({
+  summary: z.string().optional(),
+  response: z.string().optional(),
+});

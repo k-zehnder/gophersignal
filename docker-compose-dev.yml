@@ -46,9 +46,13 @@ services:
       - .env
 
   mysql:
-    image: mysql:latest
+    image: mysql:8.0
     healthcheck:
-      test: ['CMD-SHELL', 'mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}']
+      test:
+        [
+          'CMD-SHELL',
+          'mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}',
+        ]
       interval: 10s
       timeout: 5s
       retries: 5

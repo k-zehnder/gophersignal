@@ -3,9 +3,8 @@
 import mysql, { Connection } from 'mysql2/promise';
 import { Article, MySQLConfig } from '../types';
 
-// Handles database connection, disconnection, and initialization operations.
+// Handles database connection, disconnection, and initialization operations
 const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
-  // Establish a new connection to the MySQL database using the provided configuration.
   const connection: Connection = await mysql.createConnection({
     host: mysqlConfig.host,
     port: mysqlConfig.port,
@@ -16,7 +15,7 @@ const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
 
   console.log('Database connected successfully');
 
-  // Inserts multiple articles into the database in bulk.
+  // Inserts multiple articles into the database in bulk
   const saveArticles = async (articles: Article[]): Promise<void> => {
     const maxContentLength = 45000;
     const currentTimestamp = new Date()
@@ -43,7 +42,7 @@ const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
     await connection.query(query, [values]);
   };
 
-  // Updates the summary of an article in the database with the given connection, article ID, and summary text.
+  // Updates the summary of an article 
   const updateArticleSummary = async (
     id: number,
     summary: string

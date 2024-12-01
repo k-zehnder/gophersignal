@@ -34,6 +34,7 @@ export default function NavBar() {
     <>
       <Link href="/">
         {/* Render the site title as a link to the home page */}
+        {/* @ts-ignore */}
         <Typography component="h1" level="display2" fontSize="xl">
           {siteMetaData.title}
         </Typography>
