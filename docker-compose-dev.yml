@@ -57,7 +57,7 @@ services:
       timeout: 5s
       retries: 5
     ports:
-      - 9876:3306
+      - 3306:3306
     volumes:
       - mysql_gophersignal_dev:/var/lib/mysql
     networks:
