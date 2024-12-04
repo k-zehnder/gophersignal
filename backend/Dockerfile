@@ -22,8 +22,8 @@ RUN test -f docs/swagger.json && test -f docs/swagger.yaml
 FROM debian:latest
 WORKDIR /root/
 
-# Install MySQL client for database initialization
-RUN apt-get update && apt-get install -y default-mysql-client
+# Install MySQL client and iproute2 for database initialization
+RUN apt-get update && apt-get install -y default-mysql-client iproute2
 
 # Copy the built application binary and entrypoint script from the build stage
 COPY --from=build /app/main .
@@ -37,3 +37,4 @@ EXPOSE 8080
 
 # Run the entrypoint script
 ENTRYPOINT ["/root/entrypoint.sh"]
+

@@ -1,5 +1,10 @@
 #!/bin/sh
 
+# Dynamically determine the host's IP address
+HOST_IP=$(ip route | grep default | awk '{print $3}')
+export MYSQL_HOST=$HOST_IP
+echo "Determined host IP: $MYSQL_HOST"
+
 echo "Starting database initialization..."
 
 # Wait for MySQL to be ready
@@ -10,25 +15,6 @@ done
 
 echo "MySQL is ready."
 
-# Check if the database exists and create it if it does not
-echo "Creating database if it doesn't exist..."
-mysql -h $MYSQL_HOST -u root -p"$MYSQL_ROOT_PASSWORD" -e "
-    CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;
-    USE $MYSQL_DATABASE;
-    CREATE TABLE IF NOT EXISTS articles (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(255) NOT NULL,
-        link VARCHAR(512) NOT NULL,
-        content TEXT,
-        summary VARCHAR(2000),
-        source VARCHAR(100) NOT NULL,
-        created_at TIMESTAMP NOT NULL,
-        updated_at TIMESTAMP NOT NULL
-    );
-"
-
-echo "Database initialization completed."
-
 # Start the main application
 echo "Starting Go application..."
 
@@ -37,3 +23,4 @@ if [ "$GO_ENV" = "development" ]; then
 else
     exec ./main
 fi
+
