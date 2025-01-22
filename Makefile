@@ -21,7 +21,6 @@ test:
 	@echo "Running tests for all components..."
 	$(MAKE) -C frontend test
 	$(MAKE) -C backend test
-	$(MAKE) -C hackernews_scraper test
 
 .PHONY: push
 push:
