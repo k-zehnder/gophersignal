@@ -7,6 +7,8 @@ services:
       - backend
     networks:
       - app-network
+    env_file:
+      - .env
 
   backend:
     image: kjzehnder3/gophersignal-backend:latest
@@ -16,13 +18,7 @@ services:
       - app-network
     env_file:
       - .env
-<<<<<<< HEAD
-    depends_on:
-      mysql:
-        condition: service_healthy
-=======
     restart: always
->>>>>>> origin/staging
 
   hackernews_scraper:
     image: kjzehnder3/gophersignal-hackernews_scraper:latest
@@ -30,26 +26,8 @@ services:
       - app-network
     env_file:
       - .env
+    restart: always
 
-<<<<<<< HEAD
-  mysql:
-    image: mysql:latest
-    healthcheck:
-      test: ['CMD-SHELL', 'mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    ports:
-      - 3306:3306
-    volumes:
-      - mysql_gophersignal:/var/lib/mysql
-    networks:
-      - app-network
-    env_file:
-      - .env
-
-=======
->>>>>>> origin/staging
   nginx:
     image: nginx:latest
     ports:
@@ -63,8 +41,8 @@ services:
       - ./frontend/out:/usr/share/nginx/html
     depends_on:
       - backend
+    restart: always
 
 networks:
   app-network:
     driver: bridge
-
