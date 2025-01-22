@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS articles (
     content TEXT,
     summary VARCHAR(2000),
     source VARCHAR(100) NOT NULL,
+    upvotes INT DEFAULT 0,
+    comment_count INT DEFAULT 0,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );
