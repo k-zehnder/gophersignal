@@ -11,7 +11,6 @@ import (
 )
 
 // Handler defines the interface for handlers that manage HTTP requests.
-// It extends the http.Handler interface by expecting implementation of ServeHTTP.
 type Handler interface {
 	http.Handler
 }
@@ -36,15 +35,6 @@ func (h *ArticlesHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetArticles handles the HTTP request to retrieve articles.
-// @Summary Get articles
-// @Description Retrieve a list of articles from the database.
-// @Tags Articles
-// @Accept json
-// @Produce json
-// @Success 200 {object} models.ArticlesResponse "Articles data"
-// @Failure 400 {object} models.ErrorResponse "Bad Request"
-// @Failure 500 {object} models.ErrorResponse "Internal Server Error"
-// @Router /articles [get]
 func (h *ArticlesHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 	articles, err := h.Store.GetArticles()
 	if err != nil {

@@ -4,7 +4,6 @@ import ArticleListItem from './ArticleListItem';
 import List from '@mui/joy/List';
 import { Article } from '../types';
 
-// This component displays a list of articles fetched using the 'useArticles' hook.
 function ArticleList() {
   const articles: Article[] = useArticles();
 

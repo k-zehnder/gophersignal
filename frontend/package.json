@@ -25,7 +25,8 @@
     "react-dom": "18.2.0",
     "remark": "^15.0.1",
     "remark-html": "^16.0.1",
-    "semver": "^7.6.0"
+    "semver": "^7.6.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@babel/core": "^7.24.4",

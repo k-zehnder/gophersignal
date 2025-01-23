@@ -42,8 +42,25 @@ services:
       - app-network
     depends_on:
       - mysql
+      - ollama
     env_file:
       - .env
+    environment:
+      # Point to the Ollama service in the app network
+      - OLLAMA_SERVICE_URL=http://ollama:11434
+
+  ollama:
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile.ollama
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - 11434:11434
+    networks:
+      - app-network
+    environment:
+      - OLLAMA_CONFIG=/ollama/config
 
   mysql:
     image: mysql:8.0
@@ -84,3 +101,4 @@ networks:
 volumes:
   mysql_gophersignal_dev:
     driver: local
+  ollama:

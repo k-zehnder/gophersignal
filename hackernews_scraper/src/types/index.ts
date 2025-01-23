@@ -5,6 +5,10 @@ export interface Article {
   link: string;
   content?: string;
   summary?: string;
+  source?: string;
+  upvotes?: number;
+  comment_count?: number;
+  comment_link?: string;
 }
 
 export interface MySQLConfig {
@@ -28,7 +32,8 @@ export interface Config {
   ollama: OllamaConfig;
 }
 
-export const SummarySchema = z.object({
+export const SummaryResponseSchema = z.object({
   summary: z.string().optional(),
   response: z.string().optional(),
+  _meta: z.any().optional(),
 });
