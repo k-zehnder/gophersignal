@@ -43,9 +43,32 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 // SaveArticles handles the addition or update of articles in the database.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	// Prepare SQL statement for article insertion or update.
+	// Include the new columns: upvotes, comment_count, and comment_link.
 	stmt, err := store.db.Prepare(`
-        INSERT INTO articles (title, link, content, summary, source, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?);
+        INSERT INTO articles (
+          title,
+          link,
+          content,
+          summary,
+          source,
+          created_at,
+          updated_at,
+          upvotes,
+          comment_count,
+          comment_link
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+          title = VALUES(title),
+          link = VALUES(link),
+          content = VALUES(content),
+          summary = VALUES(summary),
+          source = VALUES(source),
+          created_at = VALUES(created_at),
+          updated_at = VALUES(updated_at),
+          upvotes = VALUES(upvotes),
+          comment_count = VALUES(comment_count),
+          comment_link = VALUES(comment_link);
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
@@ -54,9 +77,20 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 
 	// Execute the statement for each article.
 	for _, article := range articles {
-		_, err := stmt.Exec(article.Title, article.Link, article.Content, article.Summary, article.Source, article.CreatedAt, article.UpdatedAt)
-		if err != nil {
-			fmt.Printf("Failed for article '%s': %v\n", article.Title, err)
+		_, execErr := stmt.Exec(
+			article.Title,
+			article.Link,
+			article.Content,
+			article.Summary,
+			article.Source,
+			article.CreatedAt,
+			article.UpdatedAt,
+			article.Upvotes,
+			article.CommentCount,
+			article.CommentLink,
+		)
+		if execErr != nil {
+			fmt.Printf("Failed for article '%s': %v\n", article.Title, execErr)
 			// Continue with the next article in case of an error.
 			continue
 		}
@@ -64,15 +98,29 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-// GetArticles retrieves the latest 30 articles with non-empty summaries from the database,
-// ensuring they come from the most recent batch based on the highest `id`.
+// GetArticles retrieves the latest 30 articles with non-empty summaries from the database.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 	// Query to fetch the latest 30 articles with non-empty summaries, sorted by their IDs in descending order.
 	query := `
-        SELECT id, title, link, content, summary, source, created_at, updated_at
+        SELECT
+          id,
+          title,
+          link,
+          content,
+          summary,
+          source,
+          created_at,
+          updated_at,
+          upvotes,
+          comment_count,
+          comment_link
         FROM articles
-        WHERE summary IS NOT NULL AND summary != '' 
-        AND id >= (SELECT id FROM articles WHERE summary IS NOT NULL AND summary != '' ORDER BY id DESC LIMIT 1) - 29
+        WHERE summary IS NOT NULL AND summary != ''
+          AND id >= (
+            SELECT id FROM articles
+            WHERE summary IS NOT NULL AND summary != ''
+            ORDER BY id DESC LIMIT 1
+          ) - 29
         ORDER BY id DESC
         LIMIT 30;
     `
@@ -87,7 +135,19 @@ func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 	var articles []*models.Article
 	for rows.Next() {
 		var article models.Article
-		if err := rows.Scan(&article.ID, &article.Title, &article.Link, &article.Content, &article.Summary, &article.Source, &article.CreatedAt, &article.UpdatedAt); err != nil {
+		if err := rows.Scan(
+			&article.ID,
+			&article.Title,
+			&article.Link,
+			&article.Content,
+			&article.Summary,
+			&article.Source,
+			&article.CreatedAt,
+			&article.UpdatedAt,
+			&article.Upvotes,
+			&article.CommentCount,
+			&article.CommentLink,
+		); err != nil {
 			return nil, fmt.Errorf("failed to scan article: %w", err)
 		}
 		articles = append(articles, &article)
@@ -98,6 +158,5 @@ func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 
-	// Return a slice of pointers to articles.
 	return articles, nil
 }
