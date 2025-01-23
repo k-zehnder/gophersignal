@@ -12,7 +12,7 @@ import { createArticleProcessor } from './services/articleProcessor';
 import { createArticleSummarizer } from './services/articleSummarizer';
 import Instructor from '@instructor-ai/instructor';
 import OpenAI from 'openai';
-import { Article, SummarySchema } from './types/index';
+import { Article, SummaryResponseSchema } from './types/index';
 import config from './config/config';
 
 // Initializes dependencies: database, browser, and services
@@ -48,7 +48,7 @@ const initDependencies = async () => {
   const articleSummarizer = createArticleSummarizer(
     instructorClient,
     config.ollama,
-    SummarySchema
+    SummaryResponseSchema
   );
 
   return { db, browser, articleProcessor, articleSummarizer };
