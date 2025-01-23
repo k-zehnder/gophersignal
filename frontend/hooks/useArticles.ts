@@ -21,7 +21,7 @@ const useArticles = () => {
           throw new Error('Network response was not ok');
         }
 
-        // Parse and validate the API response
+        // Parse the API response
         const jsonResponse = await response.json();
         const apiResponse = ArticlesResponseSchema.parse(jsonResponse);
 
