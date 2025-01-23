@@ -7,8 +7,10 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies, including ts-node and system libraries
-RUN npm install ts-node && apt-get update && apt-get install -y \
+# Install dependencies, including ts-node globally and required system libraries
+RUN npm install -g ts-node typescript && \
+    npm install && \
+    apt-get update && apt-get install -y \
     libnss3 \
     libatk1.0-0 \
     libatk-bridge2.0-0 \
@@ -24,7 +26,8 @@ RUN npm install ts-node && apt-get update && apt-get install -y \
     libcairo2 \
     libatspi2.0-0 \
     libgtk-3-0 \
-    libdbus-1-3
+    libdbus-1-3 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Bundle app source
 COPY . .

@@ -2,14 +2,14 @@
 
 import { z } from 'zod';
 import { SingleBar, Presets } from 'cli-progress';
-import { Article, OllamaConfig, SummarySchema } from '../types/index';
+import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 import Instructor from '@instructor-ai/instructor';
 
 // Creates an article summarizer service using Instructor and Ollama
 const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
-  schema: z.AnyZodObject = SummarySchema
+  schema: z.AnyZodObject = SummaryResponseSchema
 ) => {
   const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
   const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
@@ -25,13 +25,13 @@ const createArticleSummarizer = (
         : content;
 
     const prompt = `Provide a concise summary (max 150 words) of the article below.
-      Title: ${title}
+    Title: ${title}
 
-      Content:
-      ${truncatedContent}
+    Content:
+    ${truncatedContent}
 
-      Summary:
-    `;
+    Summary:
+  `;
 
     try {
       const response = await client.chat.completions.create({
@@ -43,11 +43,17 @@ const createArticleSummarizer = (
         response_model: { schema, name: 'SummarySchema' },
       });
 
-      const { summary } = response;
-      return summary ?? 'No summary available';
+      // Validate the response
+      const parsedResponse = SummaryResponseSchema.parse(response);
+
+      return parsedResponse.summary ?? 'No summary available';
     } catch (error) {
-      console.error(`Error summarizing content for "${title}":`, error);
-      return '';
+      if (error instanceof z.ZodError) {
+        console.error('Zod validation error:', error.errors);
+      } else {
+        console.error(`Error summarizing content for "${title}":`, error);
+      }
+      return 'No summary available';
     }
   };
 

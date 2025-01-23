@@ -22,27 +22,46 @@ const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
       .toISOString()
       .slice(0, 19)
       .replace('T', ' ');
-    const values = articles.map(({ title, link, content = '', summary }) => [
-      title,
-      link,
-      content.length > maxContentLength
-        ? content.slice(0, maxContentLength)
-        : content,
-      summary,
-      'Hacker News',
-      currentTimestamp,
-      currentTimestamp,
-    ]);
+
+    const values = articles.map(
+      ({
+        title,
+        link,
+        content = '',
+        summary,
+        upvotes = 0,
+        comment_count = 0,
+        comment_link = '',
+      }) => [
+        title,
+        link,
+        content.length > maxContentLength
+          ? content.slice(0, maxContentLength)
+          : content,
+        summary,
+        'Hacker News',
+        upvotes,
+        comment_count,
+        comment_link,
+        currentTimestamp,
+        currentTimestamp,
+      ]
+    );
 
     const query = `
-    INSERT INTO articles (title, link, content, summary, source, created_at, updated_at)
+    INSERT INTO articles (title, link, content, summary, source, upvotes, comment_count, comment_link, created_at, updated_at)
     VALUES ?
+    ON DUPLICATE KEY UPDATE
+      upvotes = VALUES(upvotes),
+      comment_count = VALUES(comment_count),
+      comment_link = VALUES(comment_link),
+      updated_at = VALUES(updated_at);
   `;
 
     await connection.query(query, [values]);
   };
 
-  // Updates the summary of an article 
+  // Updates the summary of an article
   const updateArticleSummary = async (
     id: number,
     summary: string

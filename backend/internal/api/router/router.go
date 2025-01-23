@@ -32,6 +32,7 @@ func SetupRouter(articlesHandler *handlers.ArticlesHandler) *mux.Router {
 		}),
 		gorillaHandlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 		gorillaHandlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
+		gorillaHandlers.AllowCredentials(),
 	)
 	r.Use(cors)
 

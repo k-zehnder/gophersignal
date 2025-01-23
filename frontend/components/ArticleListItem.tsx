@@ -3,13 +3,12 @@ import { Article } from '../types';
 import Link from 'next/link';
 import Typography from '@mui/joy/Typography';
 import ListItem from '@mui/joy/ListItem';
+import Box from '@mui/joy/Box';
 
-// Define the props interface for ArticleListItem.
 interface ArticleListItemProps {
   article: Article;
 }
 
-// ArticleListItem component displays a single article as a list item.
 const ArticleListItem: React.FC<ArticleListItemProps> = ({ article }) => {
   return (
     <ListItem
@@ -17,22 +16,20 @@ const ArticleListItem: React.FC<ArticleListItemProps> = ({ article }) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'flex-start',
+        gap: '0.5rem',
       }}
     >
-      {/* Display article metadata (updated date and source). */}
-      <Typography
-        sx={{ color: 'text.secondary', mb: '0.5rem', fontSize: '0.875rem' }}
-      >
-        {article.updatedAt} ⋅ {article.source}
+      {/* Date and Source */}
+      <Typography sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+        {article.updated_at} &middot; {article.source}
       </Typography>
 
-      {/* Display the article title as a link to the article. */}
+      {/* Title */}
       <Typography
         level="h3"
         component="h3"
-        sx={{ mb: '0.5rem', fontWeight: 'medium', fontSize: '1.5rem' }}
+        sx={{ fontWeight: 'medium', fontSize: '1.5rem', mb: 0 }}
       >
-        {/* Use 'next/link' to create a link to the article. */}
         <Link legacyBehavior href={article.link} passHref>
           <a
             target="_blank"
@@ -44,8 +41,46 @@ const ArticleListItem: React.FC<ArticleListItemProps> = ({ article }) => {
         </Link>
       </Typography>
 
-      {/* Display the article summary. */}
+      {/* Summary */}
       <Typography sx={{ fontSize: '1rem' }}>{article.summary}</Typography>
+
+      {/* Upvotes & Comments Row */}
+      {(article.upvotes || article.comment_count) && (
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '1rem',
+            mt: '0.25rem',
+          }}
+        >
+          {/* Upvotes */}
+          {typeof article.upvotes === 'number' && (
+            <Typography level="body2" sx={{ color: 'text.secondary' }}>
+              {article.upvotes} upvotes
+            </Typography>
+          )}
+
+          {/* Comments (Linked to HN comment thread) */}
+          {article.comment_count && article.comment_link && (
+            <Link legacyBehavior href={article.comment_link} passHref>
+              <Typography
+                component="a"
+                sx={{
+                  fontSize: '0.875rem',
+                  color: '#007bff',
+                  textDecoration: 'none',
+                  '&:hover': {
+                    textDecoration: 'underline',
+                  },
+                }}
+              >
+                {article.comment_count} comments
+              </Typography>
+            </Link>
+          )}
+        </Box>
+      )}
     </ListItem>
   );
 };

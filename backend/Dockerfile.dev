@@ -2,7 +2,10 @@
 FROM golang:latest
 
 # Install necessary packages
-RUN apt-get update && apt-get install -y default-mysql-client
+RUN apt-get update && apt-get install -y \
+    default-mysql-client \
+    iproute2 && \
+    rm -rf /var/lib/apt/lists/*
 
 # Set the working directory for the application
 WORKDIR /app

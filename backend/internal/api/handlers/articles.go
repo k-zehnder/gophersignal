@@ -11,7 +11,6 @@ import (
 )
 
 // Handler defines the interface for handlers that manage HTTP requests.
-// It extends the http.Handler interface by expecting implementation of ServeHTTP.
 type Handler interface {
 	http.Handler
 }
