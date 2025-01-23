@@ -101,7 +101,6 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 // GetArticles retrieves the latest 30 articles with non-empty summaries from the database.
 func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 	// Query to fetch the latest 30 articles with non-empty summaries, sorted by their IDs in descending order.
-	// Now includes upvotes, comment_count, and comment_link in SELECT.
 	query := `
         SELECT
           id,

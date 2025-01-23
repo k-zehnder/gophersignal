@@ -43,7 +43,7 @@ const createArticleSummarizer = (
         response_model: { schema, name: 'SummarySchema' },
       });
 
-      // Validate the response using Zod
+      // Validate the response
       const parsedResponse = SummaryResponseSchema.parse(response);
 
       return parsedResponse.summary ?? 'No summary available';

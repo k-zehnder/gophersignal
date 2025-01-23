@@ -19,7 +19,6 @@ next-env.d.ts
 # misc
 .DS_Store
 .env*
-ArticleListDemo.tsx
 
 # debug
 npm-debug.log*
