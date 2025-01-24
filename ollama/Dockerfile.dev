@@ -1,0 +1,14 @@
+# Use the official Ollama image as the base
+FROM ollama/ollama
+
+# Install curl
+RUN apt-get update && apt-get install -y curl
+
+# Copy the startup script into the container
+COPY bin/start-ollama.sh /start-ollama.sh
+
+# Make sure the script is executable
+RUN chmod +x /start-ollama.sh
+
+# Use the startup script as the entrypoint
+ENTRYPOINT ["/start-ollama.sh"]

@@ -45,6 +45,25 @@ services:
     env_file:
       - .env
 
+  ollama:
+    build:
+      context: ./ollama
+      dockerfile: Dockerfile.dev
+    ports:
+      - 11434:11434
+    volumes:
+      - ollama:/ollama
+    environment:
+      - OLLAMA_CONFIG=/ollama/config
+    healthcheck:
+      test: ['CMD', 'test', '-f', '/tmp/ollama_model_ready']
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 360s
+    networks:
+      - app-network
+
   mysql:
     image: mysql:8.0
     healthcheck:
@@ -74,8 +93,13 @@ services:
     networks:
       - app-network
     depends_on:
-      - frontend
-      - backend
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+      ollama:
+        condition: service_healthy
+    restart: always
 
 networks:
   app-network:
@@ -83,4 +107,6 @@ networks:
 
 volumes:
   mysql_gophersignal_dev:
+    driver: local
+  ollama:
     driver: local

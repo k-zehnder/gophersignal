@@ -129,8 +129,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Exclude the /tmp directory
+# Exclude directories
 /tmp
+rss
 
 # Other
 .DS_Store

@@ -21,6 +21,7 @@ test:
 	@echo "Running tests for all components..."
 	$(MAKE) -C frontend test
 	$(MAKE) -C backend test
+	$(MAKE) -C hackernews_scraper test
 
 .PHONY: push
 push:
@@ -43,3 +44,8 @@ deploy:
 dev:
 	@echo "Starting development environment..."
 	docker compose -f docker-compose-dev.yml up -d --build
+
+.PHONY: scrape
+scrape:
+	@echo "Running HackerNews Scraper inside container..."
+	docker compose run --rm hackernews_scraper npm run start
