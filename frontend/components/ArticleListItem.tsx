@@ -45,7 +45,7 @@ const ArticleListItem: React.FC<ArticleListItemProps> = ({ article }) => {
       <Typography sx={{ fontSize: '1rem' }}>{article.summary}</Typography>
 
       {/* Upvotes & Comments Row */}
-      {(article.upvotes || article.comment_count) && (
+      {(article.upvotes || article.comment_count !== undefined) && (
         <Box
           sx={{
             display: 'flex',
@@ -61,23 +61,36 @@ const ArticleListItem: React.FC<ArticleListItemProps> = ({ article }) => {
             </Typography>
           )}
 
-          {/* Comments (Linked to HN comment thread) */}
-          {article.comment_count && article.comment_link && (
+          {/* Comments */}
+          {article.comment_count && article.comment_link ? (
             <Link legacyBehavior href={article.comment_link} passHref>
-              <Typography
-                component="a"
-                sx={{
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
                   fontSize: '0.875rem',
                   color: '#007bff',
                   textDecoration: 'none',
-                  '&:hover': {
-                    textDecoration: 'underline',
-                  },
                 }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.textDecoration = 'underline')
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.textDecoration = 'none')
+                }
               >
                 {article.comment_count} comments
-              </Typography>
+              </a>
             </Link>
+          ) : (
+            <Typography
+              sx={{
+                fontSize: '0.875rem',
+                color: 'text.secondary',
+              }}
+            >
+              0 comments
+            </Typography>
           )}
         </Box>
       )}
