@@ -37,7 +37,11 @@ deploy:
 	$(MAKE) -C frontend pull
 	$(MAKE) -C backend pull
 	$(MAKE) -C hackernews_scraper pull
+	@echo "Building frontend..."
+	cd frontend && npm install && npm run build && cd ..
+	@echo "Restarting Nginx..."
 	docker compose up -d
+	docker compose restart nginx
 	@echo "Application deployed successfully."
 
 .PHONY: dev

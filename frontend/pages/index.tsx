@@ -3,6 +3,7 @@ import Layout from '../components/Layout';
 import Description from '../components/Description';
 import ArticleList from '../components/ArticleList';
 import Typography from '@mui/joy/Typography';
+import Footer from '../components/Footer';
 
 // Index component renders the main page layout, including description and article list.
 const Index: React.FC = () => {
@@ -21,7 +22,12 @@ const Index: React.FC = () => {
       </Typography>
 
       {/* List of the latest articles. */}
-      <ArticleList />
+      <div style={{ marginBottom: '16px' }}>
+        <ArticleList />
+      </div>
+
+      {/* Footer */}
+      <Footer />
     </Layout>
   );
 };
