@@ -7,7 +7,7 @@ import { siteMetaData } from '../lib/siteMetaData';
 export default function About() {
   return (
     <Layout>
-      {/* Heading */}
+      {/* Display the heading "About". */}
       <Typography
         level="h2"
         sx={{ mb: '1rem', fontWeight: 'bold', fontSize: '1.75rem' }}
@@ -15,7 +15,7 @@ export default function About() {
         About
       </Typography>
 
-      {/* Logo */}
+      {/* Display the Gopher Signal logo as an Avatar. */}
       <Avatar
         sx={{
           '--Avatar-size': '100px',
@@ -25,9 +25,10 @@ export default function About() {
         src={siteMetaData.image}
       />
 
-      {/* Description */}
+      {/* Provide information about Gopher Signal. */}
       <Typography sx={{ fontSize: '1rem', mb: '0.5rem' }}>
-        Gopher Signal uses smart technology to summarize key points from{' '}
+        Gopher Signal uses smart technology to quickly summarize important
+        points from{' '}
         <a
           href="https://news.ycombinator.com"
           target="_blank"
@@ -36,13 +37,17 @@ export default function About() {
             color: '#007bff',
             textDecoration: 'none',
           }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.textDecoration = 'underline')
+          }
+          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
         >
           Hacker News
         </a>{' '}
-        articles, providing concise and useful updates.
+        articles, giving you brief and useful updates.
       </Typography>
 
-      {/* GitHub Link */}
+      {/* Provide GitHub link. */}
       <Typography sx={{ fontSize: '1rem', mt: '1rem' }}>
         Check out the project on{' '}
         <a
@@ -53,10 +58,14 @@ export default function About() {
             color: '#007bff',
             textDecoration: 'none',
           }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.textDecoration = 'underline')
+          }
+          onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
         >
           GitHub
-        </a>{' '}
-        — we're seeking contributors!
+        </a>
+        .
       </Typography>
     </Layout>
   );
