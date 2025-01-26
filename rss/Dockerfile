@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y build-essential curl vim && apt-get cle
 COPY Cargo.toml ./
 
 # If Cargo.lock is missing, create it after copying Cargo.toml
-RUN cargo fetch
+RUN cargo fetch || (echo "Cargo.lock missing, generating it..." && cargo generate-lockfile)
 
 # Now copy the full source code
 COPY . .
