@@ -1,0 +1,28 @@
+# Use Rust slim image for building the project
+FROM rust:slim AS dev
+
+# Set the working directory
+WORKDIR /app
+
+# Install necessary tools and OpenSSL dependencies
+RUN apt-get update && \
+    apt-get install -y build-essential curl vim pkg-config libssl-dev && \
+    apt-get clean
+
+# Install cargo-watch for hot-reloading
+RUN cargo install cargo-watch
+
+# Copy only Cargo files first for caching dependencies
+COPY Cargo.toml ./
+
+# Try to fetch dependencies and generate the Cargo.lock file
+RUN cargo fetch || (echo "Cargo.lock missing, generating it..." && cargo generate-lockfile)
+
+# Copy the entire project
+COPY . .
+
+# Expose the correct development port
+EXPOSE 9090
+
+# Use cargo-watch for hot-reloading
+CMD ["cargo", "watch", "-x", "run"]
