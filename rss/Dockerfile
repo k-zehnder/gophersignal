@@ -4,8 +4,10 @@ FROM rust:slim AS builder
 # Set the working directory
 WORKDIR /app
 
-# Install necessary build tools (for building dependencies)
-RUN apt-get update && apt-get install -y build-essential curl vim && apt-get clean
+# Install necessary build tools, OpenSSL dependencies, and pkg-config
+RUN apt-get update && \
+    apt-get install -y build-essential curl vim pkg-config libssl-dev && \
+    apt-get clean
 
 # Copy only Cargo files first for caching dependencies
 COPY Cargo.toml ./
