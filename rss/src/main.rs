@@ -69,11 +69,9 @@ async fn generate_rss_feed() -> Result<impl IntoResponse, StatusCode> {
         .articles
         .into_iter()
         .map(|article| {
-        let description = format!(
-                "Title: {}<br><br>Summary: {}<br><br>Created At: {}<br><br>Upvotes: {}<br><br>Comments: {} [<a href=\"{}\">View Comments</a>]<br><br>Link: <a href=\"{}\">{}</a>",
-                article.title,
+            let description = format!(
+                "Summary: {}<br><br>Upvotes: {}<br><br>Comments: {} [<a href=\"{}\">View Comments</a>]<br><br>Link: <a href=\"{}\">{}</a>",
                 article.summary,
-                article.created_at,
                 article.upvotes,
                 article.comment_count,
                 article.comment_link,
