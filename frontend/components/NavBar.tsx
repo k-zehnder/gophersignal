@@ -35,7 +35,6 @@ const navLinks = [
   {
     name: 'RSS',
     path: rssUrl,
-    // isExternal: false,
     icon: <RssFeedIcon />,
   },
 ];

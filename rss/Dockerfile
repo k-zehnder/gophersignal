@@ -8,12 +8,12 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y build-essential curl vim && apt-get clean
 
 # Copy only Cargo files first for caching dependencies
-COPY Cargo.toml Cargo.lock ./
+COPY Cargo.toml ./
 
-# Pre-fetch dependencies to cache them
+# If Cargo.lock is missing, create it after copying Cargo.toml
 RUN cargo fetch
 
-# Copy the source code
+# Now copy the full source code
 COPY . .
 
 # Build the project in release mode
