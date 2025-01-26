@@ -1,30 +1,41 @@
 import React from 'react';
-import Link from "next/link";
-import List from "@mui/joy/List";
-import ListItem from "@mui/joy/ListItem";
-import Typography from "@mui/joy/Typography";
-import ModeButton from "./ModeButton";
-import { siteMetaData } from "../lib/siteMetaData";
+import Link from 'next/link';
+import List from '@mui/joy/List';
+import ListItem from '@mui/joy/ListItem';
+import RssFeedIcon from '@mui/icons-material/RssFeed';
+import Typography from '@mui/joy/Typography';
+import ModeButton from './ModeButton';
+import { siteMetaData } from '../lib/siteMetaData';
 
 // Define the API URL based on the environment.
 const apiUrl =
-  process.env.NEXT_PUBLIC_ENV === "development"
-    ? "http://localhost:8080/swagger/index.html#/"
-    : "https://gophersignal.com/swagger/index.html#/";
+  process.env.NEXT_PUBLIC_ENV === 'development'
+    ? 'http://localhost:8080/swagger/index.html#/'
+    : 'https://gophersignal.com/swagger/index.html#/';
+
+const rssUrl =
+  process.env.NEXT_PUBLIC_ENV === 'development'
+    ? 'http://localhost:9090/rss#/'
+    : 'https://gophersignal.com/rss#/';
 
 // Define navigation links for the NavBar.
 const navLinks = [
   {
-    name: "Home",
-    path: "/",
+    name: 'Home',
+    path: '/',
   },
   {
-    name: "About",
-    path: "/about",
+    name: 'About',
+    path: '/about',
   },
   {
-    name: "API",
+    name: 'API',
     path: apiUrl,
+  },
+  {
+    name: 'RSS',
+    path: rssUrl,
+    icon: <RssFeedIcon />,
   },
 ];
 
@@ -42,13 +53,13 @@ export default function NavBar() {
       <nav>
         <List
           sx={{
-            display: "flex",
-            flexDirection: { xs: "row", md: "column" },
+            display: 'flex',
+            flexDirection: { xs: 'row', md: 'column' },
           }}
         >
           {navLinks.map(({ path, name }) => {
             // Check if the path is an external URL or a local route.
-            if (path.startsWith("http")) {
+            if (path.startsWith('http')) {
               return (
                 // Render an external link for URLs starting with "http".
                 <ListItem key={path}>
