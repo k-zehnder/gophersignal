@@ -9,6 +9,7 @@ services:
       - app-network
     env_file:
       - .env
+    restart: unless-stopped
 
   backend:
     image: kjzehnder3/gophersignal-backend:latest
@@ -18,7 +19,7 @@ services:
       - app-network
     env_file:
       - .env
-    restart: always
+    restart: unless-stopped
 
   hackernews_scraper:
     image: kjzehnder3/gophersignal-hackernews_scraper:latest
@@ -26,7 +27,19 @@ services:
       - app-network
     env_file:
       - .env
-    restart: always
+    restart: unless-stopped
+
+  rss:
+    image: kjzehnder3/gophersignal-rss:latest
+    ports:
+      - 9090:9090
+    networks:
+      - app-network
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    restart: unless-stopped
 
   nginx:
     image: nginx:latest
@@ -41,9 +54,13 @@ services:
       - ./frontend/out:/usr/share/nginx/html
     depends_on:
       - backend
-    restart: always
+      - rss
+    restart: unless-stopped
 
 networks:
   app-network:
     driver: bridge
 
+volumes:
+  ollama:
+    driver: local

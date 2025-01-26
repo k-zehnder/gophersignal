@@ -1,0 +1,11 @@
+# Use the official Nginx image as the base
+FROM nginx:latest
+
+# Copy the custom Nginx configuration file to the container
+COPY development.conf /etc/nginx/nginx.conf
+
+# Expose port 80 for the container
+EXPOSE 80
+
+# Start Nginx when the container starts
+CMD ["nginx", "-g", "daemon off;"]
