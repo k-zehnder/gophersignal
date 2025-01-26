@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
+import RssFeedIcon from '@mui/icons-material/RssFeed';
 import Typography from '@mui/joy/Typography';
 import ModeButton from './ModeButton';
 import { siteMetaData } from '../lib/siteMetaData';
@@ -11,6 +12,11 @@ const apiUrl =
   process.env.NEXT_PUBLIC_ENV === 'development'
     ? 'http://localhost:8080/swagger/index.html#/'
     : 'https://gophersignal.com/swagger/index.html#/';
+
+const rssUrl =
+  process.env.NEXT_PUBLIC_ENV === 'development'
+    ? 'http://localhost:9090/rss#/'
+    : 'https://gophersignal.com/rss#/';
 
 // Define navigation links for the NavBar.
 const navLinks = [
@@ -25,6 +31,12 @@ const navLinks = [
   {
     name: 'API',
     path: apiUrl,
+  },
+  {
+    name: 'RSS',
+    path: rssUrl,
+    // isExternal: false,
+    icon: <RssFeedIcon />,
   },
 ];
 
