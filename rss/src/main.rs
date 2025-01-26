@@ -25,7 +25,7 @@ async fn main() {
         .unwrap();
 }
 
-// Structure representing the API response
+// Full API response with metadata and articles
 #[derive(Deserialize)]
 struct ApiResponse {
     code: u32,
@@ -34,7 +34,7 @@ struct ApiResponse {
     articles: Vec<Article>,
 }
 
-// Structure representing an individual article
+// Data for an individual article
 #[derive(Deserialize)]
 struct Article {
     id: u32,
