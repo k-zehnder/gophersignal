@@ -1,2 +1,36 @@
-.env
+# Ignore Rust build artifacts
+target/
+Cargo.lock
+
+# Ignore Go build artifacts
+bin/
+pkg/
+vendor/
+
+# Ignore TypeScript build artifacts
 node_modules/
+dist/
+build/
+out/
+
+# Ignore .env files
+.env
+
+# Ignore editor-specific files (VSCode, JetBrains, etc.)
+.vscode/
+.idea/
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore Git directories and files
+.git/
+.gitignore
+
+# Ignore backup files
+**/*.bak
+
+# Ignore other generated or temporary files
+*.log
+*.tmp

@@ -131,7 +131,6 @@ dist
 
 # Exclude directories
 /tmp
-rss
 
 # Other
 .DS_Store

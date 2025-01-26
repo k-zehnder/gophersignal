@@ -31,6 +31,22 @@ services:
       mysql:
         condition: service_healthy
 
+  rss:
+    build:
+      context: ./rss
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./rss:/app
+      - /app/node_modules
+    networks:
+      - app-network
+    ports:
+      - 9090:9090
+    env_file:
+      - .env
+    depends_on:
+      - mysql
+
   hackernews_scraper:
     build:
       context: ./hackernews_scraper
@@ -85,7 +101,9 @@ services:
       - .env
 
   nginx:
-    image: nginx:latest
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile.dev
     volumes:
       - ./nginx/development.conf:/etc/nginx/nginx.conf
     ports:
@@ -93,10 +111,6 @@ services:
     networks:
       - app-network
     depends_on:
-      frontend:
-        condition: service_started
-      backend:
-        condition: service_started
       ollama:
         condition: service_healthy
     restart: always

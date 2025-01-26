@@ -9,6 +9,7 @@ services:
       - app-network
     env_file:
       - .env
+    restart: unless-stopped
 
   backend:
     image: kjzehnder3/gophersignal-backend:latest
@@ -18,7 +19,9 @@ services:
       - app-network
     env_file:
       - .env
-    restart: always
+    depends_on:
+      - mysql
+    restart: unless-stopped
 
   hackernews_scraper:
     image: kjzehnder3/gophersignal-hackernews_scraper:latest
@@ -26,7 +29,19 @@ services:
       - app-network
     env_file:
       - .env
-    restart: always
+    restart: unless-stopped
+
+  rss:
+    image: kjzehnder3/gophersignal-rss:latest
+    ports:
+      - 9090:9090
+    networks:
+      - app-network
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    restart: unless-stopped
 
   nginx:
     image: nginx:latest
@@ -41,8 +56,35 @@ services:
       - ./frontend/out:/usr/share/nginx/html
     depends_on:
       - backend
-    restart: always
+      - rss
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    healthcheck:
+      test: [
+        'CMD-SHELL',
+        'mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD}'
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 3306:3306
+    volumes:
+      - mysql_gophersignal_dev:/var/lib/mysql
+    networks:
+      - app-network
+    env_file:
+      - .env
+    restart: unless-stopped
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  mysql_gophersignal_dev:
+    driver: local
+  ollama:
+    driver: local
