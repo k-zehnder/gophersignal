@@ -6,7 +6,7 @@ import Typography from '@mui/joy/Typography';
 import ModeButton from './ModeButton';
 import { siteMetaData } from '../lib/siteMetaData';
 
-// Define the API URL based on the environment.
+// Define URLs based on the environment.
 const apiUrl =
   process.env.NEXT_PUBLIC_ENV === 'development'
     ? 'http://localhost:8080/swagger/index.html#/'
