@@ -20,23 +20,10 @@ const rssUrl =
 
 // Define navigation links for the NavBar.
 const navLinks = [
-  {
-    name: 'Home',
-    path: '/',
-  },
-  {
-    name: 'About',
-    path: '/about',
-  },
-  {
-    name: 'API',
-    path: apiUrl,
-  },
-  {
-    name: 'RSS',
-    path: rssUrl,
-    icon: <RssFeedIcon />,
-  },
+  { name: 'Home', path: '/' },
+  { name: 'About', path: '/about' },
+  { name: 'API', path: apiUrl },
+  { name: 'RSS', path: rssUrl },
 ];
 
 // NavBar component for rendering the navigation bar.
@@ -58,24 +45,45 @@ export default function NavBar() {
           }}
         >
           {navLinks.map(({ path, name }) => {
-            // Check if the path is an external URL or a local route.
+            // Special handling for RSS link to show only the icon
+            if (name === 'RSS') {
+              return (
+                <ListItem key={path}>
+                  <a
+                    href={path}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <RssFeedIcon
+                      style={{ color: 'orange', fontSize: '24px' }}
+                    />
+                  </a>
+                </ListItem>
+              );
+            }
+
+            // Handle external links
             if (path.startsWith('http')) {
               return (
-                // Render an external link for URLs starting with "http".
                 <ListItem key={path}>
                   <a href={path} target="_blank" rel="noopener noreferrer">
                     {name}
                   </a>
                 </ListItem>
               );
-            } else {
-              return (
-                // Render a link to a local route for other paths.
-                <ListItem key={path}>
-                  <Link href={path}>{name}</Link>
-                </ListItem>
-              );
             }
+
+            // Handle internal links
+            return (
+              <ListItem key={path}>
+                <Link href={path}>{name}</Link>
+              </ListItem>
+            );
           })}
           <ListItem>
             {/* Render the ModeButton component for light/dark mode toggle. */}
