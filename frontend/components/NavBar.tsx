@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import List from '@mui/joy/List';
 import ListItem from '@mui/joy/ListItem';
-import RssFeedIcon from '@mui/icons-material/RssFeed';
 import Typography from '@mui/joy/Typography';
 import ModeButton from './ModeButton';
 import { siteMetaData } from '../lib/siteMetaData';
@@ -45,7 +44,7 @@ export default function NavBar() {
           }}
         >
           {navLinks.map(({ path, name }) => {
-            // Special handling for RSS link to show only the icon
+            // Special handling for RSS link to add orange icon
             if (name === 'RSS') {
               return (
                 <ListItem key={path}>
@@ -56,12 +55,10 @@ export default function NavBar() {
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
+                      color: 'orange',
                     }}
                   >
-                    <RssFeedIcon
-                      style={{ color: 'orange', fontSize: '24px' }}
-                    />
+                    {name}
                   </a>
                 </ListItem>
               );
