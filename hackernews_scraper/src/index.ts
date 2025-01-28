@@ -1,4 +1,4 @@
-// Orchestrates article scraping, summarizing, and saving in one place.
+// Orchestrates article scraping, summarizing, and saving articles.
 
 import { initClients } from '../src/clients/initClients';
 import { initServices } from '../src/services/initServices';
