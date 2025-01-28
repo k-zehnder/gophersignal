@@ -32,6 +32,24 @@ export interface Config {
   ollama: OllamaConfig;
 }
 
+export interface Dependencies {
+  db: {
+    saveArticles: (articles: Article[]) => Promise<void>;
+    updateArticleSummary?: (id: number, summary: string) => Promise<void>;
+    closeDatabaseConnection: () => Promise<void>;
+    connection?: any;
+  };
+  browser: {
+    close: () => Promise<void>;
+  };
+  articleProcessor: {
+    processTopStories: () => Promise<Article[]>;
+  };
+  articleSummarizer: {
+    summarizeArticles: (articles: Required<Article>[]) => Promise<Article[]>;
+  };
+}
+
 export const SummaryResponseSchema = z.object({
   summary: z.string().optional(),
   response: z.string().optional(),
