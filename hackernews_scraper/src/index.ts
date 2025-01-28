@@ -1,99 +1,79 @@
-// Scrapes Hacker News, summarizes content via Ollama, and saves to MySQL.
+// Orchestrates article scraping, summarizing, and saving articles.
 
-import dotenv from 'dotenv';
-dotenv.config();
+import { initClients } from '../src/clients/initClients';
+import { initServices } from '../src/services/initServices';
+import { Dependencies, Article } from './types';
 
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
-import { connectToDatabase } from './database/connection';
-import { createHackerNewsScraper } from './services/articleScraper';
-import { createContentFetcher } from './services/articleContentFetcher';
-import { createArticleProcessor } from './services/articleProcessor';
-import { createArticleSummarizer } from './services/articleSummarizer';
-import Instructor from '@instructor-ai/instructor';
-import OpenAI from 'openai';
-import { Article, SummaryResponseSchema } from './types/index';
-import config from './config/config';
+// Status codes for success and failure
+const STATUS_SUCCESS = 0;
+const STATUS_FAILURE = 1;
 
-// Initializes dependencies: database, browser, and services
-const initDependencies = async () => {
-  // Initialize Puppeteer with Stealth Plugin
-  puppeteer.use(StealthPlugin());
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
-
-  // Connect to the database
-  const db = await connectToDatabase(config.mysql);
-
-  // Initialize OpenAI and Instructor clients
-  const openaiClient = new OpenAI({
-    apiKey: config.ollama.apiKey || 'ollama',
-    baseURL: config.ollama.baseUrl,
-  });
-
-  const instructorClient = Instructor({
-    client: openaiClient,
-    mode: 'JSON',
-  });
-
-  // Initialize services
-  const hackerNewsScraper = createHackerNewsScraper(browser);
-  const contentFetcher = createContentFetcher(browser);
-  const articleProcessor = createArticleProcessor(
-    hackerNewsScraper,
-    contentFetcher
-  );
-  const articleSummarizer = createArticleSummarizer(
-    instructorClient,
-    config.ollama,
-    SummaryResponseSchema
-  );
-
-  return { db, browser, articleProcessor, articleSummarizer };
-};
-
-// Main function orchestrating the workflow
-const main = async ({
+// Core workflow
+export const orchestrateWorkflow = async ({
   db,
   browser,
   articleProcessor,
   articleSummarizer,
-}: Awaited<ReturnType<typeof initDependencies>>) => {
+}: Dependencies): Promise<number> => {
   try {
-    // Process articles
+    // Fetch raw articles
     const articles = await articleProcessor.processTopStories();
+
+    // Filter out articles without content
     const articlesWithContent = articles.filter(
-      (article): article is Required<Article> => article.content != null
+      (article): article is Required<Article> => Boolean(article.content)
     );
 
-    // Summarize articles
+    // Summarize the filtered articles
     const summarizedArticles = await articleSummarizer.summarizeArticles(
       articlesWithContent
     );
 
-    // Save summaries to the database
+    // Save the summarized articles to the database
     await db.saveArticles(summarizedArticles);
 
-    console.log('Script finished successfully.');
+    console.log('Workflow completed successfully.');
+    return STATUS_SUCCESS;
   } catch (error) {
-    console.error('Error in main:', error);
+    console.error('Error in orchestrateWorkflow:', error);
+    return STATUS_FAILURE;
   } finally {
-    // Clean up resources
-    await db.closeDatabaseConnection();
-    await browser.close();
+    await db
+      .closeDatabaseConnection()
+      .catch((err) => console.error('Error closing database:', err));
+    await browser
+      .close()
+      .catch((err) => console.error('Error closing browser:', err));
   }
 };
 
-// Run the script
-if (require.main === module) {
-  initDependencies()
-    .then((dependencies) => main(dependencies))
-    .catch((error) => {
-      console.error('Failed to initialize dependencies:', error);
-      process.exit(1);
-    });
-}
+// Entry point
+export const main = async (): Promise<void> => {
+  try {
+    // Initialize clients
+    const { db, browser, instructorClient } = await initClients();
 
-export { main, initDependencies };
+    // Initialize services
+    const { articleProcessor, articleSummarizer } = initServices({
+      browser,
+      instructorClient,
+    });
+
+    // Run the main workflow
+    const statusCode = await orchestrateWorkflow({
+      db,
+      browser,
+      articleProcessor,
+      articleSummarizer,
+    });
+
+    process.exit(statusCode);
+  } catch (err) {
+    console.error('Failed to execute main:', err);
+    process.exit(STATUS_FAILURE);
+  }
+};
+
+if (require.main === module) {
+  main();
+}
