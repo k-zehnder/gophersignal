@@ -16,13 +16,20 @@ export const orchestrateWorkflow = async ({
   articleSummarizer,
 }: Dependencies): Promise<number> => {
   try {
+    // Fetch raw articles
     const articles = await articleProcessor.processTopStories();
+
+    // Filter out articles without content
     const articlesWithContent = articles.filter(
       (article): article is Required<Article> => Boolean(article.content)
     );
+
+    // Summarize the filtered articles
     const summarizedArticles = await articleSummarizer.summarizeArticles(
       articlesWithContent
     );
+
+    // Save the summarized articles to the database
     await db.saveArticles(summarizedArticles);
 
     console.log('Workflow completed successfully.');
@@ -43,12 +50,16 @@ export const orchestrateWorkflow = async ({
 // Entry point
 export const main = async (): Promise<void> => {
   try {
+    // Initialize clients
     const { db, browser, instructorClient } = await initClients();
+
+    // Initialize services
     const { articleProcessor, articleSummarizer } = initServices({
       browser,
       instructorClient,
     });
 
+    // Run the main workflow
     const statusCode = await orchestrateWorkflow({
       db,
       browser,
