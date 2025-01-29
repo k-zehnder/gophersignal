@@ -9,25 +9,36 @@ import Footer from '../components/Footer';
 const Index: React.FC = () => {
   return (
     <Layout>
-      {/* Description of the website or application. */}
-      <Description />
-
-      {/* Heading for the latest articles section. */}
-      <Typography
-        level="h2"
-        component="h2"
-        sx={{ fontWeight: 'bold', mb: 4, fontSize: '2rem' }}
+      {/* Wrap everything in a container that ensures content pushes the footer down */}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: '100vh',
+        }}
       >
-        Latest Articles
-      </Typography>
+        {/* Main content fills available space */}
+        <div style={{ flex: 1 }}>
+          <Description />
 
-      {/* List of the latest articles. */}
-      <div style={{ marginBottom: '16px' }}>
-        <ArticleList />
+          {/* Heading for the latest articles section. */}
+          <Typography
+            level="h2"
+            component="h2"
+            sx={{ fontWeight: 'bold', mb: 4, fontSize: '2rem' }}
+          >
+            Latest Articles
+          </Typography>
+
+          {/* List of the latest articles. */}
+          <div style={{ marginBottom: '16px' }}>
+            <ArticleList />
+          </div>
+        </div>
+
+        {/* Footer stays at the bottom */}
+        <Footer />
       </div>
-
-      {/* Footer */}
-      <Footer />
     </Layout>
   );
 };

@@ -1,46 +1,41 @@
 import React from 'react';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import Typography from '@mui/material/Typography';
+import { FaSkullCrossbones } from 'react-icons/fa';
 
 const Footer: React.FC = () => {
   return (
     <footer className="py-4 bg-gray-100 border-t border-gray-300">
-      <div
-        className="w-full flex justify-center items-center"
-        style={{ maxWidth: '1200px', margin: '0 auto' }}
-      >
+      <div className="w-full flex flex-col justify-center items-center">
         <Typography
           variant="body2"
           className="text-gray-600"
-          component="p"
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            textAlign: 'center',
+            fontSize: '0.95rem',
+            fontWeight: 450,
+            letterSpacing: '0.5px',
           }}
         >
-          Made with{' '}
-          <FavoriteIcon fontSize="small" sx={{ color: 'red', mx: 0.5 }} /> by{' '}
-          <a
-            href="https://github.com/k-zehnder/gophersignal"
-            target="_blank"
-            rel="noopener noreferrer"
+          <span
             style={{
-              color: '#007bff',
-              textDecoration: 'none',
-              fontWeight: 'bold',
-              marginLeft: '0.25rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
             }}
-            onMouseEnter={(e) =>
-              (e.currentTarget.style.textDecoration = 'underline')
-            }
-            onMouseLeave={(e) =>
-              (e.currentTarget.style.textDecoration = 'none')
-            }
           >
-            GopherSignal
-          </a>
+            Made Possible
+            <FaSkullCrossbones
+              style={{
+                fontSize: '1.6rem',
+                color: '#000',
+                position: 'relative',
+                top: '1px',
+              }}
+            />
+            by Uncle Dennis
+          </span>
         </Typography>
       </div>
     </footer>
