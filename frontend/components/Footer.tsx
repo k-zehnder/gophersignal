@@ -1,11 +1,8 @@
 import React from 'react';
 import Typography from '@mui/material/Typography';
 import { FaSkullCrossbones } from 'react-icons/fa';
-import { useTheme } from '@mui/material/styles';
 
 const Footer: React.FC = () => {
-  const theme = useTheme();
-
   return (
     <footer className="py-4 bg-gray-100 border-t border-gray-300">
       <div className="w-full flex flex-col justify-center items-center">
@@ -32,7 +29,7 @@ const Footer: React.FC = () => {
             <FaSkullCrossbones
               style={{
                 fontSize: '1.6rem',
-                color: theme.palette.mode === 'dark' ? '#fff' : '#000',
+                color: '#808080',
                 position: 'relative',
                 top: '1px',
               }}
