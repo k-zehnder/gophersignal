@@ -27,7 +27,7 @@
    make dev
    ```
 
-   > **Note:** The `ollama` service starts by running `ollama serve`, pulling the required model (`llama3.2`), and creating a readiness flag. Other services wait until `ollama` is fully ready before proceeding.
+   > **Note:** In this Docker Compose setup, the `ollama` service runs `ollama serve` to download the required model (e.g., `llama3:instruct`) and creates a readiness flag at `/tmp/ollama_model_ready` once ready. Dependent services (e.g., `nginx`) only start after Ollama is healthy.
 
 4. **Run the Scraper:**
 
