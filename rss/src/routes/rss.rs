@@ -33,6 +33,7 @@ pub async fn generate_rss_feed(
     let items: Vec<_> = articles
         .into_iter()
         .enumerate()
+        .take(30)
         .map(|(i, article)| {
             let pub_date = (now - Duration::minutes(i as i64)).to_rfc2822();
             let description = format!(
