@@ -1,13 +1,11 @@
 // Package store defines an interface and an implementation for article storage and retrieval.
-// It includes the Store interface for defining methods to interact with the article data in the database.
-
 package store
 
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
-	// Import the MySQL driver with a blank identifier to ensure its `init()` function is executed.
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 )
@@ -15,35 +13,31 @@ import (
 // Store interface defines methods for article storage and retrieval.
 type Store interface {
 	SaveArticles(articles []*models.Article) error
-	GetArticles() ([]*models.Article, error)
+	GetArticles(limit, offset int) ([]*models.Article, error)
+	GetFilteredArticles(flagged, dead, dupe *bool, limit, offset int) ([]*models.Article, error)
 }
 
 // MySQLStore implements the Store interface using a MySQL database.
 type MySQLStore struct {
-	db *sql.DB // db represents the connection to the database.
+	db *sql.DB
 }
 
 // NewMySQLStore establishes a new MySQL database connection.
 func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
-	// Attempt to open a database connection
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	// Ping the database to ensure the connection is active and the server is reachable.
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// Return a new MySQLStore instance with the established database connection.
 	return &MySQLStore{db: db}, nil
 }
 
-// SaveArticles handles the addition or update of articles in the database.
+// SaveArticles inserts or updates articles in the database.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
-	// Prepare SQL statement for article insertion or update.
-	// Include the new columns: upvotes, comment_count, and comment_link.
 	stmt, err := store.db.Prepare(`
         INSERT INTO articles (
           title,
@@ -51,31 +45,35 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
           content,
           summary,
           source,
-          created_at,
-          updated_at,
           upvotes,
           comment_count,
-          comment_link
+          comment_link,
+          flagged,
+          dead,
+          dupe,
+          created_at,
+          updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON DUPLICATE KEY UPDATE
           title = VALUES(title),
           link = VALUES(link),
           content = VALUES(content),
           summary = VALUES(summary),
           source = VALUES(source),
-          created_at = VALUES(created_at),
-          updated_at = VALUES(updated_at),
           upvotes = VALUES(upvotes),
           comment_count = VALUES(comment_count),
-          comment_link = VALUES(comment_link);
+          comment_link = VALUES(comment_link),
+          flagged = VALUES(flagged),
+          dead = VALUES(dead),
+          dupe = VALUES(dupe),
+          updated_at = VALUES(updated_at);
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
-	defer stmt.Close() // Ensure resource release after query execution.
+	defer stmt.Close()
 
-	// Execute the statement for each article.
 	for _, article := range articles {
 		_, execErr := stmt.Exec(
 			article.Title,
@@ -83,55 +81,47 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 			article.Content,
 			article.Summary,
 			article.Source,
-			article.CreatedAt,
-			article.UpdatedAt,
 			article.Upvotes,
 			article.CommentCount,
 			article.CommentLink,
+			article.Flagged,
+			article.Dead,
+			article.Dupe,
+			article.CreatedAt,
+			article.UpdatedAt,
 		)
 		if execErr != nil {
 			fmt.Printf("Failed for article '%s': %v\n", article.Title, execErr)
-			// Continue with the next article in case of an error.
 			continue
 		}
 	}
 	return nil
 }
 
-// GetArticles retrieves the latest 30 articles with non-empty summaries from the database.
-func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
-	// Query to fetch the latest 30 articles with non-empty summaries, sorted by their IDs in descending order.
+// GetArticles retrieves the latest articles (by id descending) that have a non-empty summary
+// and ensures that only one article per title is returned.
+func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
-        SELECT
-          id,
-          title,
-          link,
-          content,
-          summary,
-          source,
-          created_at,
-          updated_at,
-          upvotes,
-          comment_count,
-          comment_link
-        FROM articles
-        WHERE summary IS NOT NULL AND summary != ''
-          AND id >= (
-            SELECT id FROM articles
-            WHERE summary IS NOT NULL AND summary != ''
-            ORDER BY id DESC LIMIT 1
-          ) - 29
-        ORDER BY id DESC
-        LIMIT 30;
-    `
+		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
+		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
+		       a.dead, a.dupe, a.created_at, a.updated_at
+		FROM articles a
+		INNER JOIN (
+			SELECT title, MAX(id) AS max_id
+			FROM articles
+			WHERE summary IS NOT NULL AND summary != ''
+			GROUP BY title
+		) b ON a.title = b.title AND a.id = b.max_id
+		ORDER BY a.id DESC
+		LIMIT ? OFFSET ?;
+	`
 
-	rows, err := store.db.Query(query)
+	rows, err := store.db.Query(query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
 	}
 	defer rows.Close()
 
-	// Populate articles from query results.
 	var articles []*models.Article
 	for rows.Next() {
 		var article models.Article
@@ -142,21 +132,124 @@ func (store *MySQLStore) GetArticles() ([]*models.Article, error) {
 			&article.Content,
 			&article.Summary,
 			&article.Source,
-			&article.CreatedAt,
-			&article.UpdatedAt,
 			&article.Upvotes,
 			&article.CommentCount,
 			&article.CommentLink,
+			&article.Flagged,
+			&article.Dead,
+			&article.Dupe,
+			&article.CreatedAt,
+			&article.UpdatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("failed to scan article: %w", err)
 		}
 		articles = append(articles, &article)
 	}
 
-	// Handle any iteration errors.
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
+	return articles, nil
+}
 
+// GetFilteredArticles retrieves the latest filtered articles (by id descending),
+// applies optional filters for flagged, dead, and dupe statuses,
+// and ensures only one article per title is returned.
+func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, offset int) ([]*models.Article, error) {
+	// Condition that is always true.
+	innerQuery := `
+		SELECT title, MAX(id) AS max_id
+		FROM articles
+		WHERE 1
+	`
+	var conditions []string
+	var args []interface{}
+
+	// Convert boolean filters to integers (1 for true, 0 for false).
+	if flagged != nil {
+		var flaggedVal int
+		if *flagged {
+			flaggedVal = 1
+		} else {
+			flaggedVal = 0
+		}
+		conditions = append(conditions, "flagged = ?")
+		args = append(args, flaggedVal)
+	}
+	if dead != nil {
+		var deadVal int
+		if *dead {
+			deadVal = 1
+		} else {
+			deadVal = 0
+		}
+		conditions = append(conditions, "dead = ?")
+		args = append(args, deadVal)
+	}
+	if dupe != nil {
+		var dupeVal int
+		if *dupe {
+			dupeVal = 1
+		} else {
+			dupeVal = 0
+		}
+		conditions = append(conditions, "dupe = ?")
+		args = append(args, dupeVal)
+	}
+
+	// Append conditions if any exist.
+	if len(conditions) > 0 {
+		innerQuery += " AND " + strings.Join(conditions, " AND ")
+	}
+	innerQuery += " GROUP BY title"
+
+	outerQuery := `
+		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
+		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
+		       a.dead, a.dupe, a.created_at, a.updated_at
+		FROM articles a
+		INNER JOIN (
+	` + innerQuery + `
+		) b ON a.title = b.title AND a.id = b.max_id
+		ORDER BY a.id DESC
+		LIMIT ? OFFSET ?;
+	`
+
+	// Append pagination parameters to the argument slice.
+	args = append(args, limit, offset)
+
+	rows, err := store.db.Query(outerQuery, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute filtered query: %w", err)
+	}
+	defer rows.Close()
+
+	var articles []*models.Article
+	for rows.Next() {
+		var article models.Article
+		if err := rows.Scan(
+			&article.ID,
+			&article.Title,
+			&article.Link,
+			&article.Content,
+			&article.Summary,
+			&article.Source,
+			&article.Upvotes,
+			&article.CommentCount,
+			&article.CommentLink,
+			&article.Flagged,
+			&article.Dead,
+			&article.Dupe,
+			&article.CreatedAt,
+			&article.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan article: %w", err)
+		}
+		articles = append(articles, &article)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("iteration error: %w", err)
+	}
 	return articles, nil
 }

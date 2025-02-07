@@ -1,10 +1,9 @@
-// Handles database connection, disconnection, and initialization operations.
-
 import mysql, { Connection } from 'mysql2/promise';
-import { Article, MySQLConfig } from '../types';
+import { Article, Config, DBClient } from '../types';
 
-// Handles database connection, disconnection, and initialization operations
-const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
+const createMySqlClient = async (config: Config): Promise<DBClient> => {
+  const mysqlConfig = config.mysql;
+
   const connection: Connection = await mysql.createConnection({
     host: mysqlConfig.host,
     port: mysqlConfig.port,
@@ -17,12 +16,15 @@ const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
 
   // Inserts multiple articles into the database in bulk
   const saveArticles = async (articles: Article[]): Promise<void> => {
+    if (articles.length === 0) return;
+
     const maxContentLength = 45000;
     const currentTimestamp = new Date()
       .toISOString()
       .slice(0, 19)
       .replace('T', ' ');
 
+    // Map articles to an array-of-arrays for the insert
     const values = articles.map(
       ({
         title,
@@ -32,6 +34,9 @@ const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
         upvotes = 0,
         comment_count = 0,
         comment_link = '',
+        flagged = false,
+        dead = false,
+        dupe = false,
       }) => [
         title,
         link,
@@ -43,20 +48,36 @@ const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
         upvotes,
         comment_count,
         comment_link,
+        flagged,
+        dead,
+        dupe,
         currentTimestamp,
         currentTimestamp,
       ]
     );
 
-    const query = `
-    INSERT INTO articles (title, link, content, summary, source, upvotes, comment_count, comment_link, created_at, updated_at)
-    VALUES ?
-    ON DUPLICATE KEY UPDATE
+    const query = `INSERT INTO articles (
+      title,
+      link,
+      content,
+      summary,
+      source,
+      upvotes,
+      comment_count,
+      comment_link,
+      flagged,
+      dead,
+      dupe,
+      created_at,
+      updated_at
+    ) VALUES ? ON DUPLICATE KEY UPDATE
       upvotes = VALUES(upvotes),
       comment_count = VALUES(comment_count),
       comment_link = VALUES(comment_link),
-      updated_at = VALUES(updated_at);
-  `;
+      flagged = VALUES(flagged),
+      dead = VALUES(dead),
+      dupe = VALUES(dupe),
+      updated_at = VALUES(updated_at)`;
 
     await connection.query(query, [values]);
   };
@@ -66,13 +87,29 @@ const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
     id: number,
     summary: string
   ): Promise<void> => {
-    await connection.execute('UPDATE articles SET summary = ? WHERE id = ?', [
-      summary,
-      id,
-    ]);
+    await connection.execute(
+      'UPDATE articles SET summary = ?, updated_at = NOW() WHERE id = ?',
+      [summary, id]
+    );
   };
 
-  // Closes the database connection.
+  // Marks an article as dead
+  const markArticleAsDead = async (id: number): Promise<void> => {
+    await connection.execute(
+      'UPDATE articles SET dead = TRUE, updated_at = NOW() WHERE id = ?',
+      [id]
+    );
+  };
+
+  // Marks an article as duplicate
+  const markArticleAsDuplicate = async (id: number): Promise<void> => {
+    await connection.execute(
+      'UPDATE articles SET dupe = TRUE, updated_at = NOW() WHERE id = ?',
+      [id]
+    );
+  };
+
+  // Closes the database connection
   const closeDatabaseConnection = async (): Promise<void> => {
     if (connection) {
       await connection.end();
@@ -83,9 +120,11 @@ const connectToDatabase = async (mysqlConfig: MySQLConfig) => {
   return {
     saveArticles,
     updateArticleSummary,
+    markArticleAsDead,
+    markArticleAsDuplicate,
     closeDatabaseConnection,
     connection,
   };
 };
 
-export { connectToDatabase };
+export { createMySqlClient };

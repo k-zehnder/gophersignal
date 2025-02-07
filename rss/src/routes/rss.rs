@@ -1,37 +1,51 @@
-use crate::services::fetch_articles::fetch_articles;
-use axum::{http::StatusCode, response::IntoResponse};
+use crate::config::AppConfig;
+use crate::services::articles::fetch_articles;
+use axum::{
+    extract::{Extension, Query},
+    http::StatusCode,
+    response::{Html, IntoResponse},
+};
 use chrono::{Duration, Utc};
 use rss::{ChannelBuilder, ItemBuilder};
+use serde::Deserialize;
 
-pub async fn generate_rss_feed() -> Result<impl IntoResponse, StatusCode> {
-    // Fetch articles from external API
-    let mut articles = fetch_articles().await.map_err(|err| {
+#[derive(Deserialize)]
+pub struct RssQuery {
+    pub flagged: Option<bool>,
+    pub dead: Option<bool>,
+    pub dupe: Option<bool>,
+}
+
+pub async fn generate_rss_feed(
+    Query(query): Query<RssQuery>,
+    Extension(config): Extension<AppConfig>,
+) -> Result<impl IntoResponse, StatusCode> {
+    // Pass both the query and the config to fetch_articles
+    let mut articles = fetch_articles(&query, &config).await.map_err(|err| {
         eprintln!("Failed to fetch articles: {}", err);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    // Sort articles by `id` DESC
+    // Sort the articles (by id descending)
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
-    // Assign unique pubDates in descending order
     let now = Utc::now();
     let items: Vec<_> = articles
         .into_iter()
         .enumerate()
+        .take(30)
         .map(|(i, article)| {
             let pub_date = (now - Duration::minutes(i as i64)).to_rfc2822();
-
             let description = format!(
                 "Summary: {}<br><br>Upvotes: {}<br><br>Comments: {} [<a href=\"{}\">View Comments</a>]<br><br>\
-                 Link: <a href=\"{}\">{}</a>",
-                article.summary,
-                article.upvotes,
-                article.comment_count,
-                article.comment_link,
+Link: <a href=\"{}\">{}</a>",
+                article.summary.unwrap_or_else(|| "No summary".to_string()),
+                article.upvotes.unwrap_or(0),
+                article.comment_count.unwrap_or(0),
+                article.comment_link.unwrap_or_else(|| "No comments".to_string()),
                 article.link,
                 article.title
             );
-
             ItemBuilder::default()
                 .title(Some(article.title))
                 .link(Some(article.link))
@@ -41,7 +55,6 @@ pub async fn generate_rss_feed() -> Result<impl IntoResponse, StatusCode> {
         })
         .collect();
 
-    // Build RSS feed
     let channel = ChannelBuilder::default()
         .title("GopherSignal RSS Feed")
         .link("https://gophersignal.com")
@@ -49,5 +62,5 @@ pub async fn generate_rss_feed() -> Result<impl IntoResponse, StatusCode> {
         .items(items)
         .build();
 
-    Ok(axum::response::Html(channel.to_string()))
+    Ok(Html(channel.to_string()))
 }

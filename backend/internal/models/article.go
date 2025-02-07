@@ -68,6 +68,9 @@ type Article struct {
 	Upvotes      NullableInt    `json:"upvotes" swaggertype:"integer"`       // Upvote count from Hacker News or similar.
 	CommentCount NullableInt    `json:"comment_count" swaggertype:"integer"` // Number of comments from Hacker News or similar.
 	CommentLink  NullableString `json:"comment_link" swaggertype:"string"`   // Link to the comment thread (if any).
+	Flagged      bool           `json:"flagged"`                             // Whether the article is flagged.
+	Dead         bool           `json:"dead"`                                // Whether the article is dead.
+	Dupe         bool           `json:"dupe"`                                // Whether the article is marked as duplicate.
 }
 
 // NewArticle is a constructor for creating a new Article instance.
@@ -78,6 +81,7 @@ func NewArticle(
 	upvotes int64,
 	commentCount int64,
 	commentLink string,
+	flagged, dead, dupe bool,
 ) *Article {
 	return &Article{
 		ID:           id,
@@ -91,6 +95,9 @@ func NewArticle(
 		Upvotes:      NullableInt{NullInt64: sql.NullInt64{Int64: upvotes, Valid: true}},
 		CommentCount: NullableInt{NullInt64: sql.NullInt64{Int64: commentCount, Valid: true}},
 		CommentLink:  NullableString{NullString: sql.NullString{String: commentLink, Valid: commentLink != ""}},
+		Flagged:      flagged,
+		Dead:         dead,
+		Dupe:         dupe,
 	}
 }
 

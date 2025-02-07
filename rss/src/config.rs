@@ -1,5 +1,6 @@
 use std::env;
 
+#[derive(Clone)]
 pub struct AppConfig {
     pub port: String,
     pub api_url: String,

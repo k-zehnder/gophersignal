@@ -4,15 +4,17 @@ mod routes;
 mod services;
 
 use crate::config::AppConfig;
-use axum::{routing::get, Router};
+use axum::{routing::get, Extension, Router};
 
 #[tokio::main]
 async fn main() {
     // Load environment variables and app configuration
     let config = AppConfig::from_env();
 
-    // Create Axum router
-    let app = Router::new().route("/rss", get(routes::rss::generate_rss_feed));
+    // Create Axum router and add the config as an extension
+    let app = Router::new()
+        .route("/rss", get(routes::rss::generate_rss_feed))
+        .layer(Extension(config.clone()));
 
     println!("Server running on port: {}", config.port);
 
