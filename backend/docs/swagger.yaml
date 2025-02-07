@@ -2,12 +2,27 @@ basePath: /api/v1
 definitions:
   models.Article:
     properties:
+      comment_count:
+        description: Number of comments from Hacker News or similar.
+        type: integer
+      comment_link:
+        description: Link to the comment thread (if any).
+        type: string
       content:
         description: Full content of the article.
         type: string
       created_at:
         description: Timestamp when the article was created.
         type: string
+      dead:
+        description: Whether the article is dead.
+        type: boolean
+      dupe:
+        description: Whether the article is marked as duplicate.
+        type: boolean
+      flagged:
+        description: Whether the article is flagged.
+        type: boolean
       id:
         description: Unique identifier for the article.
         type: integer
@@ -26,6 +41,9 @@ definitions:
       updated_at:
         description: Timestamp when the article was last updated.
         type: string
+      upvotes:
+        description: Upvote count from Hacker News or similar.
+        type: integer
     type: object
   models.ArticlesResponse:
     properties:
@@ -66,7 +84,30 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve a list of articles from the database.
+      description: Retrieve a list of articles from the database. Optional query parameters
+      parameters:
+      - description: Filter by flagged status
+        in: query
+        name: flagged
+        type: boolean
+      - description: Filter by dead status
+        in: query
+        name: dead
+        type: boolean
+      - description: Filter by duplicate status
+        in: query
+        name: dupe
+        type: boolean
+      - default: 30
+        description: Limit the number of articles returned (default is 30)
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset for pagination (default is 0)
+        in: query
+        name: offset
+        type: integer
       produces:
       - application/json
       responses:

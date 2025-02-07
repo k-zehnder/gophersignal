@@ -136,3 +136,5 @@ dist
 .DS_Store
 coverage.out
 coverage.html
+debugOllama.ts
+debugTavily.ts

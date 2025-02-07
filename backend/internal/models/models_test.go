@@ -26,6 +26,9 @@ func TestNewArticle(t *testing.T) {
 		100,
 		50,
 		"https://news.ycombinator.com/item?id=1",
+		false,
+		false,
+		true,
 	)
 
 	if article.ID != 1 {
@@ -39,6 +42,15 @@ func TestNewArticle(t *testing.T) {
 	}
 	if !article.CommentLink.Valid || article.CommentLink.String != "https://news.ycombinator.com/item?id=1" {
 		t.Errorf("Expected CommentLink 'https://news.ycombinator.com/item?id=1', got '%v'", article.CommentLink)
+	}
+	if article.Flagged {
+		t.Errorf("Expected Flagged false, got true")
+	}
+	if article.Dead {
+		t.Errorf("Expected Dead false, got true")
+	}
+	if article.Dupe != true {
+		t.Errorf("Expected Dupe true, got false")
 	}
 }
 
@@ -86,6 +98,9 @@ func TestArticleMarshaling(t *testing.T) {
 		123,
 		45,
 		"https://example.com/comments",
+		true,
+		false,
+		false,
 	)
 
 	data, err := json.Marshal(article)
@@ -103,4 +118,7 @@ func TestArticleMarshaling(t *testing.T) {
 	assert.Equal(t, article.Upvotes.Int64, result.Upvotes.Int64)
 	assert.Equal(t, article.CommentCount.Int64, result.CommentCount.Int64)
 	assert.Equal(t, article.CommentLink.String, result.CommentLink.String)
+	assert.Equal(t, article.Flagged, result.Flagged)
+	assert.Equal(t, article.Dead, result.Dead)
+	assert.Equal(t, article.Dupe, result.Dupe)
 }

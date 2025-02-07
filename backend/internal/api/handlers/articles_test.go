@@ -2,6 +2,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/http/httptest"
@@ -14,7 +15,10 @@ import (
 // TestGetArticles_Success tests the GetArticles handler for a successful response.
 func TestGetArticles_Success(t *testing.T) {
 	// Set up a mock store with predefined data to simulate database interactions.
-	mockStore := store.NewMockStore([]*models.Article{{Title: "Test Article 1"}}, nil, nil)
+	// The mock store should implement GetArticles(limit, offset int)
+	mockStore := store.NewMockStore([]*models.Article{
+		{ID: 1, Title: "Test Article 1"},
+	}, nil, nil)
 
 	// Initialize the handler with the mock store.
 	handler := NewArticlesHandler(mockStore)
@@ -68,5 +72,96 @@ func TestServeHTTP_MethodNotAllowed(t *testing.T) {
 	// Check if the response status code is as expected (405 Method Not Allowed).
 	if status := rr.Code; status != http.StatusMethodNotAllowed {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusMethodNotAllowed)
+	}
+}
+
+// TestGetArticles_WithQueryParams tests the GetArticles handler when query parameters are provided.
+func TestGetArticles_WithQueryParams(t *testing.T) {
+	// Prepare a list of articles with varying boolean fields.
+	articles := []*models.Article{
+		{ID: 1, Title: "Article 1", Flagged: false, Dead: false, Dupe: false},
+		{ID: 2, Title: "Article 2", Flagged: true, Dead: false, Dupe: false},
+		{ID: 3, Title: "Article 3", Flagged: true, Dead: true, Dupe: false},
+		{ID: 4, Title: "Article 4", Flagged: false, Dead: false, Dupe: true},
+	}
+	mockStore := store.NewMockStore(articles, nil, nil)
+	handler := NewArticlesHandler(mockStore)
+
+	// Case 1: flagged=true (should return only articles where Flagged == true, i.e. Articles 2 and 3).
+	req := httptest.NewRequest("GET", "/dummy-url?flagged=true", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+
+	// Decode the JSON response.
+	var resp models.ArticlesResponse
+	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	if resp.TotalCount != 2 {
+		t.Errorf("Expected 2 articles for flagged=true, got %d", resp.TotalCount)
+	}
+
+	// Case 2: dead=true and dupe=true (should return 0 articles, as no article satisfies both).
+	req = httptest.NewRequest("GET", "/dummy-url?dead=true&dupe=true", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	if resp.TotalCount != 0 {
+		t.Errorf("Expected 0 articles for dead=true and dupe=true, got %d", resp.TotalCount)
+	}
+}
+
+// TestGetFilteredArticles_Success tests the endpoint when query parameters are provided.
+// Since our handler uses a single endpoint (/articles) for both default and filtered queries,
+// this test simulates a filtered request.
+func TestGetFilteredArticles_Success(t *testing.T) {
+	// Prepare a list of articles with varying boolean fields.
+	articles := []*models.Article{
+		{ID: 1, Title: "Article 1", Flagged: false, Dead: false, Dupe: false},
+		{ID: 2, Title: "Article 2", Flagged: true, Dead: false, Dupe: false},
+		{ID: 3, Title: "Article 3", Flagged: true, Dead: true, Dupe: false},
+		{ID: 4, Title: "Article 4", Flagged: false, Dead: false, Dupe: true},
+	}
+	mockStore := store.NewMockStore(articles, nil, nil)
+	handler := NewArticlesHandler(mockStore)
+
+	// In this test we provide flagged=true.
+	req := httptest.NewRequest("GET", "/dummy-url?flagged=true", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+	var resp models.ArticlesResponse
+	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	// In our test data, Articles 2 and 3 have Flagged == true.
+	if resp.TotalCount != 2 {
+		t.Errorf("Expected 2 articles for flagged=true, got %d", resp.TotalCount)
+	}
+
+	// Also test pagination: for example, use limit=2 and offset=0.
+	req = httptest.NewRequest("GET", "/dummy-url?limit=2&offset=0", nil)
+	rr = httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	// Since our mock store has 4 articles, default GetArticles with limit=30 would return all 4,
+	// but with limit=2 we expect only 2 articles.
+	if resp.TotalCount != 2 {
+		t.Errorf("Expected 2 articles for limit=2, offset=0, got %d", resp.TotalCount)
 	}
 }

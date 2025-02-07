@@ -1,5 +1,5 @@
 import Instructor from '@instructor-ai/instructor';
-import { createOpenAIClient } from './createOpenAIClient';
+import { createOpenAIClient } from './openAI';
 
 // Wraps the OpenAI client with the Instructor library
 export const createInstructorClient = (

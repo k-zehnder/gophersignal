@@ -1,40 +1,45 @@
-// Scrapes top stories from Hacker News, fetches their full content,
-// and returns the articles.
+// Provides functions to scrape and process articles.
 
-import { Article } from './articleScraper';
-
-type Scraper = {
-  scrapeTopStories: () => Promise<Article[]>;
-};
-
-type ContentFetcher = {
-  fetchArticleContent: (url: string) => Promise<string>;
-};
+import { Article, Scraper, ContentFetcher } from '../types';
+import { ArticleHelpers } from '../utils/article';
 
 const createArticleProcessor = (
   scraper: Scraper,
-  contentFetcher: ContentFetcher
+  contentFetcher: ContentFetcher,
+  helpers: ArticleHelpers
 ) => {
-  const processTopStories = async (): Promise<Article[]> => {
-    try {
-      const articles = await scraper.scrapeTopStories();
-      articles.reverse();
+  // Scrapes top stories using page-number based pagination or next-button logic
+  const scrapeTopStories = async (numPages?: number): Promise<Article[]> => {
+    return await scraper.scrapeTopStories(numPages);
+  };
 
-      for (const article of articles) {
+  // Scrapes all front page articles for a specific day using next-button logic
+  const scrapeFrontForDay = async (day: string): Promise<Article[]> => {
+    return await scraper.scrapeFrontForDay(day);
+  };
+
+  // Processes articles by fetching full content
+  const processArticles = async (articles: Article[]): Promise<Article[]> => {
+    for (const article of articles) {
+      try {
         article.content = await contentFetcher.fetchArticleContent(
           article.link
         );
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error(`Error processing article at ${article.link}:`, error);
       }
-
-      return articles;
-    } catch (error) {
-      console.error('Error processing top stories:', error);
-      return [];
+      // Wait 1 second between content fetches
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
+    return articles;
   };
 
-  return { processTopStories };
+  return {
+    scrapeTopStories,
+    processArticles,
+    scrapeFrontForDay,
+    helpers,
+  };
 };
 
 export { createArticleProcessor };

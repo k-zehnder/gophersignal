@@ -7,6 +7,9 @@ export const createBrowserClient = async () => {
   const browser = await puppeteer.launch({
     headless: true,
     args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    protocolTimeout: 30000,
   });
   return browser;
 };
+
+export type BrowserClient = Awaited<ReturnType<typeof createBrowserClient>>;

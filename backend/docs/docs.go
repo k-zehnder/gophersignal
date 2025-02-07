@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/articles": {
             "get": {
-                "description": "Retrieve a list of articles from the database.",
+                "description": "Retrieve a list of articles from the database. Optional query parameters",
                 "consumes": [
                     "application/json"
                 ],
@@ -28,6 +28,40 @@ const docTemplate = `{
                     "Articles"
                 ],
                 "summary": "Get articles",
+                "parameters": [
+                    {
+                        "type": "boolean",
+                        "description": "Filter by flagged status",
+                        "name": "flagged",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by dead status",
+                        "name": "dead",
+                        "in": "query"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Filter by duplicate status",
+                        "name": "dupe",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 30,
+                        "description": "Limit the number of articles returned (default is 30)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Offset for pagination (default is 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Articles data",
@@ -55,6 +89,14 @@ const docTemplate = `{
         "models.Article": {
             "type": "object",
             "properties": {
+                "comment_count": {
+                    "description": "Number of comments from Hacker News or similar.",
+                    "type": "integer"
+                },
+                "comment_link": {
+                    "description": "Link to the comment thread (if any).",
+                    "type": "string"
+                },
                 "content": {
                     "description": "Full content of the article.",
                     "type": "string"
@@ -62,6 +104,18 @@ const docTemplate = `{
                 "created_at": {
                     "description": "Timestamp when the article was created.",
                     "type": "string"
+                },
+                "dead": {
+                    "description": "Whether the article is dead.",
+                    "type": "boolean"
+                },
+                "dupe": {
+                    "description": "Whether the article is marked as duplicate.",
+                    "type": "boolean"
+                },
+                "flagged": {
+                    "description": "Whether the article is flagged.",
+                    "type": "boolean"
                 },
                 "id": {
                     "description": "Unique identifier for the article.",
@@ -86,6 +140,10 @@ const docTemplate = `{
                 "updated_at": {
                     "description": "Timestamp when the article was last updated.",
                     "type": "string"
+                },
+                "upvotes": {
+                    "description": "Upvote count from Hacker News or similar.",
+                    "type": "integer"
                 }
             }
         },

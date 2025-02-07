@@ -22,13 +22,13 @@ func NewRouter(store store.Store) http.Handler {
 func SetupRouter(articlesHandler *handlers.ArticlesHandler) *mux.Router {
 	r := mux.NewRouter()
 
-	// Setup CORS for various development and production environments
+	// Setup CORS for various development and production environments.
 	cors := gorillaHandlers.CORS(
 		gorillaHandlers.AllowedOrigins([]string{
-			"http://localhost:3000",        // Local frontend dev server
-			"http://localhost:8080",        // Local dev server
-			"https://gophersignal.com",     // Production frontend
-			"https://www.gophersignal.com", // Production frontend with www
+			"http://localhost:3000",        // Local frontend dev server.
+			"http://localhost:8080",        // Local dev server.
+			"https://gophersignal.com",     // Production frontend.
+			"https://www.gophersignal.com", // Production frontend with www.
 		}),
 		gorillaHandlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 		gorillaHandlers.AllowedHeaders([]string{"Content-Type", "Authorization"}),
@@ -36,11 +36,13 @@ func SetupRouter(articlesHandler *handlers.ArticlesHandler) *mux.Router {
 	)
 	r.Use(cors)
 
-	// Setup API v1 routes, including the GET endpoint for articles
+	// Setup API v1 routes.
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
-	apiRouter.Handle("/articles", articlesHandler)
 
-	// Enable Swagger documentation at '/swagger'
+	// Endpoint for retrieving articles.
+	apiRouter.Handle("/articles", articlesHandler).Methods("GET")
+
+	// Endpoint for Swagger documentation at '/swagger'.
 	r.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	return r

@@ -1,1 +1,1 @@
-pub mod fetch_articles;
+pub mod articles;
