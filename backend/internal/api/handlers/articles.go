@@ -128,7 +128,7 @@ func (h *ArticlesHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.setCacheHeaders(w, 3600)
+	h.setCacheHeaders(w, 5400) // Set cache headers for 1.5 hours.
 	h.jsonResponse(w, models.ArticlesResponse{
 		Code:       http.StatusOK,
 		Status:     "success",
