@@ -20,13 +20,13 @@ pub async fn generate_rss_feed(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    // Pass both the query and the config to fetch_articles
+    // Fetch articles using the provided query and config
     let mut articles = fetch_articles(&query, &config).await.map_err(|err| {
         eprintln!("Failed to fetch articles: {}", err);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    // Sort the articles (by id descending)
+    // Sort articles by id descending
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
     let now = Utc::now();
@@ -35,17 +35,26 @@ pub async fn generate_rss_feed(
         .enumerate()
         .take(30)
         .map(|(i, article)| {
+            // Calculate a publication date by subtracting i minutes from now
             let pub_date = (now - Duration::minutes(i as i64)).to_rfc2822();
+            let summary = article.summary.unwrap_or_else(|| "No summary".to_string());
+            let comment_link = article
+                .comment_link
+                .unwrap_or_else(|| "No comments".to_string());
+
             let description = format!(
-                "Summary: {}<br><br>Upvotes: {}<br><br>Comments: {} [<a href=\"{}\">View Comments</a>]<br><br>\
-Link: <a href=\"{}\">{}</a>",
-                article.summary.unwrap_or_else(|| "No summary".to_string()),
+                "<strong>Summary:</strong> {}<br><br>\
+<strong>Upvotes:</strong> {}<br><br>\
+<strong>Comments:</strong> {} [<a href=\"{}\">View Comments</a>]<br><br>\
+<strong>Link:</strong> <a href=\"{}\">{}</a>",
+                summary,
                 article.upvotes.unwrap_or(0),
                 article.comment_count.unwrap_or(0),
-                article.comment_link.unwrap_or_else(|| "No comments".to_string()),
+                comment_link,
                 article.link,
                 article.title
             );
+
             ItemBuilder::default()
                 .title(Some(article.title))
                 .link(Some(article.link))
