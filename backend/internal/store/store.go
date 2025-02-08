@@ -36,7 +36,7 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	return &MySQLStore{db: db}, nil
 }
 
-// SaveArticles inserts or updates articles in the database.
+// SaveArticles inserts articles into the database.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	stmt, err := store.db.Prepare(`
         INSERT INTO articles (
@@ -54,20 +54,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          title = VALUES(title),
-          link = VALUES(link),
-          content = VALUES(content),
-          summary = VALUES(summary),
-          source = VALUES(source),
-          upvotes = VALUES(upvotes),
-          comment_count = VALUES(comment_count),
-          comment_link = VALUES(comment_link),
-          flagged = VALUES(flagged),
-          dead = VALUES(dead),
-          dupe = VALUES(dupe),
-          updated_at = VALUES(updated_at);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
@@ -98,8 +85,8 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-// GetArticles retrieves the latest articles (by id descending) that have a non-empty summary
-// and ensures that only one article per title is returned.
+// GetArticles retrieves the latest articles (by id descending) that have a non-empty summary,
+// and deduplicates them by title (only the article with the highest id for each title is returned).
 func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
 		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
@@ -109,7 +96,7 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 		INNER JOIN (
 			SELECT title, MAX(id) AS max_id
 			FROM articles
-			WHERE summary IS NOT NULL AND summary != ''
+			WHERE summary IS NOT NULL AND TRIM(summary) != ''
 			GROUP BY title
 		) b ON a.title = b.title AND a.id = b.max_id
 		ORDER BY a.id DESC
@@ -154,18 +141,18 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 
 // GetFilteredArticles retrieves the latest filtered articles (by id descending),
 // applies optional filters for flagged, dead, and dupe statuses,
-// and ensures only one article per title is returned.
+// ensures that only articles with non-empty summaries are considered,
+// and deduplicates by title.
 func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, offset int) ([]*models.Article, error) {
-	// Condition that is always true.
+	// Build the inner subquery that deduplicates by title.
 	innerQuery := `
 		SELECT title, MAX(id) AS max_id
 		FROM articles
-		WHERE 1
+		WHERE summary IS NOT NULL AND TRIM(summary) != ''
 	`
 	var conditions []string
 	var args []interface{}
 
-	// Convert boolean filters to integers (1 for true, 0 for false).
 	if flagged != nil {
 		var flaggedVal int
 		if *flagged {
@@ -197,13 +184,13 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		args = append(args, dupeVal)
 	}
 
-	// Append conditions if any exist.
 	if len(conditions) > 0 {
 		innerQuery += " AND " + strings.Join(conditions, " AND ")
 	}
 	innerQuery += " GROUP BY title"
 
-	outerQuery := `
+	// Build the outer query that joins the deduplicated inner query.
+	query := `
 		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
 		       a.dead, a.dupe, a.created_at, a.updated_at
@@ -214,11 +201,10 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		ORDER BY a.id DESC
 		LIMIT ? OFFSET ?;
 	`
-
-	// Append pagination parameters to the argument slice.
+	// Append pagination parameters.
 	args = append(args, limit, offset)
 
-	rows, err := store.db.Query(outerQuery, args...)
+	rows, err := store.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute filtered query: %w", err)
 	}

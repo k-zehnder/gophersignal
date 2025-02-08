@@ -70,19 +70,11 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
       dupe,
       created_at,
       updated_at
-    ) VALUES ? ON DUPLICATE KEY UPDATE
-      upvotes = VALUES(upvotes),
-      comment_count = VALUES(comment_count),
-      comment_link = VALUES(comment_link),
-      flagged = VALUES(flagged),
-      dead = VALUES(dead),
-      dupe = VALUES(dupe),
-      updated_at = VALUES(updated_at)`;
+    ) VALUES ?`;
 
     await connection.query(query, [values]);
   };
 
-  // Updates the summary of an article
   const updateArticleSummary = async (
     id: number,
     summary: string
@@ -93,7 +85,6 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
-  // Marks an article as dead
   const markArticleAsDead = async (id: number): Promise<void> => {
     await connection.execute(
       'UPDATE articles SET dead = TRUE, updated_at = NOW() WHERE id = ?',
@@ -101,7 +92,6 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
-  // Marks an article as duplicate
   const markArticleAsDuplicate = async (id: number): Promise<void> => {
     await connection.execute(
       'UPDATE articles SET dupe = TRUE, updated_at = NOW() WHERE id = ?',
@@ -109,7 +99,6 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
-  // Closes the database connection
   const closeDatabaseConnection = async (): Promise<void> => {
     if (connection) {
       await connection.end();

@@ -8,7 +8,7 @@ describe('Workflow', () => {
   beforeEach(() => {
     mockServices = {
       scraper: {
-        scrapeFrontForDay: jest.fn().mockResolvedValue([]),
+        scrapeFront: jest.fn().mockResolvedValue([]),
         scrapeTopStories: jest.fn().mockResolvedValue([]),
       },
       articleProcessor: {
@@ -42,7 +42,7 @@ describe('Workflow', () => {
   it('should execute the workflow successfully', async () => {
     await expect(workflow.run()).resolves.not.toThrow();
 
-    expect(mockServices.scraper.scrapeFrontForDay).toHaveBeenCalledTimes(2);
+    expect(mockServices.scraper.scrapeFront).toHaveBeenCalledTimes(1);
     expect(mockServices.scraper.scrapeTopStories).toHaveBeenCalledTimes(1);
     expect(mockServices.articleProcessor.processArticles).toHaveBeenCalledTimes(
       1
