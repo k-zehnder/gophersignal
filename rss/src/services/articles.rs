@@ -33,5 +33,5 @@ pub async fn fetch_articles(
 
     let response = request.send().await?;
     let api_response: ApiResponse = response.json().await?;
-    Ok(api_response.articles)
+    Ok(api_response.articles.unwrap_or_default())
 }
