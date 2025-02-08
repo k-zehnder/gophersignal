@@ -76,7 +76,5 @@ pub async fn generate_rss_feed(
         .items(items)
         .build();
 
-    let rss_feed = channel.to_string();
-
-    Ok(Html(rss_feed))
+    Ok(Html(channel.to_string()))
 }
