@@ -4,6 +4,7 @@ package store
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
@@ -36,7 +37,6 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 }
 
 // SaveArticles inserts articles into the database.
-// Note: The "ON DUPLICATE KEY UPDATE" clause has been removed.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	stmt, err := store.db.Prepare(`
         INSERT INTO articles (
@@ -85,15 +85,21 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-// GetArticles retrieves the latest articles (by id descending) that have a non-empty summary.
+// GetArticles retrieves the latest articles (by id descending) that have a non-empty summary,
+// and deduplicates them by title (only the article with the highest id for each title is returned).
 func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
-		SELECT id, title, link, content, summary, source,
-		       upvotes, comment_count, comment_link, flagged,
-		       dead, dupe, created_at, updated_at
-		FROM articles
-		WHERE summary IS NOT NULL AND TRIM(summary) != ''
-		ORDER BY id DESC
+		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
+		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
+		       a.dead, a.dupe, a.created_at, a.updated_at
+		FROM articles a
+		INNER JOIN (
+			SELECT title, MAX(id) AS max_id
+			FROM articles
+			WHERE summary IS NOT NULL AND TRIM(summary) != ''
+			GROUP BY title
+		) b ON a.title = b.title AND a.id = b.max_id
+		ORDER BY a.id DESC
 		LIMIT ? OFFSET ?;
 	`
 
@@ -133,20 +139,20 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 	return articles, nil
 }
 
-// GetFilteredArticles retrieves the latest filtered articles (by id descending)
-// and applies optional filters for flagged, dead, and dupe statuses.
+// GetFilteredArticles retrieves the latest filtered articles (by id descending),
+// applies optional filters for flagged, dead, and dupe statuses,
+// ensures that only articles with non-empty summaries are considered,
+// and deduplicates by title.
 func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, offset int) ([]*models.Article, error) {
-	// Base query.
-	query := `
-		SELECT id, title, link, content, summary, source,
-		       upvotes, comment_count, comment_link, flagged,
-		       dead, dupe, created_at, updated_at
+	// Build the inner subquery that deduplicates by title.
+	innerQuery := `
+		SELECT title, MAX(id) AS max_id
 		FROM articles
-		WHERE 1
+		WHERE summary IS NOT NULL AND TRIM(summary) != ''
 	`
+	var conditions []string
 	var args []interface{}
 
-	// Build filtering conditions.
 	if flagged != nil {
 		var flaggedVal int
 		if *flagged {
@@ -154,7 +160,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		} else {
 			flaggedVal = 0
 		}
-		query += " AND flagged = ?"
+		conditions = append(conditions, "flagged = ?")
 		args = append(args, flaggedVal)
 	}
 	if dead != nil {
@@ -164,7 +170,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		} else {
 			deadVal = 0
 		}
-		query += " AND dead = ?"
+		conditions = append(conditions, "dead = ?")
 		args = append(args, deadVal)
 	}
 	if dupe != nil {
@@ -174,15 +180,30 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		} else {
 			dupeVal = 0
 		}
-		query += " AND dupe = ?"
+		conditions = append(conditions, "dupe = ?")
 		args = append(args, dupeVal)
 	}
 
-	// Append ordering and pagination.
-	query += " ORDER BY id DESC LIMIT ? OFFSET ?;"
+	if len(conditions) > 0 {
+		innerQuery += " AND " + strings.Join(conditions, " AND ")
+	}
+	innerQuery += " GROUP BY title"
+
+	// Build the outer query that joins the deduplicated inner query.
+	query := `
+		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
+		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
+		       a.dead, a.dupe, a.created_at, a.updated_at
+		FROM articles a
+		INNER JOIN (
+	` + innerQuery + `
+		) b ON a.title = b.title AND a.id = b.max_id
+		ORDER BY a.id DESC
+		LIMIT ? OFFSET ?;
+	`
+	// Append pagination parameters.
 	args = append(args, limit, offset)
 
-	// Execute the query.
 	rows, err := store.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute filtered query: %w", err)
