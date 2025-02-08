@@ -20,7 +20,7 @@ pub async fn generate_rss_feed(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    // Fetch articles using the provided query and config
+    // Fetch articles
     let mut articles = fetch_articles(&query, &config).await.map_err(|err| {
         eprintln!("Failed to fetch articles: {}", err);
         StatusCode::INTERNAL_SERVER_ERROR
@@ -35,22 +35,25 @@ pub async fn generate_rss_feed(
         .enumerate()
         .take(30)
         .map(|(i, article)| {
-            // Calculate a publication date by subtracting i minutes from now
+            // Calculate a pub date by subtracting i minutes from now
             let pub_date = (now - Duration::minutes(i as i64)).to_rfc2822();
-            let summary = article.summary.unwrap_or_else(|| "No summary".to_string());
-            let comment_link = article
-                .comment_link
-                .unwrap_or_else(|| "No comments".to_string());
 
+            // Ensure the summary is not empty
+            let summary = match &article.summary {
+                Some(s) if !s.trim().is_empty() => s.clone(),
+                _ => "No summary available.".to_string(),
+            };
+
+            // Wrap the description in CDATA to preserve HTML formatting
             let description = format!(
-                "<strong>Summary:</strong> {}<br><br>\
+                "<![CDATA[<strong>Summary:</strong> {}<br><br>\
 <strong>Upvotes:</strong> {}<br><br>\
 <strong>Comments:</strong> {} [<a href=\"{}\">View Comments</a>]<br><br>\
-<strong>Link:</strong> <a href=\"{}\">{}</a>",
+<strong>Link:</strong> <a href=\"{}\">{}</a>]]>",
                 summary,
                 article.upvotes.unwrap_or(0),
                 article.comment_count.unwrap_or(0),
-                comment_link,
+                article.comment_link.as_deref().unwrap_or("#"),
                 article.link,
                 article.title
             );
@@ -71,5 +74,7 @@ pub async fn generate_rss_feed(
         .items(items)
         .build();
 
-    Ok(Html(channel.to_string()))
+    let rss_feed = channel.to_string();
+
+    Ok(Html(rss_feed))
 }
