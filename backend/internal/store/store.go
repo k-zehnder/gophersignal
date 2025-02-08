@@ -4,7 +4,6 @@ package store
 import (
 	"database/sql"
 	"fmt"
-	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
@@ -36,7 +35,8 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	return &MySQLStore{db: db}, nil
 }
 
-// SaveArticles inserts or updates articles in the database.
+// SaveArticles inserts articles into the database.
+// Note: The "ON DUPLICATE KEY UPDATE" clause has been removed.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	stmt, err := store.db.Prepare(`
         INSERT INTO articles (
@@ -54,20 +54,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          title = VALUES(title),
-          link = VALUES(link),
-          content = VALUES(content),
-          summary = VALUES(summary),
-          source = VALUES(source),
-          upvotes = VALUES(upvotes),
-          comment_count = VALUES(comment_count),
-          comment_link = VALUES(comment_link),
-          flagged = VALUES(flagged),
-          dead = VALUES(dead),
-          dupe = VALUES(dupe),
-          updated_at = VALUES(updated_at);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
@@ -98,21 +85,15 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-// GetArticles retrieves the latest articles (by id descending) that have a non-empty summary
-// and ensures that only one article per title is returned.
+// GetArticles retrieves the latest articles (by id descending) that have a non-empty summary.
 func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
-		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
-		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
-		FROM articles a
-		INNER JOIN (
-			SELECT title, MAX(id) AS max_id
-			FROM articles
-			WHERE summary IS NOT NULL AND summary != ''
-			GROUP BY title
-		) b ON a.title = b.title AND a.id = b.max_id
-		ORDER BY a.id DESC
+		SELECT id, title, link, content, summary, source,
+		       upvotes, comment_count, comment_link, flagged,
+		       dead, dupe, created_at, updated_at
+		FROM articles
+		WHERE summary IS NOT NULL AND TRIM(summary) != ''
+		ORDER BY id DESC
 		LIMIT ? OFFSET ?;
 	`
 
@@ -152,20 +133,20 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 	return articles, nil
 }
 
-// GetFilteredArticles retrieves the latest filtered articles (by id descending),
-// applies optional filters for flagged, dead, and dupe statuses,
-// and ensures only one article per title is returned.
+// GetFilteredArticles retrieves the latest filtered articles (by id descending)
+// and applies optional filters for flagged, dead, and dupe statuses.
 func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, offset int) ([]*models.Article, error) {
-	// Condition that is always true.
-	innerQuery := `
-		SELECT title, MAX(id) AS max_id
+	// Base query.
+	query := `
+		SELECT id, title, link, content, summary, source,
+		       upvotes, comment_count, comment_link, flagged,
+		       dead, dupe, created_at, updated_at
 		FROM articles
 		WHERE 1
 	`
-	var conditions []string
 	var args []interface{}
 
-	// Convert boolean filters to integers (1 for true, 0 for false).
+	// Build filtering conditions.
 	if flagged != nil {
 		var flaggedVal int
 		if *flagged {
@@ -173,7 +154,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		} else {
 			flaggedVal = 0
 		}
-		conditions = append(conditions, "flagged = ?")
+		query += " AND flagged = ?"
 		args = append(args, flaggedVal)
 	}
 	if dead != nil {
@@ -183,7 +164,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		} else {
 			deadVal = 0
 		}
-		conditions = append(conditions, "dead = ?")
+		query += " AND dead = ?"
 		args = append(args, deadVal)
 	}
 	if dupe != nil {
@@ -193,32 +174,16 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		} else {
 			dupeVal = 0
 		}
-		conditions = append(conditions, "dupe = ?")
+		query += " AND dupe = ?"
 		args = append(args, dupeVal)
 	}
 
-	// Append conditions if any exist.
-	if len(conditions) > 0 {
-		innerQuery += " AND " + strings.Join(conditions, " AND ")
-	}
-	innerQuery += " GROUP BY title"
-
-	outerQuery := `
-		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
-		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
-		FROM articles a
-		INNER JOIN (
-	` + innerQuery + `
-		) b ON a.title = b.title AND a.id = b.max_id
-		ORDER BY a.id DESC
-		LIMIT ? OFFSET ?;
-	`
-
-	// Append pagination parameters to the argument slice.
+	// Append ordering and pagination.
+	query += " ORDER BY id DESC LIMIT ? OFFSET ?;"
 	args = append(args, limit, offset)
 
-	rows, err := store.db.Query(outerQuery, args...)
+	// Execute the query.
+	rows, err := store.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute filtered query: %w", err)
 	}
