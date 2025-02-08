@@ -1,4 +1,4 @@
-// Scrapes and processes articles from Y Combinator, then saves them.
+// Scrapes (https://news.ycombinator.com/front, https://news.ycombinator.com/news), processes, summarizes, and saves articles.
 
 import { Article } from './types/article';
 import { Services } from './services/createServices';
@@ -12,7 +12,7 @@ export class Workflow {
   public async run(): Promise<void> {
     try {
       // Fetch front-page articles
-      const combinedFrontArticles = await this.fetchFrontArticles();
+      const combinedFrontArticles = await this.services.scraper.scrapeFront();
       console.info(`Front articles count: ${combinedFrontArticles.length}`);
 
       // Categorize front-page articles
@@ -50,11 +50,6 @@ export class Workflow {
       console.error('Workflow execution error:', error);
       throw error;
     }
-  }
-
-  // Fetch front-page articles
-  private async fetchFrontArticles(): Promise<Article[]> {
-    return this.services.scraper.scrapeFront();
   }
 
   // Merge top stories with categorized articles, ensuring order consistency

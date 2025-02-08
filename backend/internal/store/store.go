@@ -36,7 +36,7 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	return &MySQLStore{db: db}, nil
 }
 
-// SaveArticles inserts or updates articles in the database.
+// SaveArticles inserts articles into the database.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	stmt, err := store.db.Prepare(`
         INSERT INTO articles (
@@ -53,22 +53,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
           dupe,
           created_at,
           updated_at
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE
-          title = VALUES(title),
-          link = VALUES(link),
-          content = VALUES(content),
-          summary = VALUES(summary),
-          source = VALUES(source),
-          upvotes = VALUES(upvotes),
-          comment_count = VALUES(comment_count),
-          comment_link = VALUES(comment_link),
-          flagged = VALUES(flagged),
-          dead = VALUES(dead),
-          dupe = VALUES(dupe),
-          updated_at = VALUES(updated_at);
-	`)
+        ) VALUES ?`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
@@ -102,17 +87,18 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 // and ensures that only one article per title is returned.
 func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
-		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
-		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
-		FROM articles a
-		INNER JOIN (
-			SELECT title, MAX(id) AS max_id
-			FROM articles
-			WHERE summary IS NOT NULL AND summary != ''
-			GROUP BY title
-		) b ON a.title = b.title AND a.id = b.max_id
-		ORDER BY a.id DESC
+		SELECT id, title, link, content, summary, source,
+		       upvotes, comment_count, comment_link, flagged,
+		       dead, dupe, created_at, updated_at
+		FROM articles
+		WHERE summary IS NOT NULL AND summary != ''
+		  AND id = (
+		      SELECT MAX(id)
+		      FROM articles
+		      WHERE title = articles.title
+		        AND summary IS NOT NULL AND summary != ''
+		  )
+		ORDER BY id DESC
 		LIMIT ? OFFSET ?;
 	`
 
@@ -204,14 +190,14 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 	innerQuery += " GROUP BY title"
 
 	outerQuery := `
-		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
-		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
-		FROM articles a
+		SELECT id, title, link, content, summary, source,
+		       upvotes, comment_count, comment_link, flagged,
+		       dead, dupe, created_at, updated_at
+		FROM articles
 		INNER JOIN (
 	` + innerQuery + `
-		) b ON a.title = b.title AND a.id = b.max_id
-		ORDER BY a.id DESC
+		) AS t ON articles.title = t.title AND articles.id = t.max_id
+		ORDER BY id DESC
 		LIMIT ? OFFSET ?;
 	`
 
