@@ -9,20 +9,20 @@ RUN apt-get update && \
     apt-get install -y build-essential curl vim pkg-config libssl-dev && \
     apt-get clean
 
-# Install cargo-watch for hot-reloading
-RUN cargo install cargo-watch
-
 # Copy only Cargo files first for caching dependencies
-COPY Cargo.toml ./
+COPY Cargo.toml Cargo.lock ./
 
-# Try to fetch dependencies and generate the Cargo.lock file
+# Fetch dependencies and generate the Cargo.lock file if missing
 RUN cargo fetch || (echo "Cargo.lock missing, generating it..." && cargo generate-lockfile)
 
 # Copy the entire project
 COPY . .
 
+# Build the project
+RUN cargo build --release
+
 # Expose the correct development port
 EXPOSE 9090
 
-# Use cargo-watch for hot-reloading
-CMD ["cargo", "watch", "-x", "run"]
+# Run the Rust binary directly (No hot-reloading)
+CMD ["cargo", "run", "--release"]

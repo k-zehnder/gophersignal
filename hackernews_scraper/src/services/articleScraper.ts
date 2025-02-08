@@ -16,6 +16,7 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
         const articles: Article[] = [];
         // Get all rows that represent an article
         const rows = Array.from(document.querySelectorAll('tr.athing'));
+
         rows.forEach((row) => {
           const titleElement = row.querySelector(
             'td.title > span.titleline a'
@@ -31,6 +32,7 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
           let upvotes = 0;
           let comment_count = 0;
           let comment_link = 'No comments link';
+
           const subtextRow = row.nextElementSibling;
           if (subtextRow) {
             const subtext = subtextRow.querySelector('.subtext');
@@ -50,6 +52,7 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
               }
             }
           }
+
           articles.push({
             title,
             link,
@@ -61,11 +64,23 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
             comment_link,
           });
         });
-        // Get the "more" link
+
+        // Get the "more" button link, ensuring correct pagination
         const moreLinkElem = document.querySelector(
           'a.morelink'
         ) as HTMLAnchorElement | null;
-        const nextUrl = moreLinkElem ? moreLinkElem.href : null;
+        let nextUrl: string | null = null;
+        if (moreLinkElem) {
+          const match = moreLinkElem.href.match(
+            /day=(\d{4}-\d{2}-\d{2})&p=(\d+)/
+          );
+          if (match) {
+            const day = match[1];
+            const nextPage = parseInt(match[2], 10);
+            nextUrl = `https://news.ycombinator.com/front?day=${day}&p=${nextPage}`;
+          }
+        }
+
         return { articles, nextUrl };
       });
       return result;
@@ -94,7 +109,7 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
     return articles;
   };
 
-  // Scrapes front pages (another URL endpoint on HN) with a page limit
+  // Scrapes front pages with a page limit
   const scrapeFront = async (maxPages: number = 10): Promise<Article[]> => {
     let articles: Article[] = [];
     let nextUrl: string | null = 'https://news.ycombinator.com/front';

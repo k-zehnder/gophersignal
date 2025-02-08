@@ -1,4 +1,4 @@
-// Scrapes (https://news.ycombinator.com/front, https://news.ycombinator.com/news), processes, summarizes, and saves articles.
+// Scrapes and processes articles from Y Combinator, then saves them.
 
 import { Article } from './types/article';
 import { Services } from './services/createServices';
@@ -11,7 +11,7 @@ export class Workflow {
 
   public async run(): Promise<void> {
     try {
-      // Fetch front-page articles from /front (today & yesterday)
+      // Fetch front-page articles
       const combinedFrontArticles = await this.fetchFrontArticles();
       console.info(`Front articles count: ${combinedFrontArticles.length}`);
 
@@ -27,7 +27,7 @@ export class Workflow {
       );
       console.info(`Top stories scraped: ${topArticles.length}`);
 
-      // Merge top stories with categorized front-page articles
+      // Merge categorized articles with top stories
       const allArticles = this.mergeArticles(topArticles, categorizedArticles);
       console.info(`Total articles to process: ${allArticles.length}`);
 
@@ -52,24 +52,25 @@ export class Workflow {
     }
   }
 
+  // Fetch front-page articles
   private async fetchFrontArticles(): Promise<Article[]> {
-    const { scraper, timeUtil } = this.services;
-    const [todayArticles, yesterdayArticles] = await Promise.all([
-      scraper.scrapeFrontForDay(timeUtil.today),
-      scraper.scrapeFrontForDay(timeUtil.yesterday),
-    ]);
-    return [...todayArticles, ...yesterdayArticles];
+    return this.services.scraper.scrapeFront();
   }
 
+  // Merge top stories with categorized articles, ensuring order consistency
   private mergeArticles(
     topArticles: Article[],
     categorized: { flagged: Article[]; dead: Article[]; dupe: Article[] }
   ): Article[] {
     return [
-      ...topArticles,
-      ...categorized.flagged,
-      ...categorized.dead,
-      ...categorized.dupe,
+      // Reverse to ensure newest top stories appear first
+      ...topArticles.reverse(),
+      // Reverse flagged articles for correct ordering
+      ...categorized.flagged.reverse(),
+      // Reverse dead articles for correct ordering
+      ...categorized.dead.reverse(),
+      // Reverse duplicate articles for correct ordering
+      ...categorized.dupe.reverse(),
     ];
   }
 
@@ -77,16 +78,21 @@ export class Workflow {
     processed: Article[],
     topArticles: Article[]
   ): Promise<Article[]> {
+    // Extract top articles that have content
     const topWithContent =
       this.services.articleProcessor.helpers.getTopArticlesWithContent(
         processed,
         topArticles
       );
+
+    // Summarize top N articles
     const summarized = await this.services.articleSummarizer.summarizeArticles(
-      topWithContent.slice(0, this.MAX_SUMMARIZED_ARTICLES).reverse()
+      topWithContent.slice(0, this.MAX_SUMMARIZED_ARTICLES)
     );
+
     return [
       ...summarized,
+      // Include processed articles that are not in top stories
       ...processed.filter(
         (article) => !topArticles.some((top) => top.link === article.link)
       ),
@@ -95,6 +101,7 @@ export class Workflow {
 
   public async shutdown(): Promise<void> {
     try {
+      // Close database and browser resources
       await Promise.all([
         this.services.db.closeDatabaseConnection(),
         this.services.browser.close(),

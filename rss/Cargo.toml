@@ -11,9 +11,9 @@ reqwest = { version = "0.11", features = ["json"] }
 rss = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-hyper = "0.14" 
+hyper = "0.14"
 chrono = "0.4"
 
 [[bin]]
 name = "rss"
-path = "src/main.rs" 
+path = "src/main.rs"

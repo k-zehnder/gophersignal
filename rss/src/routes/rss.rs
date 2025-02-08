@@ -20,13 +20,13 @@ pub async fn generate_rss_feed(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    // Pass both the query and the config to fetch_articles
+    // Fetch articles
     let mut articles = fetch_articles(&query, &config).await.map_err(|err| {
         eprintln!("Failed to fetch articles: {}", err);
         StatusCode::INTERNAL_SERVER_ERROR
     })?;
 
-    // Sort the articles (by id descending)
+    // Sort articles by id descending
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
     let now = Utc::now();
@@ -35,17 +35,29 @@ pub async fn generate_rss_feed(
         .enumerate()
         .take(30)
         .map(|(i, article)| {
+            // Calculate a pub date by subtracting i minutes from now
             let pub_date = (now - Duration::minutes(i as i64)).to_rfc2822();
+
+            // Ensure the summary is not empty
+            let summary = match &article.summary {
+                Some(s) if !s.trim().is_empty() => s.clone(),
+                _ => "No summary available.".to_string(),
+            };
+
+            // Wrap the description in CDATA to preserve HTML formatting
             let description = format!(
-                "Summary: {}<br><br>Upvotes: {}<br><br>Comments: {} [<a href=\"{}\">View Comments</a>]<br><br>\
-Link: <a href=\"{}\">{}</a>",
-                article.summary.unwrap_or_else(|| "No summary".to_string()),
+                "<![CDATA[<strong>Summary:</strong> {}<br><br>\
+<strong>Upvotes:</strong> {}<br><br>\
+<strong>Comments:</strong> {} [<a href=\"{}\">View Comments</a>]<br><br>\
+<strong>Link:</strong> <a href=\"{}\">{}</a>]]>",
+                summary,
                 article.upvotes.unwrap_or(0),
                 article.comment_count.unwrap_or(0),
-                article.comment_link.unwrap_or_else(|| "No comments".to_string()),
+                article.comment_link.as_deref().unwrap_or("#"),
                 article.link,
                 article.title
             );
+
             ItemBuilder::default()
                 .title(Some(article.title))
                 .link(Some(article.link))
@@ -62,5 +74,7 @@ Link: <a href=\"{}\">{}</a>",
         .items(items)
         .build();
 
-    Ok(Html(channel.to_string()))
+    let rss_feed = channel.to_string();
+
+    Ok(Html(rss_feed))
 }
