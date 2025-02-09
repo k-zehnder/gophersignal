@@ -49,7 +49,7 @@ describe('Workflow', () => {
     );
     expect(
       mockServices.articleSummarizer.summarizeArticles
-    ).toHaveBeenCalledTimes(1);
+    ).toHaveBeenCalledTimes(2);
     expect(mockServices.db.saveArticles).toHaveBeenCalledTimes(1);
   });
 

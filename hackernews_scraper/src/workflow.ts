@@ -1,4 +1,5 @@
-// Scrapes (https://news.ycombinator.com/front, https://news.ycombinator.com/news), processes, summarizes, and saves articles.
+// Scrapes (https://news.ycombinator.com/front, https://news.ycombinator.com/news),
+// processes, summarizes, and saves articles.
 
 import { Article } from './types/article';
 import { Services } from './services/createServices';
@@ -35,10 +36,13 @@ export class Workflow {
       const processedArticles =
         await this.services.articleProcessor.processArticles(allArticles);
 
-      // Filter and summarize top articles
+      // Filter and summarize articles:
+      // Summarize up to MAX_SUMMARIZED_ARTICLES from top stories
+      // And always summarize ALL flagged articles
       const finalArticles = await this.filterAndSummarizeArticles(
         processedArticles,
-        topArticles
+        topArticles,
+        categorizedArticles.flagged
       );
 
       // Save final articles to the database
@@ -69,9 +73,14 @@ export class Workflow {
     ];
   }
 
+  // Filter and summarize articles:
+  // Summarize up to MAX_SUMMARIZED_ARTICLES from top stories
+  // Always summarize all flagged articles
+  // Append any processed articles that weren't summarized
   private async filterAndSummarizeArticles(
     processed: Article[],
-    topArticles: Article[]
+    topArticles: Article[],
+    flaggedArticles: Article[]
   ): Promise<Article[]> {
     // Extract top articles that have content
     const topWithContent =
@@ -80,17 +89,36 @@ export class Workflow {
         topArticles
       );
 
-    // Summarize top N articles
-    const summarized = await this.services.articleSummarizer.summarizeArticles(
-      topWithContent.slice(0, this.MAX_SUMMARIZED_ARTICLES)
-    );
+    // Extract flagged articles that have content
+    const flaggedWithContent =
+      this.services.articleProcessor.helpers.getTopArticlesWithContent(
+        processed,
+        flaggedArticles
+      );
+
+    // Summarize top articles up to MAX_SUMMARIZED_ARTICLES
+    const summarizedTop =
+      await this.services.articleSummarizer.summarizeArticles(
+        topWithContent.slice(0, this.MAX_SUMMARIZED_ARTICLES)
+      );
+
+    // Summarize ALL flagged articles
+    const summarizedFlagged =
+      await this.services.articleSummarizer.summarizeArticles(
+        flaggedWithContent
+      );
+
+    // Build list of summarized article links
+    const summarizedLinks = [
+      ...summarizedTop.map((a) => a.link),
+      ...summarizedFlagged.map((a) => a.link),
+    ];
 
     return [
-      ...summarized,
-      // Include processed articles that are not in top stories
-      ...processed.filter(
-        (article) => !topArticles.some((top) => top.link === article.link)
-      ),
+      ...summarizedTop,
+      ...summarizedFlagged,
+      // Append any processed articles that were not summarized
+      ...processed.filter((article) => !summarizedLinks.includes(article.link)),
     ];
   }
 
