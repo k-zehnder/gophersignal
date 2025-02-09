@@ -89,17 +89,17 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 // and deduplicates them by title (only the article with the highest id for each title is returned).
 func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
-		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
-		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
-		FROM articles a
+		SELECT id, title, link, content, summary, source,
+		       upvotes, comment_count, comment_link, flagged,
+		       dead, dupe, created_at, updated_at
+		FROM articles
 		INNER JOIN (
 			SELECT title, MAX(id) AS max_id
 			FROM articles
 			WHERE summary IS NOT NULL AND TRIM(summary) != ''
 			GROUP BY title
-		) b ON a.title = b.title AND a.id = b.max_id
-		ORDER BY a.id DESC
+		) b ON articles.title = b.title AND articles.id = b.max_id
+		ORDER BY id DESC
 		LIMIT ? OFFSET ?;
 	`
 
@@ -191,16 +191,17 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 
 	// Build the outer query that joins the deduplicated inner query.
 	query := `
-		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
-		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
-		FROM articles a
+		SELECT id, title, link, content, summary, source,
+			upvotes, comment_count, comment_link, flagged,
+			dead, dupe, created_at, updated_at
+		FROM articles
 		INNER JOIN (
-	` + innerQuery + `
-		) b ON a.title = b.title AND a.id = b.max_id
-		ORDER BY a.id DESC
+		` + innerQuery + `
+		) b ON articles.title = b.title AND articles.id = b.max_id
+		ORDER BY id DESC
 		LIMIT ? OFFSET ?;
 	`
+
 	// Append pagination parameters.
 	args = append(args, limit, offset)
 
