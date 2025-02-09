@@ -148,7 +148,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 	innerQuery := `
 		SELECT title, MAX(id) AS max_id
 		FROM articles
-		WHERE summary IS NOT NULL AND TRIM(summary) != ''
+    	WHERE 1=1
 	`
 	var conditions []string
 	var args []interface{}
