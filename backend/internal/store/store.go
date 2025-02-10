@@ -82,7 +82,6 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 			article.UpdatedAt,
 		)
 		if execErr != nil {
-			// Log the error and continue with the next article
 			fmt.Printf("Failed for article '%s': %v\n", article.Title, execErr)
 			continue
 		}
