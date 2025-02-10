@@ -101,7 +101,12 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 		INNER JOIN (
 			SELECT title, MAX(id) AS max_id
 			FROM articles
-			WHERE summary IS NOT NULL AND TRIM(summary) != ''
+			WHERE summary IS NOT NULL 
+			  AND TRIM(summary) != ''
+			  AND summary NOT LIKE 'No summary available%'
+			  AND flagged = FALSE
+			  AND dead = FALSE
+			  AND dupe = FALSE
 			GROUP BY title
 		) b ON a.title = b.title AND a.id = b.max_id
 		ORDER BY a.id DESC
