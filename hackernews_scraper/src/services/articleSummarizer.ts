@@ -7,12 +7,6 @@ import Instructor from '@instructor-ai/instructor';
 
 // Emotional stimuli phrases inspired by EmotionPrompt research
 // @see {@link https://python.useinstructor.com/prompting/zero_shot/emotion_prompting/|EmotionPrompt Documentation}
-const EMOTIONAL_STIMULI = [
-  'This summary is crucial for understanding cutting-edge tech trends.',
-  'Your precise summary will guide critical decision-making.',
-  'Deliver clarity to help readers quickly grasp key insights.',
-  'Accuracy is key—provide a focused, detail-rich summary.',
-];
 
 const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
@@ -21,6 +15,12 @@ const createArticleSummarizer = (
 ) => {
   const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
   const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
+  const EMOTIONAL_STIMULI = [
+    'This summary is crucial for understanding cutting-edge tech trends.',
+    'Your precise summary will guide critical decision-making.',
+    'Deliver clarity to help readers quickly grasp key insights.',
+    'Accuracy is key—provide a focused, detail-rich summary.',
+  ];
 
   const sanitizeInput = (text: string) =>
     text.replace(
@@ -38,7 +38,6 @@ const createArticleSummarizer = (
         ? '\n[Truncated for length constraints]'
         : '';
 
-    // Select a random emotional directive
     const emotionalDirective =
       EMOTIONAL_STIMULI[Math.floor(Math.random() * EMOTIONAL_STIMULI.length)];
 
@@ -81,15 +80,19 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
         response_model: { schema, name: 'SummarySchema' },
       });
 
-      const parsedResponse = SummaryResponseSchema.parse(response);
+      // Validate response structure
+      const parsed = SummaryResponseSchema.safeParse(response);
 
-      return parsedResponse.summary ?? 'No summary available';
+      // Return summary if valid, otherwise fallback
+      return parsed.success
+        ? parsed.data.summary ?? 'No summary available'
+        : 'No summary available';
     } catch (error) {
       console.error(
         `Error processing "${title.slice(0, 50)}...":`,
-        error instanceof z.ZodError ? error.errors : error
+        error instanceof Error ? error.message : 'Unknown error'
       );
-      return 'SUMMARY_ERROR';
+      return 'No summary available';
     }
   };
 
@@ -108,9 +111,8 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
 
     for (const [index, article] of articles.entries()) {
       console.log(`\nProcessing article: ${article.title.slice(0, 60)}...`);
-      const summary = await summarizeContent(article.title, article.content);
 
-      article.summary = summary || 'Summary unavailable';
+      article.summary = await summarizeContent(article.title, article.content);
       progressBar.update(index + 1);
     }
 

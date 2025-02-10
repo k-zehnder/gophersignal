@@ -89,8 +89,12 @@ const docTemplate = `{
         "models.Article": {
             "type": "object",
             "properties": {
+                "article_rank": {
+                    "description": "Article rank extracted from the source.",
+                    "type": "integer"
+                },
                 "comment_count": {
-                    "description": "Number of comments from Hacker News or similar.",
+                    "description": "Number of comments.",
                     "type": "integer"
                 },
                 "comment_link": {
@@ -142,7 +146,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "upvotes": {
-                    "description": "Upvote count from Hacker News or similar.",
+                    "description": "Upvote count.",
                     "type": "integer"
                 }
             }

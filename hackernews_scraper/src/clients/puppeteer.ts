@@ -1,5 +1,7 @@
+import { z } from 'zod';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+import { Browser } from 'puppeteer';
 
 // Creates and configures a Puppeteer browser client
 export const createBrowserClient = async () => {
@@ -24,3 +26,6 @@ export const createBrowserClient = async () => {
 
   return browser;
 };
+
+export const BrowserClientSchema = z.instanceof(Browser);
+export type BrowserClient = z.infer<typeof BrowserClientSchema>;

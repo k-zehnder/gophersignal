@@ -4,6 +4,7 @@ import { Article, Config, DBClient } from '../types';
 const createMySqlClient = async (config: Config): Promise<DBClient> => {
   const mysqlConfig = config.mysql;
 
+  // Create a new MySQL connection
   const connection: Connection = await mysql.createConnection({
     host: mysqlConfig.host,
     port: mysqlConfig.port,
@@ -29,6 +30,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
       ({
         title,
         link,
+        article_rank,
         content = '',
         summary,
         upvotes = 0,
@@ -40,6 +42,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
       }) => [
         title,
         link,
+        article_rank,
         content.length > maxContentLength
           ? content.slice(0, maxContentLength)
           : content,
@@ -59,6 +62,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     const query = `INSERT INTO articles (
       title,
       link,
+      article_rank,
       content,
       summary,
       source,
@@ -75,6 +79,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     await connection.query(query, [values]);
   };
 
+  // Updates an article's summary and sets the updated_at timestamp
   const updateArticleSummary = async (
     id: number,
     summary: string
@@ -85,6 +90,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
+  // Marks an article as dead and updates the timestamp
   const markArticleAsDead = async (id: number): Promise<void> => {
     await connection.execute(
       'UPDATE articles SET dead = TRUE, updated_at = NOW() WHERE id = ?',
@@ -92,6 +98,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
+  // Marks an article as duplicate and updates the timestamp
   const markArticleAsDuplicate = async (id: number): Promise<void> => {
     await connection.execute(
       'UPDATE articles SET dupe = TRUE, updated_at = NOW() WHERE id = ?',
@@ -99,6 +106,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
+  // Closes the MySQL database connection
   const closeDatabaseConnection = async (): Promise<void> => {
     if (connection) {
       await connection.end();

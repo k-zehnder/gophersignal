@@ -38,10 +38,12 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 
 // SaveArticles inserts articles into the database.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
+	// Prepare the SQL statement with the article_rank column
 	stmt, err := store.db.Prepare(`
         INSERT INTO articles (
           title,
           link,
+          article_rank,
           content,
           summary,
           source,
@@ -54,17 +56,19 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
 	}
 	defer stmt.Close()
 
+	// Execute the statement for each article
 	for _, article := range articles {
 		_, execErr := stmt.Exec(
 			article.Title,
 			article.Link,
+			article.ArticleRank,
 			article.Content,
 			article.Summary,
 			article.Source,
@@ -78,6 +82,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 			article.UpdatedAt,
 		)
 		if execErr != nil {
+			// Log the error and continue with the next article
 			fmt.Printf("Failed for article '%s': %v\n", article.Title, execErr)
 			continue
 		}
@@ -89,7 +94,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 // and deduplicates them by title (only the article with the highest id for each title is returned).
 func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
-		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
+		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
 		       a.dead, a.dupe, a.created_at, a.updated_at
 		FROM articles a
@@ -116,6 +121,7 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 			&article.ID,
 			&article.Title,
 			&article.Link,
+			&article.ArticleRank,
 			&article.Content,
 			&article.Summary,
 			&article.Source,
@@ -148,7 +154,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 	innerQuery := `
 		SELECT title, MAX(id) AS max_id
 		FROM articles
-    	WHERE 1=1
+		WHERE 1=1
 	`
 	var conditions []string
 	var args []interface{}
@@ -191,7 +197,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 
 	// Build the outer query that joins the deduplicated inner query.
 	query := `
-		SELECT a.id, a.title, a.link, a.content, a.summary, a.source,
+		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
 		       a.dead, a.dupe, a.created_at, a.updated_at
 		FROM articles a
@@ -217,6 +223,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 			&article.ID,
 			&article.Title,
 			&article.Link,
+			&article.ArticleRank,
 			&article.Content,
 			&article.Summary,
 			&article.Source,
