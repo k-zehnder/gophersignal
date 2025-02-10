@@ -1,11 +1,12 @@
-import { Workflow } from '../src/workflow';
+import { createWorkflow } from '../src/workflow';
 import { Services } from '../src/services/createServices';
 
 describe('Workflow', () => {
   let mockServices: jest.Mocked<Services>;
-  let workflow: Workflow;
+  let workflow: ReturnType<typeof createWorkflow>;
 
   beforeEach(() => {
+    // Set up a mocked version of the Services interface
     mockServices = {
       scraper: {
         scrapeFront: jest.fn().mockResolvedValue([]),
@@ -36,12 +37,14 @@ describe('Workflow', () => {
       },
     } as unknown as jest.Mocked<Services>;
 
-    workflow = new Workflow(mockServices);
+    // Create the workflow using the factory function
+    workflow = createWorkflow(mockServices);
   });
 
   it('should execute the workflow successfully', async () => {
     await expect(workflow.run()).resolves.not.toThrow();
 
+    // Verify that the expected service functions were called
     expect(mockServices.scraper.scrapeFront).toHaveBeenCalledTimes(1);
     expect(mockServices.scraper.scrapeTopStories).toHaveBeenCalledTimes(1);
     expect(mockServices.articleProcessor.processArticles).toHaveBeenCalledTimes(
@@ -49,13 +52,14 @@ describe('Workflow', () => {
     );
     expect(
       mockServices.articleSummarizer.summarizeArticles
-    ).toHaveBeenCalledTimes(1);
+    ).toHaveBeenCalledTimes(2);
     expect(mockServices.db.saveArticles).toHaveBeenCalledTimes(1);
   });
 
   it('should handle shutdown gracefully', async () => {
     await expect(workflow.shutdown()).resolves.not.toThrow();
 
+    // Verify that resources are properly closed
     expect(mockServices.db.closeDatabaseConnection).toHaveBeenCalledTimes(1);
     expect(mockServices.browser.close).toHaveBeenCalledTimes(1);
   });

@@ -1,4 +1,4 @@
-// Scrapes top stories from Hacker News, extracting their titles and links.
+// Scrapes top stories from Hacker News, extracting their titles, links, article_rank, upvotes, and comment counts.
 
 import { Browser } from 'puppeteer';
 import { Article, Scraper } from '../types';
@@ -16,8 +16,17 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
         const articles: Article[] = [];
         // Get all rows that represent an article
         const rows = Array.from(document.querySelectorAll('tr.athing'));
-
-        rows.forEach((row) => {
+        rows.forEach((row: Element) => {
+          // Extract the article_rank from the span with class "rank"
+          const rankElement = row.querySelector(
+            'td.title > span.rank'
+          ) as HTMLElement | null;
+          // Remove any non-digit characters (such as the trailing dot)
+          const rankStr = rankElement
+            ? rankElement.innerText.replace(/\D/g, '').trim()
+            : '0';
+          const article_rank = parseInt(rankStr, 10) || 0;
+          // Extract title and link from the title element
           const titleElement = row.querySelector(
             'td.title > span.titleline a'
           ) as HTMLAnchorElement | null;
@@ -32,7 +41,7 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
           let upvotes = 0;
           let comment_count = 0;
           let comment_link = 'No comments link';
-
+          // Get the next row which holds subtext details (like upvotes and comments)
           const subtextRow = row.nextElementSibling;
           if (subtextRow) {
             const subtext = subtextRow.querySelector('.subtext');
@@ -42,9 +51,12 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
                 const match = scoreEl.textContent.match(/\d+/);
                 upvotes = match ? parseInt(match[0], 10) : 0;
               }
+              // Cast NodeList to NodeListOf<HTMLAnchorElement> so that 'a' is properly typed
               const commentLinkElement = Array.from(
-                subtext.querySelectorAll('a')
-              ).find((a) => a.textContent?.includes('comment'));
+                subtext.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>
+              ).find((a: HTMLAnchorElement) =>
+                a.textContent?.includes('comment')
+              );
               if (commentLinkElement) {
                 const match = commentLinkElement.textContent?.match(/\d+/);
                 comment_count = match ? parseInt(match[0], 10) : 0;
@@ -52,10 +64,11 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
               }
             }
           }
-
+          // Push the article object including the new "article_rank" property
           articles.push({
             title,
             link,
+            article_rank,
             flagged,
             dead,
             dupe,
@@ -64,7 +77,6 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
             comment_link,
           });
         });
-
         // Get the "more" button link, ensuring correct pagination
         const moreLinkElem = document.querySelector(
           'a.morelink'
@@ -80,7 +92,6 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
             nextUrl = `https://news.ycombinator.com/front?day=${day}&p=${nextPage}`;
           }
         }
-
         return { articles, nextUrl };
       });
       return result;

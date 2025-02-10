@@ -18,6 +18,7 @@ func TestNewArticle(t *testing.T) {
 		1,
 		"Test Title",
 		"https://example.com",
+		1,
 		"Full content here.",
 		"Short summary.",
 		"Hacker News",
@@ -37,6 +38,9 @@ func TestNewArticle(t *testing.T) {
 	if article.Title != "Test Title" {
 		t.Errorf("Expected Title 'Test Title', got '%s'", article.Title)
 	}
+	if article.ArticleRank != 1 {
+		t.Errorf("Expected ArticleRank 1, got %d", article.ArticleRank)
+	}
 	if !article.Summary.Valid || article.Summary.String != "Short summary." {
 		t.Errorf("Expected Summary 'Short summary.', got '%v'", article.Summary)
 	}
@@ -54,6 +58,7 @@ func TestNewArticle(t *testing.T) {
 	}
 }
 
+// TestNullableIntJSONMarshaling tests JSON marshaling for NullableInt.
 func TestNullableIntJSONMarshaling(t *testing.T) {
 	// Valid integer
 	validInt := NullableInt{NullInt64: sql.NullInt64{Int64: 42, Valid: true}}
@@ -68,6 +73,7 @@ func TestNullableIntJSONMarshaling(t *testing.T) {
 	assert.JSONEq(t, "null", string(data))
 }
 
+// TestNullableStringJSONMarshaling tests JSON marshaling for NullableString.
 func TestNullableStringJSONMarshaling(t *testing.T) {
 	// Valid string
 	validString := NullableString{NullString: sql.NullString{String: "test", Valid: true}}
@@ -82,6 +88,7 @@ func TestNullableStringJSONMarshaling(t *testing.T) {
 	assert.JSONEq(t, "null", string(data))
 }
 
+// TestArticleMarshaling tests marshaling and unmarshaling of an Article.
 func TestArticleMarshaling(t *testing.T) {
 	createdAt := time.Now()
 	updatedAt := createdAt.Add(time.Hour)
@@ -90,6 +97,7 @@ func TestArticleMarshaling(t *testing.T) {
 		1,
 		"Test Article",
 		"https://example.com",
+		2, // ArticleRank
 		"Full content here",
 		"Summary here",
 		"Example Source",
@@ -113,6 +121,7 @@ func TestArticleMarshaling(t *testing.T) {
 	assert.Equal(t, article.ID, result.ID)
 	assert.Equal(t, article.Title, result.Title)
 	assert.Equal(t, article.Link, result.Link)
+	assert.Equal(t, article.ArticleRank, result.ArticleRank)
 	assert.Equal(t, article.Content, result.Content)
 	assert.Equal(t, article.Summary.String, result.Summary.String)
 	assert.Equal(t, article.Upvotes.Int64, result.Upvotes.Int64)

@@ -7,12 +7,12 @@ import (
 	"time"
 )
 
-// Custom type for nullable integers to improve Swagger compatibility
+// NullableInt is a custom type for nullable integers to improve Swagger compatibility.
 type NullableInt struct {
 	sql.NullInt64
 }
 
-// MarshalJSON customizes JSON output for NullableInt
+// MarshalJSON customizes JSON output for NullableInt.
 func (n NullableInt) MarshalJSON() ([]byte, error) {
 	if n.Valid {
 		return json.Marshal(n.Int64)
@@ -20,7 +20,7 @@ func (n NullableInt) MarshalJSON() ([]byte, error) {
 	return json.Marshal(nil)
 }
 
-// UnmarshalJSON customizes JSON input for NullableInt
+// UnmarshalJSON customizes JSON input for NullableInt.
 func (n *NullableInt) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		n.Valid = false
@@ -31,12 +31,12 @@ func (n *NullableInt) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// Custom type for nullable strings to improve Swagger compatibility
+// NullableString is a custom type for nullable strings to improve Swagger compatibility.
 type NullableString struct {
 	sql.NullString
 }
 
-// MarshalJSON customizes JSON output for NullableString
+// MarshalJSON customizes JSON output for NullableString.
 func (n NullableString) MarshalJSON() ([]byte, error) {
 	if n.Valid {
 		return json.Marshal(n.String)
@@ -44,7 +44,7 @@ func (n NullableString) MarshalJSON() ([]byte, error) {
 	return json.Marshal(nil)
 }
 
-// UnmarshalJSON customizes JSON input for NullableString
+// UnmarshalJSON customizes JSON input for NullableString.
 func (n *NullableString) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		n.Valid = false
@@ -60,13 +60,14 @@ type Article struct {
 	ID           int            `json:"id"`                                  // Unique identifier for the article.
 	Title        string         `json:"title"`                               // Title of the article.
 	Link         string         `json:"link"`                                // URL link to the article.
+	ArticleRank  int            `json:"article_rank"`                        // Article rank extracted from the source.
 	Content      string         `json:"content"`                             // Full content of the article.
 	Summary      NullableString `json:"summary" swaggertype:"string"`        // Summary of the article, nullable.
 	Source       string         `json:"source"`                              // Source from where the article was fetched.
 	CreatedAt    time.Time      `json:"created_at"`                          // Timestamp when the article was created.
 	UpdatedAt    time.Time      `json:"updated_at"`                          // Timestamp when the article was last updated.
-	Upvotes      NullableInt    `json:"upvotes" swaggertype:"integer"`       // Upvote count from Hacker News or similar.
-	CommentCount NullableInt    `json:"comment_count" swaggertype:"integer"` // Number of comments from Hacker News or similar.
+	Upvotes      NullableInt    `json:"upvotes" swaggertype:"integer"`       // Upvote count.
+	CommentCount NullableInt    `json:"comment_count" swaggertype:"integer"` // Number of comments.
 	CommentLink  NullableString `json:"comment_link" swaggertype:"string"`   // Link to the comment thread (if any).
 	Flagged      bool           `json:"flagged"`                             // Whether the article is flagged.
 	Dead         bool           `json:"dead"`                                // Whether the article is dead.
@@ -76,7 +77,9 @@ type Article struct {
 // NewArticle is a constructor for creating a new Article instance.
 func NewArticle(
 	id int,
-	title, link, content, summary, source string,
+	title, link string,
+	articleRank int,
+	content, summary, source string,
 	createdAt, updatedAt time.Time,
 	upvotes int64,
 	commentCount int64,
@@ -87,6 +90,7 @@ func NewArticle(
 		ID:           id,
 		Title:        title,
 		Link:         link,
+		ArticleRank:  articleRank,
 		Content:      content,
 		Summary:      NullableString{NullString: sql.NullString{String: summary, Valid: summary != ""}},
 		Source:       source,

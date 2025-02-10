@@ -5,7 +5,9 @@ import { SingleBar, Presets } from 'cli-progress';
 import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 import Instructor from '@instructor-ai/instructor';
 
-// Creates an article summarizer service using Instructor and Ollama
+// Emotional stimuli phrases inspired by EmotionPrompt research
+// @see {@link https://python.useinstructor.com/prompting/zero_shot/emotion_prompting/|EmotionPrompt Documentation}
+
 const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
@@ -13,51 +15,87 @@ const createArticleSummarizer = (
 ) => {
   const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
   const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
+  const EMOTIONAL_STIMULI = [
+    'This summary is crucial for understanding cutting-edge tech trends.',
+    'Your precise summary will guide critical decision-making.',
+    'Deliver clarity to help readers quickly grasp key insights.',
+    'Accuracy is key—provide a focused, detail-rich summary.',
+  ];
 
-  // Summarizes the content of a single article
+  const sanitizeInput = (text: string) =>
+    text.replace(
+      /[<>&]/g,
+      (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[char] || char)
+    );
+
   const summarizeContent = async (
     title: string,
     content: string
   ): Promise<string> => {
-    const truncatedContent =
+    const truncatedContent = content.slice(0, MAX_CONTENT_LENGTH);
+    const truncationNotice =
       content.length > MAX_CONTENT_LENGTH
-        ? content.slice(0, MAX_CONTENT_LENGTH)
-        : content;
+        ? '\n[Truncated for length constraints]'
+        : '';
 
-    const prompt = `Provide a concise summary (max 150 words) of the article below.
-    Title: ${title}
+    const emotionalDirective =
+      EMOTIONAL_STIMULI[Math.floor(Math.random() * EMOTIONAL_STIMULI.length)];
 
-    Content:
-    ${truncatedContent}
+    const prompt = `
+SUMMARY REQUEST
+---------------
+INSTRUCTIONS:
+- ${emotionalDirective}
+- Provide a clear, concise summary of the Hacker News article.
+- Emphasize key technical details, context, and innovative ideas.
+- Do NOT preface with generic phrases such as "The article discusses..."
+- Format the output as a single, well-structured paragraph.
 
-    Summary:
-  `;
+ARTICLE:
+--- TITLE ---
+${sanitizeInput(title)}
+
+--- TRUNCATED CONTENT ---
+${sanitizeInput(truncatedContent)} ${truncationNotice}
+`;
 
     try {
       const response = await client.chat.completions.create({
         model: config.model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [
+          {
+            role: 'system',
+            content: `You are a precise summarization AI specialized in Hacker News content. Follow these rules strictly:
+1. Provide factual, technical summaries in a single paragraph.
+2. Avoid generic lead-ins.`,
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
         max_tokens: MAX_OUTPUT_TOKENS,
         temperature: 0.5,
         top_p: 0.9,
         response_model: { schema, name: 'SummarySchema' },
       });
 
-      // Validate the response
-      const parsedResponse = SummaryResponseSchema.parse(response);
+      // Validate response structure
+      const parsed = SummaryResponseSchema.safeParse(response);
 
-      return parsedResponse.summary ?? 'No summary available';
+      // Return summary if valid, otherwise fallback
+      return parsed.success
+        ? parsed.data.summary ?? 'No summary available'
+        : 'No summary available';
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        console.error('Zod validation error:', error.errors);
-      } else {
-        console.error(`Error summarizing content for "${title}":`, error);
-      }
+      console.error(
+        `Error processing "${title.slice(0, 50)}...":`,
+        error instanceof Error ? error.message : 'Unknown error'
+      );
       return 'No summary available';
     }
   };
 
-  // Summarizes a list of articles
   const summarizeArticles = async (
     articles: Required<Article>[]
   ): Promise<Article[]> => {
@@ -72,28 +110,17 @@ const createArticleSummarizer = (
     progressBar.start(articles.length, 0);
 
     for (const [index, article] of articles.entries()) {
-      console.log(`\nSummarizing article: ${article.title}`);
-      const summary = await summarizeContent(article.title, article.content);
+      console.log(`\nProcessing article: ${article.title.slice(0, 60)}...`);
 
-      if (summary) {
-        article.summary = summary;
-      } else {
-        console.warn(
-          `\nFailed to generate summary for article: ${article.title}`
-        );
-      }
-
+      article.summary = await summarizeContent(article.title, article.content);
       progressBar.update(index + 1);
     }
 
     progressBar.stop();
-
     return articles;
   };
 
-  return {
-    summarizeArticles,
-  };
+  return { summarizeArticles };
 };
 
 export { createArticleSummarizer };
