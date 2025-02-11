@@ -24,11 +24,11 @@ impl AppConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use std::env;
 
     #[test]
     fn test_app_config_defaults() {
-        // Remove these variables so defaults are used.
         env::remove_var("RSS_PORT");
         env::remove_var("API_URL");
 
@@ -38,15 +38,21 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_app_config_custom() {
+        env::remove_var("RSS_PORT");
+        env::remove_var("API_URL");
+
+        println!("Before set: RSS_PORT = {:?}", env::var("RSS_PORT"));
         env::set_var("RSS_PORT", "8000");
         env::set_var("API_URL", "http://example.com/api");
+        println!("After set: RSS_PORT = {:?}", env::var("RSS_PORT"));
 
         let config = AppConfig::from_env();
         assert_eq!(config.port, "8000");
         assert_eq!(config.api_url, "http://example.com/api");
 
-        // Clean up for subsequent tests.
+        // Clean up
         env::remove_var("RSS_PORT");
         env::remove_var("API_URL");
     }
