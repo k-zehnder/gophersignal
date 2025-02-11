@@ -1,5 +1,5 @@
 use crate::config::AppConfig;
-use crate::services::articles::fetch_articles;
+use crate::services::articles::ArticlesClient;
 use axum::{
     extract::{Extension, Query},
     http::StatusCode,
@@ -9,24 +9,26 @@ use chrono::{Duration, Utc};
 use rss::{ChannelBuilder, ItemBuilder};
 use serde::Deserialize;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct RssQuery {
     pub flagged: Option<bool>,
     pub dead: Option<bool>,
     pub dupe: Option<bool>,
 }
 
-pub async fn generate_rss_feed(
+pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
+    Extension(client): Extension<T>,
 ) -> Result<impl IntoResponse, StatusCode> {
-    // Fetch articles using the provided query and config
-    let mut articles = fetch_articles(&query, &config).await.map_err(|err| {
-        eprintln!("Failed to fetch articles: {}", err);
-        StatusCode::INTERNAL_SERVER_ERROR
-    })?;
+    let mut articles = client
+        .fetch_articles(&query, &config)
+        .await
+        .map_err(|err| {
+            eprintln!("Failed to fetch articles: {}", err);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
 
-    // Sort articles by id descending
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
     let now = Utc::now();

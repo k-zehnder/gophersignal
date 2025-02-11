@@ -12,7 +12,7 @@ done
 
 # Pull the required Ollama model
 echo "Pulling the required Ollama model..."
-ollama pull llama3:instruct
+ollama pull llama3.2
 echo "Model pulled successfully."
 
 # Create a flag file to signal that the model has been pulled

@@ -38,7 +38,6 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 
 // SaveArticles inserts articles into the database.
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
-	// Prepare the SQL statement with the article_rank column
 	stmt, err := store.db.Prepare(`
         INSERT INTO articles (
           title,
@@ -82,7 +81,6 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 			article.UpdatedAt,
 		)
 		if execErr != nil {
-			// Log the error and continue with the next article
 			fmt.Printf("Failed for article '%s': %v\n", article.Title, execErr)
 			continue
 		}
