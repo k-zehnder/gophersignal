@@ -38,11 +38,20 @@ push:
 deploy:
 	@echo "Deploying application via Docker Swarm..."
 	docker stack rm gophersignal || true
+	@echo "Waiting for old tasks to clear..."
 	sleep 15
+	@echo "Pulling latest images..."
 	$(MAKE) -C frontend pull
 	$(MAKE) -C backend pull
 	$(MAKE) -C hackernews_scraper pull
 	$(MAKE) -C rss pull
+	@echo "Building frontend assets..."
+	cd frontend && npm install && npm run build && cd ..
+	@echo "Restarting Nginx containers with compose..."
+	docker compose up -d
+	docker compose restart nginx
+	sleep 5
+	@echo "Deploying new stack with swarm..."
 	docker stack deploy -c docker-compose.yml gophersignal
 	@echo "Application deployed successfully."
 
