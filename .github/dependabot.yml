@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: 'gomod'
+    directory: '/backend'
+    schedule:
+      interval: 'weekly'
+    versioning-strategy: 'increase'
+
+  - package-ecosystem: 'npm'
+    directory: '/frontend'
+    schedule:
+      interval: 'weekly'
+    versioning-strategy: 'increase'
+
+  - package-ecosystem: 'npm'
+    directory: '/hackernews_scraper'
+    schedule:
+      interval: 'weekly'
+    versioning-strategy: 'increase'
+
+  - package-ecosystem: 'cargo'
+    directory: '/rss'
+    schedule:
+      interval: 'weekly'
+    versioning-strategy: 'increase'
