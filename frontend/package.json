@@ -17,7 +17,7 @@
     "@fortawesome/react-fontawesome": "^0.2.2",
     "@mui/icons-material": "^5.15.11",
     "@mui/joy": "^5.0.0-alpha.65",
-    "date-fns": "^3.3.1",
+    "date-fns": "^4.1.0",
     "gray-matter": "^4.0.3",
     "ip": "^2.0.1",
     "next": "^14.2.21",
