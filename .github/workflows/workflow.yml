@@ -33,7 +33,6 @@ jobs:
           name: coverage-report
           path: backend/coverage.html
 
-      # DEPLOY TO VPS
       - name: Install SSH Client
         run: sudo apt-get update && sudo apt-get install -y ssh
 
