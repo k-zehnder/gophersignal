@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build-test-push:
+  build-test-push-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,8 +26,26 @@ jobs:
       - name: Build, Test, and Push All Components
         run: make all
 
-      - name: Upload Go coverage report
+      - name: Upload Coverage Report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: backend/coverage.html
+
+      # DEPLOY TO VPS
+      - name: Install SSH Client
+        run: sudo apt-get update && sudo apt-get install -y ssh
+
+      - name: Add SSH Key
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy to VPS using Makefile
+        if: github.ref == 'refs/heads/main'
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.VPS_SSH_USER }}@${{ secrets.VPS_HOST }} "cd ${{ secrets.VPS_REPO_PATH }} && make deploy"
