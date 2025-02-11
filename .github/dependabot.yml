@@ -6,12 +6,6 @@ updates:
       interval: 'weekly'
 
   - package-ecosystem: 'npm'
-    directory: '/frontend'
-    schedule:
-      interval: 'weekly'
-    versioning-strategy: 'auto'
-
-  - package-ecosystem: 'npm'
     directory: '/hackernews_scraper'
     schedule:
       interval: 'weekly'
