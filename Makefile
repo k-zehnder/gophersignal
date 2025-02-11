@@ -36,17 +36,14 @@ push:
 
 .PHONY: deploy
 deploy:
-	@echo "Deploying application..."
-	docker compose down
+	@echo "Deploying application via Docker Swarm..."
+	docker stack rm gophersignal || true
+	sleep 15
 	$(MAKE) -C frontend pull
 	$(MAKE) -C backend pull
 	$(MAKE) -C hackernews_scraper pull
 	$(MAKE) -C rss pull
-	@echo "Building frontend..."
-	cd frontend && npm install && npm run build && cd ..
-	@echo "Restarting Nginx..."
-	docker compose up -d
-	docker compose restart nginx
+	docker stack deploy -c docker-compose.yml gophersignal
 	@echo "Application deployed successfully."
 
 .PHONY: dev
