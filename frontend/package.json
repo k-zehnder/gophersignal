@@ -9,7 +9,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@babel/traverse": "^7.23.9",
+    "@babel/traverse": "^7.26.8",
     "@emotion/react": "^11.10.5",
     "@emotion/server": "^11.11.0",
     "@emotion/styled": "^11.11.0",
