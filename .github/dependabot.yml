@@ -10,9 +10,6 @@ updates:
     schedule:
       interval: 'weekly'
     versioning-strategy: 'auto'
-    ignore:
-      - dependency-name: 'date-fns'
-      - dependency-name: 'react-day-picker'
 
   - package-ecosystem: 'npm'
     directory: '/hackernews_scraper'
