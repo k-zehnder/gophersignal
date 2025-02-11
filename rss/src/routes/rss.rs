@@ -29,6 +29,7 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
             StatusCode::INTERNAL_SERVER_ERROR
         })?;
 
+    // Sort articles by id descending
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
     let now = Utc::now();
