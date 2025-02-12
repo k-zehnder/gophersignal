@@ -3,19 +3,17 @@ mod models;
 mod routes;
 mod services;
 
-use crate::config::AppConfig;
-use crate::routes::rss::generate_rss_feed;
-use crate::services::articles::HttpArticlesClient;
 use axum::{routing::get, Extension, Router};
+use config::AppConfig;
+use routes::rss::generate_rss_feed;
+use services::articles::HttpArticlesClient;
+use std::net::SocketAddr;
 
 #[tokio::main]
 async fn main() {
     let config = AppConfig::from_env();
-
-    // Create an instance of the client.
     let client = HttpArticlesClient;
 
-    // Create the router and inject the dependencies.
     let app = Router::new()
         .route("/rss", get(generate_rss_feed::<HttpArticlesClient>))
         .layer(Extension(config.clone()))
@@ -23,8 +21,9 @@ async fn main() {
 
     println!("Server running on port: {}", config.port);
 
-    axum::Server::bind(&format!("0.0.0.0:{}", config.port).parse().unwrap())
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let addr: SocketAddr = format!("0.0.0.0:{}", config.port).parse().unwrap();
+
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+
+    axum::serve(listener, app).await.unwrap();
 }
