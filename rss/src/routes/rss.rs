@@ -1,4 +1,4 @@
-use crate::config::AppConfig;
+use crate::config::config::AppConfig;
 use crate::services::articles::ArticlesClient;
 use axum::{
     extract::{Extension, Query},
