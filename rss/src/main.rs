@@ -4,7 +4,7 @@ mod routes;
 mod services;
 
 use axum::{routing::get, Extension, Router};
-use config::AppConfig;
+use config::config::AppConfig;
 use routes::rss::generate_rss_feed;
 use services::articles::HttpArticlesClient;
 use std::net::SocketAddr;

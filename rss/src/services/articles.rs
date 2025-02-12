@@ -1,4 +1,4 @@
-use crate::config::AppConfig;
+use crate::config::config::AppConfig;
 use crate::models::article::{ApiResponse, Article};
 use crate::routes::rss::RssQuery;
 use async_trait::async_trait;
