@@ -9,7 +9,7 @@ const EXIT_CODE_SUCCESS = 0;
 const EXIT_CODE_FAILURE = 1;
 
 const main = async (): Promise<number> => {
-  // Initialize the workflow variable
+  // Initialize workflow and set default exit code
   let workflow: ReturnType<typeof createWorkflow> | null = null;
   let exitCode = EXIT_CODE_SUCCESS;
   try {
@@ -28,7 +28,7 @@ const main = async (): Promise<number> => {
     console.error('Workflow execution error:', error);
     exitCode = EXIT_CODE_FAILURE;
   } finally {
-    // Shutdown and release resources if the workflow was initialized
+    // Shutdown workflow if initialized
     if (workflow) await workflow.shutdown();
   }
   return exitCode;

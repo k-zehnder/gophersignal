@@ -5,10 +5,8 @@ import { Article } from './types/article';
 import { Services } from './services/createServices';
 
 export const createWorkflow = (services: Services) => {
-  // Number of /news pages to scrape
-  const NUMBER_OF_TOP_STORY_PAGES = 2;
-  // Maximum /news articles to summarize
-  const MAX_SUMMARIZED_ARTICLES = 30;
+  const MAX_TOP_STORY_PAGES = 2; // Maximum /news pages to scrape
+  const MAX_SUMMARIZED_ARTICLES = 30; // Maximum number of articles to summarize
 
   // Merge top stories with categorized articles, ensuring order consistency
   const mergeArticles = (
@@ -82,7 +80,7 @@ export const createWorkflow = (services: Services) => {
 
       // Scrape top articles from /news
       const topArticles = await services.scraper.scrapeTopStories(
-        NUMBER_OF_TOP_STORY_PAGES
+        MAX_TOP_STORY_PAGES
       );
       console.info(`Top stories scraped: ${topArticles.length}`);
 
