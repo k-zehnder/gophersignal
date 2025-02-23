@@ -1,21 +1,24 @@
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, sqlx::FromRow)]
 pub struct Article {
-    pub id: u32,
+    pub id: i64,
     pub title: String,
     pub link: String,
+    #[serde(default)]
+    pub article_rank: i32,
     pub content: Option<String>,
     pub summary: Option<String>,
     pub source: String,
+    pub upvotes: Option<i32>,
+    pub comment_count: Option<i32>,
+    pub comment_link: Option<String>,
+    pub flagged: bool,
+    pub dead: bool,
+    pub dupe: bool,
     pub created_at: String,
     pub updated_at: String,
-    pub upvotes: Option<u32>,
-    pub comment_count: Option<u32>,
-    pub comment_link: Option<String>,
-    pub flagged: Option<bool>,
-    pub dead: Option<bool>,
-    pub dupe: Option<bool>,
+    pub published_at: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -48,7 +51,8 @@ mod tests {
             "comment_link": "http://example.com/comments",
             "flagged": false,
             "dead": false,
-            "dupe": false
+            "dupe": false,
+            "published_at": null
         }
         "#;
         let article: Article = serde_json::from_str(json).unwrap();
@@ -77,7 +81,8 @@ mod tests {
                 "comment_link": "http://example.com/comments",
                 "flagged": false,
                 "dead": false,
-                "dupe": false
+                "dupe": false,
+                "published_at": null
             }]
         }
         "#;
