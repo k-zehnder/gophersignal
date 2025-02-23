@@ -1,4 +1,3 @@
-use crate::db::db::{load_published_articles, update_published_articles};
 use crate::{
     config::config::AppConfig, errors::errors::AppError, models::article::Article,
     services::articles::ArticlesClient,
@@ -26,41 +25,18 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Extension(config): Extension<AppConfig>,
     Extension(client): Extension<T>,
 ) -> Result<Response<String>, AppError> {
-    // Fetch articles and sort by ID descending.
+    // Fetch and sort articles
     let mut articles = client.fetch_articles(&query, &config).await?;
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
-    // Deduplicate articles using article.link as a unique key.
+    // Deduplicate articles
     let mut seen = HashSet::new();
-    articles.retain(|article| {
-        if seen.contains(&article.link) {
-            false
-        } else {
-            seen.insert(article.link.clone());
-            true
-        }
-    });
+    articles.retain(|article| seen.insert(article.link.clone()));
 
-    // Load the set of previously published articles.
-    let mut published = load_published_articles();
+    // Build RSS items
+    let items: Vec<_> = articles.iter().map(build_item).collect();
 
-    // Build RSS items for every article.
-    let items: Vec<_> = articles
-        .iter()
-        .map(|article| {
-            // If the article link is not in our published set, it's new.
-            let is_new = !published.contains(&article.link);
-            if is_new {
-                published.insert(article.link.clone());
-            }
-            build_item(article, is_new)
-        })
-        .collect();
-
-    // Persist the updated published articles set.
-    update_published_articles(&published);
-
-    // Build the RSS channel.
+    // Construct RSS channel
     let channel = ChannelBuilder::default()
         .title("GopherSignal RSS Feed")
         .link("https://gophersignal.com")
@@ -75,24 +51,23 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
         .body(channel.to_string())?)
 }
 
-/// Build an RSS item with GUID, publication date, and a custom <isNew> element.
-fn build_item(article: &Article, is_new: bool) -> rss::Item {
-    let pub_date = DateTime::parse_from_rfc3339(
-        &article
-            .published_at
-            .clone()
-            .unwrap_or(article.created_at.clone()),
-    )
-    .unwrap_or_else(|_| Utc::now().into())
-    .to_rfc2822();
+fn build_item(article: &Article) -> rss::Item {
+    // Calculate offset duration based on ID
+    let id_offset = chrono::Duration::seconds(article.id as i64);
+
+    let pub_date =
+        DateTime::parse_from_rfc3339(&article.published_at.as_ref().unwrap_or(&article.created_at))
+            .unwrap_or_else(|_| Utc::now().into())
+            // Add ID-based offset to ensure unique timestamps
+            .checked_add_signed(id_offset)
+            .unwrap()
+            .to_rfc2822();
 
     let description = format!(
-        "<isNew>{}</isNew>\
-         <strong>Summary:</strong> {}<br><br>\
+        "<strong>Summary:</strong> {}<br><br>\
          <strong>Upvotes:</strong> {}<br><br>\
          <strong>Comments:</strong> {} [<a href=\"{}\">View Comments</a>]<br><br>\
          <strong>Link:</strong> <a href=\"{}\">{}</a>",
-        if is_new { "true" } else { "false" },
         article.summary.as_deref().unwrap_or("No summary"),
         article.upvotes.unwrap_or(0),
         article.comment_count.unwrap_or(0),
