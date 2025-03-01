@@ -1,5 +1,4 @@
 mod config;
-mod db;
 mod errors;
 mod models;
 mod routes;
@@ -10,20 +9,17 @@ use config::config::AppConfig;
 use errors::errors::AppError;
 use routes::rss::generate_rss_feed;
 use services::articles::HttpArticlesClient;
-use sqlx::MySqlPool;
 use std::net::SocketAddr;
 
 #[tokio::main]
 async fn main() -> Result<(), AppError> {
     let config = AppConfig::from_env();
     let client = HttpArticlesClient;
-    let pool: MySqlPool = db::db::create_pool(&config).await?;
 
     let app = Router::new()
         .route("/rss", get(generate_rss_feed::<HttpArticlesClient>))
         .layer(Extension(config.clone()))
-        .layer(Extension(client))
-        .layer(Extension(pool));
+        .layer(Extension(client));
 
     println!("Server running on port: {}", config.port);
 
