@@ -19,7 +19,7 @@ impl AppConfig {
             api_url: env::var("API_URL")
                 .unwrap_or_else(|_| "https://gophersignal.com/api/v1/articles".to_string()),
             database_url: env::var("DATABASE_URL")
-                .unwrap_or_else(|_| "mysql://user:password@host:3306/gophersignal".to_string()),
+                .unwrap_or_else(|_| "mysql://user:password@mysql:3306/gophersignal".to_string()),
         }
     }
 }
