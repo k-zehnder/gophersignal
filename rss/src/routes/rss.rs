@@ -21,7 +21,7 @@ pub struct RssQuery {
     pub dupe: Option<bool>,
 }
 
-/// Generate the RSS feed by including all articles but indicating new ones.
+/// Generate the RSS feed.
 pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
