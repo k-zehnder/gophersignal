@@ -12,8 +12,6 @@ services:
       - 3000:3000
     env_file:
       - .env
-    depends_on:
-      - backend
 
   backend:
     build:
@@ -27,9 +25,6 @@ services:
       - 8080:8080
     env_file:
       - .env
-    depends_on:
-      mysql:
-        condition: service_healthy
 
   rss:
     build:
@@ -44,8 +39,6 @@ services:
       - 9090:9090
     env_file:
       - .env
-    depends_on:
-      - mysql
 
   hackernews_scraper:
     build:
@@ -56,8 +49,6 @@ services:
       - /app/node_modules
     networks:
       - app-network
-    depends_on:
-      - mysql
     env_file:
       - .env
 
@@ -110,10 +101,6 @@ services:
       - 80:80
     networks:
       - app-network
-    depends_on:
-      ollama:
-        condition: service_healthy
-    restart: always
 
 networks:
   app-network:

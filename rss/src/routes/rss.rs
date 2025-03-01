@@ -64,7 +64,7 @@ fn build_item(article: &Article) -> rss::Item {
             .unwrap()
             .to_rfc2822();
 
-    // Extract domain using proper URL parsing
+    // Extract domain
     let domain = Url::parse(&article.link)
         .ok()
         .and_then(|url| url.host_str().map(|h| h.to_string()))
