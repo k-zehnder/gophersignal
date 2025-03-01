@@ -54,7 +54,7 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
 }
 
 fn build_item(article: &Article) -> rss::Item {
-    // Calculate offset duration based on ID
+    // Apply an offset based on the article's unique ID to ensure each item has a distinct publication date.
     let id_offset = chrono::Duration::seconds(article.id as i64);
 
     let pub_date =
