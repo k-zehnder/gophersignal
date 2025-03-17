@@ -49,7 +49,8 @@ INSTRUCTIONS:
 - Provide a clear, concise summary of the Hacker News article.
 - Emphasize key technical details, context, and innovative ideas.
 - Do NOT preface with generic phrases such as "The article discusses..."
-- Format the output as a single, well-structured paragraph.
+- Return ONLY a JSON object with a "summary" key containing 
+  the factual summary. Format must be: { "summary": "..." }.
 
 ARTICLE:
 --- TITLE ---
@@ -67,7 +68,9 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
             role: 'system',
             content: `You are a precise summarization AI specialized in Hacker News content. Follow these rules strictly:
 1. Provide factual, technical summaries in a single paragraph.
-2. Avoid generic lead-ins.`,
+2. Avoid generic lead-ins.
+3. Return ONLY a JSON object with a "summary" key containing 
+  the factual summary. Format must be: { "summary": "..." }.`,
           },
           {
             role: 'user',
@@ -84,9 +87,7 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
       const parsed = SummaryResponseSchema.safeParse(response);
 
       // Return summary if valid, otherwise fallback
-      return parsed.success
-        ? parsed.data.summary ?? 'No summary available'
-        : 'No summary available';
+      return parsed.data?.summary ?? 'No summary available';
     } catch (error) {
       console.error(
         `Error processing "${title.slice(0, 50)}...":`,

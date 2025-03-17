@@ -7,14 +7,15 @@ import (
 
 	gorillaHandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/handlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // NewRouter creates an http.Handler with configured routes and handlers.
-func NewRouter(store store.Store) http.Handler {
-	articlesHandler := handlers.NewArticlesHandler(store)
+func NewRouter(store store.Store, cfg *config.AppConfig) http.Handler {
+	articlesHandler := handlers.NewArticlesHandler(store, cfg)
 	return SetupRouter(articlesHandler)
 }
 

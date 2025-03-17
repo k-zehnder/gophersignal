@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 	"github.com/k-zehnder/gophersignal/backend/docs"
@@ -17,6 +18,7 @@ type AppConfig struct {
 	ServerAddress     string // Address on which the server should listen
 	SwaggerHost       string // Host for Swagger documentation
 	HuggingFaceAPIKey string // API key for Hugging Face service
+	CacheMaxAge       int    // Cache-Control max-age in seconds
 }
 
 // NewConfig initializes and returns a new AppConfig, loading environment variables from .env file with defaults if not present.
@@ -27,12 +29,21 @@ func NewConfig() *AppConfig {
 		log.Printf("Warning: Failed to load environment variables: %v", err)
 	}
 
+	// Parse CACHE_MAX_AGE env variable with default value 5400 seconds (1.5 hours)
+	cacheMaxAgeStr := GetEnv("CACHE_MAX_AGE", "5400")
+	cacheMaxAge, err := strconv.Atoi(cacheMaxAgeStr)
+	if err != nil {
+		log.Printf("Invalid CACHE_MAX_AGE value: %s, using default 5400", cacheMaxAgeStr)
+		cacheMaxAge = 5400
+	}
+
 	cfg := &AppConfig{
 		DataSourceName:    GetDataSourceName(),
 		Environment:       GetEnv("GO_ENV", "development"),
 		ServerAddress:     GetEnv("SERVER_ADDRESS", "0.0.0.0:8080"),
 		SwaggerHost:       GetDefaultSwaggerHost(GetEnv("GO_ENV", "development")),
 		HuggingFaceAPIKey: GetEnv("HUGGING_FACE_API_KEY", ""),
+		CacheMaxAge:       cacheMaxAge,
 	}
 
 	// Configure Swagger host
