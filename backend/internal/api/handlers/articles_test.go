@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
@@ -20,8 +21,9 @@ func TestGetArticles_Success(t *testing.T) {
 		{ID: 1, Title: "Test Article 1"},
 	}, nil, nil)
 
-	// Initialize the handler with the mock store.
-	handler := NewArticlesHandler(mockStore)
+	// Initialize the handler with the mock store and configuration.
+	cfg := config.NewConfig()
+	handler := NewArticlesHandler(mockStore, cfg)
 
 	// Create a new HTTP GET request for the articles endpoint.
 	req := httptest.NewRequest("GET", "/dummy-url", nil)
@@ -41,8 +43,9 @@ func TestGetArticles_Error(t *testing.T) {
 	// Set up a mock store to simulate an error scenario.
 	mockStore := store.NewMockStore(nil, nil, errors.New("database error"))
 
-	// Initialize the handler with the mock store.
-	handler := NewArticlesHandler(mockStore)
+	// Initialize the handler with the mock store and configuration.
+	cfg := config.NewConfig()
+	handler := NewArticlesHandler(mockStore, cfg)
 
 	// Create a new HTTP GET request for the articles endpoint.
 	req := httptest.NewRequest("GET", "/dummy-url", nil)
@@ -59,8 +62,9 @@ func TestGetArticles_Error(t *testing.T) {
 
 // TestServeHTTP_MethodNotAllowed tests the ServeHTTP method for non-GET requests.
 func TestServeHTTP_MethodNotAllowed(t *testing.T) {
-	// Initialize the handler with a mock store (can be nil as it's not used in this test).
-	handler := NewArticlesHandler(nil)
+	// Initialize the handler with a mock store (can be nil as it's not used in this test) and configuration.
+	cfg := config.NewConfig()
+	handler := NewArticlesHandler(nil, cfg)
 
 	// Create a new HTTP POST request (or any non-GET request).
 	req := httptest.NewRequest("POST", "/dummy-url", nil)
@@ -85,7 +89,8 @@ func TestGetArticles_WithQueryParams(t *testing.T) {
 		{ID: 4, Title: "Article 4", Flagged: false, Dead: false, Dupe: true},
 	}
 	mockStore := store.NewMockStore(articles, nil, nil)
-	handler := NewArticlesHandler(mockStore)
+	cfg := config.NewConfig()
+	handler := NewArticlesHandler(mockStore, cfg)
 
 	// Case 1: flagged=true (should return only articles where Flagged == true, i.e. Articles 2 and 3).
 	req := httptest.NewRequest("GET", "/dummy-url?flagged=true", nil)
@@ -131,7 +136,8 @@ func TestGetFilteredArticles_Success(t *testing.T) {
 		{ID: 4, Title: "Article 4", Flagged: false, Dead: false, Dupe: true},
 	}
 	mockStore := store.NewMockStore(articles, nil, nil)
-	handler := NewArticlesHandler(mockStore)
+	cfg := config.NewConfig()
+	handler := NewArticlesHandler(mockStore, cfg)
 
 	// In this test we provide flagged=true.
 	req := httptest.NewRequest("GET", "/dummy-url?flagged=true", nil)

@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/router"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
@@ -15,7 +16,7 @@ import (
 // TestNewServer validates the server's behavior by simulating HTTP requests with mock data
 // and verifying the responses, thus confirming the accuracy and reliability of the API's outputs.
 func TestNewServer(t *testing.T) {
-	// Initialize your test articles here
+	// Initialize test articles
 	mockArticles := []*models.Article{
 		{
 			ID:      1,
@@ -32,8 +33,9 @@ func TestNewServer(t *testing.T) {
 	// Create a MockStore with the mock data
 	mockStore := store.NewMockStore(mockArticles, nil, nil)
 
-	// Initialize the router with the mock store
-	handler := router.NewRouter(mockStore)
+	// Initialize configuration and then the router with the mock store
+	cfg := config.NewConfig()
+	handler := router.NewRouter(mockStore, cfg)
 
 	// Adjust the request URL to include the API prefix
 	req, err := http.NewRequest("GET", "/api/v1/articles", nil)

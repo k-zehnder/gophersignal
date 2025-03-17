@@ -7,18 +7,23 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
 )
 
 // ArticlesHandler manages article-related HTTP requests.
 type ArticlesHandler struct {
-	Store store.Store // Store provides access to the data layer.
+	Store  store.Store       // Store provides access to the data layer.
+	Config *config.AppConfig // Config provides application configuration.
 }
 
-// NewArticlesHandler creates a new ArticlesHandler with the provided store.
-func NewArticlesHandler(store store.Store) *ArticlesHandler {
-	return &ArticlesHandler{Store: store}
+// NewArticlesHandler creates a new ArticlesHandler with the provided store and configuration.
+func NewArticlesHandler(store store.Store, cfg *config.AppConfig) *ArticlesHandler {
+	return &ArticlesHandler{
+		Store:  store,
+		Config: cfg,
+	}
 }
 
 // ServeHTTP routes HTTP requests to the appropriate handler methods.
@@ -111,8 +116,8 @@ func (h *ArticlesHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 		articles []*models.Article
 		err      error
 	)
-	// If any filtering query parameter is provided, use the filtered query;
-	// otherwise, use the default query.
+	// If any filtering query parameter is provided, use the filtered query.
+	// Otherwise, use the default query.
 	if flagged != nil || dead != nil || dupe != nil {
 		articles, err = h.Store.GetFilteredArticles(flagged, dead, dupe, limit, offset)
 	} else {
@@ -128,7 +133,7 @@ func (h *ArticlesHandler) GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.setCacheHeaders(w, 5400) // Set cache headers for 1.5 hours.
+	h.setCacheHeaders(w, h.Config.CacheMaxAge) 
 	h.jsonResponse(w, models.ArticlesResponse{
 		Code:       http.StatusOK,
 		Status:     "success",

@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/k-zehnder/gophersignal/backend/config"
 	"github.com/k-zehnder/gophersignal/backend/internal/api/handlers"
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 	"github.com/k-zehnder/gophersignal/backend/internal/store"
@@ -16,8 +17,9 @@ func TestRouter_ArticlesRoute(t *testing.T) {
 	// Set up a mock store with no articles to simulate database interaction.
 	mockStore := store.NewMockStore([]*models.Article{}, nil, nil)
 
-	// Initialize the ArticlesHandler with the mock store.
-	articlesHandler := handlers.NewArticlesHandler(mockStore)
+	// Initialize the ArticlesHandler with the mock store and configuration.
+	cfg := config.NewConfig()
+	articlesHandler := handlers.NewArticlesHandler(mockStore, cfg)
 
 	// Set up the router.
 	router := SetupRouter(articlesHandler)

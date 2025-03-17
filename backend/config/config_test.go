@@ -27,7 +27,6 @@ func TestGetEnv(t *testing.T) {
 }
 
 // TestNewConfig ensures that the NewConfig function correctly initializes a Config struct using environment variables.
-// It sets up test environment variables, calls NewConfig to create a configuration, and validates the correctness of the config fields.
 func TestNewConfig(t *testing.T) {
 	// Preparing test environment variables.
 	os.Setenv("MYSQL_USER", "test_user")
@@ -56,6 +55,11 @@ func TestNewConfig(t *testing.T) {
 		t.Errorf("NewConfig() = %+v; want DataSourceName=%s, Environment=%s, ServerAddress=%s",
 			appConfig, expectedDSN, "test_go_env", "test_server_addr")
 	}
+
+	// Validate the default CacheMaxAge value (should be 5400 if CACHE_MAX_AGE is not set).
+	if appConfig.CacheMaxAge != 5400 {
+		t.Errorf("NewConfig() CacheMaxAge = %d; want 5400", appConfig.CacheMaxAge)
+	}
 }
 
 // TestGetDefaultSwaggerHost verifies the behavior of the GetDefaultSwaggerHost function.
@@ -70,4 +74,33 @@ func TestGetDefaultSwaggerHost(t *testing.T) {
 	if got := GetDefaultSwaggerHost("production"); got != "gophersignal.com" {
 		t.Errorf("GetDefaultSwaggerHost('production') = %s; want gophersignal.com", got)
 	}
+}
+
+// TestCacheMaxAge verifies that the CACHE_MAX_AGE environment variable is correctly integrated.
+func TestCacheMaxAge(t *testing.T) {
+	t.Run("valid cache value", func(t *testing.T) {
+		os.Setenv("CACHE_MAX_AGE", "6000")
+		defer os.Unsetenv("CACHE_MAX_AGE")
+		cfg := NewConfig()
+		if cfg.CacheMaxAge != 6000 {
+			t.Errorf("Expected CacheMaxAge to be 6000, got %d", cfg.CacheMaxAge)
+		}
+	})
+
+	t.Run("invalid cache value falls back", func(t *testing.T) {
+		os.Setenv("CACHE_MAX_AGE", "invalid")
+		defer os.Unsetenv("CACHE_MAX_AGE")
+		cfg := NewConfig()
+		if cfg.CacheMaxAge != 5400 {
+			t.Errorf("Expected default CacheMaxAge of 5400 on invalid input, got %d", cfg.CacheMaxAge)
+		}
+	})
+
+	t.Run("default cache value", func(t *testing.T) {
+		os.Unsetenv("CACHE_MAX_AGE")
+		cfg := NewConfig()
+		if cfg.CacheMaxAge != 5400 {
+			t.Errorf("Expected default CacheMaxAge of 5400 when not set, got %d", cfg.CacheMaxAge)
+		}
+	})
 }
