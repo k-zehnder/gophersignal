@@ -11,7 +11,7 @@ use axum::{
 };
 use chrono::{DateTime, Utc};
 use htmlescape::encode_minimal;
-use rss::{ChannelBuilder, ItemBuilder};
+use rss::{ChannelBuilder, Guid, ItemBuilder};
 use serde::Deserialize;
 use std::collections::HashSet;
 use url::Url;
@@ -104,7 +104,7 @@ fn build_item(article: &Article) -> rss::Item {
         .link(Some(article.link.clone()))
         .description(Some(description))
         .pub_date(Some(pub_date))
-        .guid(Some(rss::Guid {
+        .guid(Some(Guid {
             value: article.link.clone(),
             permalink: true,
         }))
