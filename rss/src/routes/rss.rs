@@ -1,4 +1,4 @@
-//! RSS feed generator for GopherSignal using in-memory deduplication
+//! RSS feed generator for GopherSignal using in-memory deduplication.
 
 use crate::{
     config::config::AppConfig, errors::errors::AppError, models::article::Article,
