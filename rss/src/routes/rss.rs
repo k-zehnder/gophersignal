@@ -13,7 +13,6 @@ use chrono::{DateTime, Utc};
 use htmlescape::encode_minimal;
 use rss::{ChannelBuilder, Guid, ItemBuilder};
 use serde::Deserialize;
-use std::collections::HashSet;
 use url::Url;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -32,10 +31,6 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     // Fetch articles and sort in descending order by ID
     let mut articles = client.fetch_articles(&query, &config).await?;
     articles.sort_by(|a, b| b.id.cmp(&a.id));
-
-    // Deduplicate articles using a HashSet
-    let mut seen = HashSet::new();
-    articles.retain(|article| seen.insert(article.link.clone()));
 
     // Build RSS items
     let items: Vec<_> = articles.iter().map(build_item).collect();
