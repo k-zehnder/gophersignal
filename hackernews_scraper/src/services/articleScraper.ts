@@ -1,4 +1,5 @@
-// Root is homepage for fresh stories and /front is for dup, dead, flagged articles not on homepage
+// Scrapes a page and returns the articles and next URL. The isTop flag distinguishes
+// between the homepage (fresh stories) and /front (dup, dead, flagged articles).
 
 import { Browser } from 'puppeteer';
 import { Article, Scraper } from '../types';
