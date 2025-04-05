@@ -43,6 +43,7 @@ deploy:
 	docker pull $(HACKERNEWS_SCRAPER_IMAGE_TAG)
 	docker pull $(RSS_IMAGE_TAG)
 	docker compose up -d
+	docker compose restart nginx
 	@echo "Application deployed successfully."
 
 .PHONY: dev
