@@ -38,13 +38,10 @@ push:
 deploy:
 	@echo "Deploying application..."
 	docker compose down
-	$(MAKE) -C frontend pull
-	$(MAKE) -C backend pull
-	$(MAKE) -C hackernews_scraper pull
-	$(MAKE) -C rss pull
-	@echo "Building frontend..."
-	cd frontend && npm install && npm run build && cd ..
-	@echo "Restarting Nginx..."
+	docker pull $(FRONTEND_IMAGE_TAG)
+	docker pull $(BACKEND_IMAGE_TAG)
+	docker pull $(HACKERNEWS_SCRAPER_IMAGE_TAG)
+	docker pull $(RSS_IMAGE_TAG)
 	docker compose up -d
 	docker compose restart nginx
 	@echo "Application deployed successfully."
