@@ -97,9 +97,7 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
     }
   };
 
-  const summarizeArticles = async (
-    articles: Required<Article>[]
-  ): Promise<Article[]> => {
+  const summarizeArticles = async (articles: Article[]): Promise<Article[]> => {
     const progressBar = new SingleBar(
       {
         format:
@@ -113,7 +111,11 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
     for (const [index, article] of articles.entries()) {
       console.log(`\nProcessing article: ${article.title.slice(0, 60)}...`);
 
-      article.summary = await summarizeContent(article.title, article.content);
+      // Provide a fallback empty string if article.content is undefined
+      article.summary = await summarizeContent(
+        article.title,
+        article.content ?? ''
+      );
       progressBar.update(index + 1);
     }
 

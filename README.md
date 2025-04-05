@@ -27,8 +27,6 @@
    make dev
    ```
 
-   > **Note:** The `ollama` service starts by running `ollama serve`, pulling the required model (`llama3:instruct`), and creating a readiness flag. Other services wait until `ollama` is fully ready before proceeding.
-
 4. **Run the Scraper:**
 
    Populate the database by running the scraper:
