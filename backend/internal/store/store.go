@@ -10,29 +10,29 @@ import (
 	"github.com/k-zehnder/gophersignal/backend/internal/models"
 )
 
-// Store interface defines methods for article storage and retrieval.
+// Store defines methods for article storage and retrieval.
 type Store interface {
 	SaveArticles(articles []*models.Article) error
 	GetArticles(limit, offset int) ([]*models.Article, error)
 	GetFilteredArticles(flagged, dead, dupe *bool, limit, offset int) ([]*models.Article, error)
+	GetArticlesWithThresholds(limit, offset, minUpvotes, minComments int) ([]*models.Article, error)
+	GetArticlesWithThresholdsAndFilters(limit, offset, minUpvotes, minComments int, flagged, dead, dupe *bool) ([]*models.Article, error)
 }
 
-// MySQLStore implements the Store interface using a MySQL database.
+// MySQLStore implements Store using a MySQL database.
 type MySQLStore struct {
 	db *sql.DB
 }
 
-// NewMySQLStore establishes a new MySQL database connection.
+// NewMySQLStore creates a new MySQLStore.
 func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 	db, err := sql.Open("mysql", dataSourceName)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
-
 	if err = db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
-
 	return &MySQLStore{db: db}, nil
 }
 
@@ -62,7 +62,6 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	}
 	defer stmt.Close()
 
-	// Execute the statement for each article
 	for _, article := range articles {
 		_, execErr := stmt.Exec(
 			article.Title,
@@ -88,8 +87,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	return nil
 }
 
-// GetArticles retrieves the latest articles (by id descending) that have a non-empty summary,
-// and deduplicates them by title (only the article with the highest id for each title is returned).
+// GetArticles retrieves deduplicated articles.
 func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
 		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
@@ -110,7 +108,6 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 		ORDER BY a.id DESC
 		LIMIT ? OFFSET ?;
 	`
-
 	rows, err := store.db.Query(query, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
@@ -141,19 +138,14 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 		}
 		articles = append(articles, &article)
 	}
-
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 	return articles, nil
 }
 
-// GetFilteredArticles retrieves the latest filtered articles (by id descending),
-// applies optional filters for flagged, dead, and dupe statuses,
-// ensures that only articles with non-empty summaries are considered,
-// and deduplicates by title.
+// GetFilteredArticles retrieves articles with optional filters.
 func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, offset int) ([]*models.Article, error) {
-	// Build the inner subquery that deduplicates by title.
 	innerQuery := `
 		SELECT title, MAX(id) AS max_id
 		FROM articles
@@ -198,7 +190,6 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 	}
 	innerQuery += " GROUP BY title"
 
-	// Build the outer query that joins the deduplicated inner query.
 	query := `
 		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
@@ -210,9 +201,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		ORDER BY a.id DESC
 		LIMIT ? OFFSET ?;
 	`
-	// Append pagination parameters.
 	args = append(args, limit, offset)
-
 	rows, err := store.db.Query(query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute filtered query: %w", err)
@@ -243,9 +232,174 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		}
 		articles = append(articles, &article)
 	}
-
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("iteration error: %w", err)
 	}
 	return articles, nil
+}
+
+// GetArticlesWithThresholds retrieves articles using provided minimum upvote and comment thresholds.
+func (store *MySQLStore) GetArticlesWithThresholds(limit, offset, minUpvotes, minComments int) ([]*models.Article, error) {
+	query := `
+		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
+		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
+		       a.dead, a.dupe, a.created_at, a.updated_at
+		FROM articles a
+		INNER JOIN (
+			SELECT title, MAX(id) AS max_id
+			FROM articles
+			WHERE summary IS NOT NULL 
+			  AND TRIM(summary) != ''
+			  AND summary NOT LIKE 'No summary available%'
+			  AND flagged = FALSE
+			  AND dead = FALSE
+			  AND dupe = FALSE
+			  AND upvotes >= ?
+			  AND comment_count >= ?
+			GROUP BY title
+		) b ON a.title = b.title AND a.id = b.max_id
+		ORDER BY a.id DESC
+		LIMIT ? OFFSET ?;
+	`
+	// If minUpvotes or minComments is 0, the query condition ">= 0" includes all articles.
+	rows, err := store.db.Query(query, minUpvotes, minComments, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute query: %w", err)
+	}
+	defer rows.Close()
+
+	var articles []*models.Article
+	for rows.Next() {
+		var article models.Article
+		if err := rows.Scan(
+			&article.ID,
+			&article.Title,
+			&article.Link,
+			&article.ArticleRank,
+			&article.Content,
+			&article.Summary,
+			&article.Source,
+			&article.Upvotes,
+			&article.CommentCount,
+			&article.CommentLink,
+			&article.Flagged,
+			&article.Dead,
+			&article.Dupe,
+			&article.CreatedAt,
+			&article.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan article: %w", err)
+		}
+		articles = append(articles, &article)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("iteration error: %w", err)
+	}
+	return articles, nil
+}
+
+// GetArticlesWithThresholdsAndFilters retrieves articles that satisfy both threshold
+// conditions (minUpvotes and minComments) and additional boolean filters (flagged, dead, dupe).
+func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(limit, offset, minUpvotes, minComments int, flagged, dead, dupe *bool) ([]*models.Article, error) {
+	innerQuery := `
+		SELECT title, MAX(id) AS max_id
+		FROM articles
+		WHERE summary IS NOT NULL 
+		  AND TRIM(summary) != ''
+		  AND summary NOT LIKE 'No summary available%'
+	`
+	// Append boolean filter conditions.
+	if flagged != nil {
+		innerQuery += " AND flagged = ?"
+	} else {
+		innerQuery += " AND flagged = FALSE"
+	}
+	if dead != nil {
+		innerQuery += " AND dead = ?"
+	} else {
+		innerQuery += " AND dead = FALSE"
+	}
+	if dupe != nil {
+		innerQuery += " AND dupe = ?"
+	} else {
+		innerQuery += " AND dupe = FALSE"
+	}
+
+	// Append threshold conditions.
+	innerQuery += " AND upvotes >= ? AND comment_count >= ? GROUP BY title"
+
+	// Build the outer query.
+	fullQuery := `
+		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
+		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
+		       a.dead, a.dupe, a.created_at, a.updated_at
+		FROM articles a
+		INNER JOIN (
+			` + innerQuery + `
+		) b ON a.title = b.title AND a.id = b.max_id
+		ORDER BY a.id DESC
+		LIMIT ? OFFSET ?;
+	`
+
+	// Build the arguments list.
+	var args []interface{}
+	if flagged != nil {
+		args = append(args, boolToInt(*flagged))
+	} else {
+		args = append(args, 0)
+	}
+	if dead != nil {
+		args = append(args, boolToInt(*dead))
+	} else {
+		args = append(args, 0)
+	}
+	if dupe != nil {
+		args = append(args, boolToInt(*dupe))
+	} else {
+		args = append(args, 0)
+	}
+	args = append(args, minUpvotes, minComments, limit, offset)
+
+	rows, err := store.db.Query(fullQuery, args...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute combined query: %w", err)
+	}
+	defer rows.Close()
+
+	var articles []*models.Article
+	for rows.Next() {
+		var article models.Article
+		if err := rows.Scan(
+			&article.ID,
+			&article.Title,
+			&article.Link,
+			&article.ArticleRank,
+			&article.Content,
+			&article.Summary,
+			&article.Source,
+			&article.Upvotes,
+			&article.CommentCount,
+			&article.CommentLink,
+			&article.Flagged,
+			&article.Dead,
+			&article.Dupe,
+			&article.CreatedAt,
+			&article.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("failed to scan article: %w", err)
+		}
+		articles = append(articles, &article)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("iteration error: %w", err)
+	}
+	return articles, nil
+}
+
+// Convert boolean to integer (1 or 0).
+func boolToInt(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
 }

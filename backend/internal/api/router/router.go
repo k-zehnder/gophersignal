@@ -39,8 +39,6 @@ func SetupRouter(articlesHandler *handlers.ArticlesHandler) *mux.Router {
 
 	// Setup API v1 routes.
 	apiRouter := r.PathPrefix("/api/v1").Subrouter()
-
-	// Endpoint for retrieving articles.
 	apiRouter.Handle("/articles", articlesHandler).Methods("GET")
 
 	// Endpoint for Swagger documentation at '/swagger'.

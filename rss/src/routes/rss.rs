@@ -1,5 +1,3 @@
-//! RSS feed generator for GopherSignal using in-memory deduplication.
-
 use crate::{
     config::config::AppConfig, errors::errors::AppError, models::article::Article,
     services::articles::ArticlesClient,
@@ -20,6 +18,9 @@ pub struct RssQuery {
     pub flagged: Option<bool>,
     pub dead: Option<bool>,
     pub dupe: Option<bool>,
+    // Optional threshold parameters:
+    pub min_upvotes: Option<u32>,
+    pub min_comments: Option<u32>,
 }
 
 /// Generate the RSS feed.
@@ -28,14 +29,15 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Extension(config): Extension<AppConfig>,
     Extension(client): Extension<T>,
 ) -> Result<Response<String>, AppError> {
-    // Fetch articles and sort in descending order by ID
+    // Fetch articles from the backend API using the query.
     let mut articles = client.fetch_articles(&query, &config).await?;
+    // Sort articles in descending order by id.
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
-    // Build RSS items
+    // Build RSS items.
     let items: Vec<_> = articles.iter().map(build_item).collect();
 
-    // Construct RSS channel
+    // Construct the RSS channel.
     let channel = ChannelBuilder::default()
         .title("GopherSignal RSS Feed")
         .link("https://gophersignal.com")
@@ -51,8 +53,8 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
 }
 
 fn build_item(article: &Article) -> rss::Item {
-    // Compute a unique publication date using article ID as an offset
-    let id_offset = chrono::Duration::seconds(article.id as i64);
+    // Compute a unique publication date using the article ID as an offset.
+    let id_offset = chrono::Duration::seconds(article.id);
     let pub_date =
         DateTime::parse_from_rfc3339(&article.published_at.as_ref().unwrap_or(&article.created_at))
             .unwrap_or_else(|_| Utc::now().into())
@@ -60,7 +62,7 @@ fn build_item(article: &Article) -> rss::Item {
             .unwrap()
             .to_rfc2822();
 
-    // Get the domain from the article link
+    // Parse the domain from the article link.
     let domain = Url::parse(&article.link)
         .ok()
         .and_then(|url| url.host_str().map(|h| h.to_string()))
@@ -68,7 +70,7 @@ fn build_item(article: &Article) -> rss::Item {
 
     let summary = encode_minimal(article.summary.as_deref().unwrap_or("No summary"));
 
-    // Render comment text. Clickable link if comments exist; plain text if 0
+    // Render comment text.
     let comment_count = article.comment_count.unwrap_or(0);
     let comment_text = if comment_count > 0 {
         format!(
@@ -80,9 +82,10 @@ fn build_item(article: &Article) -> rss::Item {
         "💬 0 comments".to_string()
     };
 
-    // Build info string with upvotes, comment text, and source info
+    // Build an info string with upvotes, comment text, and source.
+    let upvotes = article.upvotes.unwrap_or(0);
     let info = vec![
-        format!("▲ {}", article.upvotes.unwrap_or(0)),
+        format!("▲ {}", upvotes),
         comment_text,
         format!(
             "via <a href=\"{}\">{}</a>",
