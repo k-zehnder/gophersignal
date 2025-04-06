@@ -38,6 +38,12 @@ impl ArticlesClient for HttpArticlesClient {
         if let Some(dupe) = query.dupe {
             params.push(("dupe", dupe.to_string()));
         }
+        if let Some(min_upvotes) = query.min_upvotes {
+            params.push(("min_upvotes", min_upvotes.to_string()));
+        }
+        if let Some(min_comments) = query.min_comments {
+            params.push(("min_comments", min_comments.to_string()));
+        }
         if !params.is_empty() {
             request = request.query(&params);
         }

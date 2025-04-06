@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/articles": {
             "get": {
-                "description": "Retrieve a list of articles from the database. Optional query parameters",
+                "description": "Retrieve paginated articles with optional filters and thresholds",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,7 +27,7 @@ const docTemplate = `{
                 "tags": [
                     "Articles"
                 ],
-                "summary": "Get articles",
+                "summary": "Get filtered articles",
                 "parameters": [
                     {
                         "type": "boolean",
@@ -48,23 +48,44 @@ const docTemplate = `{
                         "in": "query"
                     },
                     {
+                        "maximum": 100,
+                        "minimum": 1,
                         "type": "integer",
                         "default": 30,
-                        "description": "Limit the number of articles returned (default is 30)",
+                        "description": "Results per page (max 100)",
                         "name": "limit",
                         "in": "query"
                     },
                     {
+                        "minimum": 0,
                         "type": "integer",
                         "default": 0,
-                        "description": "Offset for pagination (default is 0)",
+                        "description": "Pagination offset",
                         "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 0,
+                        "description": "Minimum upvotes threshold",
+                        "name": "min_upvotes",
+                        "in": "query"
+                    },
+                    {
+                        "minimum": 0,
+                        "type": "integer",
+                        "format": "int64",
+                        "default": 0,
+                        "description": "Minimum comments threshold",
+                        "name": "min_comments",
                         "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Articles data",
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/models.ArticlesResponse"
                         }

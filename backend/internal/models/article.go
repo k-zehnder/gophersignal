@@ -12,6 +12,11 @@ type NullableInt struct {
 	sql.NullInt64
 }
 
+// NewNullableInt returns a new NullableInt with the given value marked as valid.
+func NewNullableInt(value int64) NullableInt {
+	return NullableInt{sql.NullInt64{Int64: value, Valid: true}}
+}
+
 // MarshalJSON customizes JSON output for NullableInt.
 func (n NullableInt) MarshalJSON() ([]byte, error) {
 	if n.Valid {

@@ -87,7 +87,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: Retrieve a list of articles from the database. Optional query parameters
+      description: Retrieve paginated articles with optional filters and thresholds
       parameters:
       - description: Filter by flagged status
         in: query
@@ -102,20 +102,37 @@ paths:
         name: dupe
         type: boolean
       - default: 30
-        description: Limit the number of articles returned (default is 30)
+        description: Results per page (max 100)
         in: query
+        maximum: 100
+        minimum: 1
         name: limit
         type: integer
       - default: 0
-        description: Offset for pagination (default is 0)
+        description: Pagination offset
         in: query
+        minimum: 0
         name: offset
+        type: integer
+      - default: 0
+        description: Minimum upvotes threshold
+        format: int64
+        in: query
+        minimum: 0
+        name: min_upvotes
+        type: integer
+      - default: 0
+        description: Minimum comments threshold
+        format: int64
+        in: query
+        minimum: 0
+        name: min_comments
         type: integer
       produces:
       - application/json
       responses:
         "200":
-          description: Articles data
+          description: OK
           schema:
             $ref: '#/definitions/models.ArticlesResponse'
         "400":
@@ -126,7 +143,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ErrorResponse'
-      summary: Get articles
+      summary: Get filtered articles
       tags:
       - Articles
 swagger: "2.0"

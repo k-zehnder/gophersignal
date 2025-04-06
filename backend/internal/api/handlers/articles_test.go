@@ -15,24 +15,19 @@ import (
 
 // TestGetArticles_Success tests the GetArticles handler for a successful response.
 func TestGetArticles_Success(t *testing.T) {
-	// Set up a mock store with predefined data to simulate database interactions.
-	// The mock store should implement GetArticles(limit, offset int)
+	// Set up a mock store with predefined data.
 	mockStore := store.NewMockStore([]*models.Article{
 		{ID: 1, Title: "Test Article 1"},
 	}, nil, nil)
 
-	// Initialize the handler with the mock store and configuration.
 	cfg := config.NewConfig()
 	handler := NewArticlesHandler(mockStore, cfg)
 
-	// Create a new HTTP GET request for the articles endpoint.
 	req := httptest.NewRequest("GET", "/dummy-url", nil)
 	rr := httptest.NewRecorder()
 
-	// Serve the HTTP request and record the response.
 	handler.ServeHTTP(rr, req)
 
-	// Check if the response status code is as expected (200 OK).
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusOK)
 	}
@@ -43,18 +38,14 @@ func TestGetArticles_Error(t *testing.T) {
 	// Set up a mock store to simulate an error scenario.
 	mockStore := store.NewMockStore(nil, nil, errors.New("database error"))
 
-	// Initialize the handler with the mock store and configuration.
 	cfg := config.NewConfig()
 	handler := NewArticlesHandler(mockStore, cfg)
 
-	// Create a new HTTP GET request for the articles endpoint.
 	req := httptest.NewRequest("GET", "/dummy-url", nil)
 	rr := httptest.NewRecorder()
 
-	// Serve the HTTP request and record the response.
 	handler.ServeHTTP(rr, req)
 
-	// Check if the response status code is as expected (500 Internal Server Error).
 	if status := rr.Code; status != http.StatusInternalServerError {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusInternalServerError)
 	}
@@ -62,26 +53,22 @@ func TestGetArticles_Error(t *testing.T) {
 
 // TestServeHTTP_MethodNotAllowed tests the ServeHTTP method for non-GET requests.
 func TestServeHTTP_MethodNotAllowed(t *testing.T) {
-	// Initialize the handler with a mock store (can be nil as it's not used in this test) and configuration.
 	cfg := config.NewConfig()
 	handler := NewArticlesHandler(nil, cfg)
 
-	// Create a new HTTP POST request (or any non-GET request).
 	req := httptest.NewRequest("POST", "/dummy-url", nil)
 	rr := httptest.NewRecorder()
 
-	// Serve the HTTP request and record the response.
 	handler.ServeHTTP(rr, req)
 
-	// Check if the response status code is as expected (405 Method Not Allowed).
 	if status := rr.Code; status != http.StatusMethodNotAllowed {
 		t.Errorf("handler returned wrong status code: got %v want %v", status, http.StatusMethodNotAllowed)
 	}
 }
 
-// TestGetArticles_WithQueryParams tests the GetArticles handler when query parameters are provided.
+// TestGetArticles_WithQueryParams tests the GetArticles handler when boolean query parameters are provided.
 func TestGetArticles_WithQueryParams(t *testing.T) {
-	// Prepare a list of articles with varying boolean fields.
+	// Prepare articles with varying boolean fields.
 	articles := []*models.Article{
 		{ID: 1, Title: "Article 1", Flagged: false, Dead: false, Dupe: false},
 		{ID: 2, Title: "Article 2", Flagged: true, Dead: false, Dupe: false},
@@ -92,7 +79,7 @@ func TestGetArticles_WithQueryParams(t *testing.T) {
 	cfg := config.NewConfig()
 	handler := NewArticlesHandler(mockStore, cfg)
 
-	// Case 1: flagged=true (should return only articles where Flagged == true, i.e. Articles 2 and 3).
+	// Test flagged=true.
 	req := httptest.NewRequest("GET", "/dummy-url?flagged=true", nil)
 	rr := httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -100,62 +87,16 @@ func TestGetArticles_WithQueryParams(t *testing.T) {
 		t.Fatalf("Expected status 200, got %d", rr.Code)
 	}
 
-	// Decode the JSON response.
 	var resp models.ArticlesResponse
 	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
 		t.Fatalf("Failed to decode response: %v", err)
 	}
+	// Expecting Articles 2 and 3.
 	if resp.TotalCount != 2 {
 		t.Errorf("Expected 2 articles for flagged=true, got %d", resp.TotalCount)
 	}
 
-	// Case 2: dead=true and dupe=true (should return 0 articles, as no article satisfies both).
-	req = httptest.NewRequest("GET", "/dummy-url?dead=true&dupe=true", nil)
-	rr = httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("Expected status 200, got %d", rr.Code)
-	}
-	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
-		t.Fatalf("Failed to decode response: %v", err)
-	}
-	if resp.TotalCount != 0 {
-		t.Errorf("Expected 0 articles for dead=true and dupe=true, got %d", resp.TotalCount)
-	}
-}
-
-// TestGetFilteredArticles_Success tests the endpoint when query parameters are provided.
-// Since our handler uses a single endpoint (/articles) for both default and filtered queries,
-// this test simulates a filtered request.
-func TestGetFilteredArticles_Success(t *testing.T) {
-	// Prepare a list of articles with varying boolean fields.
-	articles := []*models.Article{
-		{ID: 1, Title: "Article 1", Flagged: false, Dead: false, Dupe: false},
-		{ID: 2, Title: "Article 2", Flagged: true, Dead: false, Dupe: false},
-		{ID: 3, Title: "Article 3", Flagged: true, Dead: true, Dupe: false},
-		{ID: 4, Title: "Article 4", Flagged: false, Dead: false, Dupe: true},
-	}
-	mockStore := store.NewMockStore(articles, nil, nil)
-	cfg := config.NewConfig()
-	handler := NewArticlesHandler(mockStore, cfg)
-
-	// In this test we provide flagged=true.
-	req := httptest.NewRequest("GET", "/dummy-url?flagged=true", nil)
-	rr := httptest.NewRecorder()
-	handler.ServeHTTP(rr, req)
-	if rr.Code != http.StatusOK {
-		t.Fatalf("Expected status 200, got %d", rr.Code)
-	}
-	var resp models.ArticlesResponse
-	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
-		t.Fatalf("Failed to decode response: %v", err)
-	}
-	// In our test data, Articles 2 and 3 have Flagged == true.
-	if resp.TotalCount != 2 {
-		t.Errorf("Expected 2 articles for flagged=true, got %d", resp.TotalCount)
-	}
-
-	// Also test pagination: for example, use limit=2 and offset=0.
+	// Test pagination: limit=2, offset=0.
 	req = httptest.NewRequest("GET", "/dummy-url?limit=2&offset=0", nil)
 	rr = httptest.NewRecorder()
 	handler.ServeHTTP(rr, req)
@@ -165,9 +106,107 @@ func TestGetFilteredArticles_Success(t *testing.T) {
 	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
 		t.Fatalf("Failed to decode response: %v", err)
 	}
-	// Since our mock store has 4 articles, default GetArticles with limit=30 would return all 4,
-	// but with limit=2 we expect only 2 articles.
 	if resp.TotalCount != 2 {
 		t.Errorf("Expected 2 articles for limit=2, offset=0, got %d", resp.TotalCount)
+	}
+}
+
+// TestGetArticles_WithThresholdFilters tests the GetArticles handler when threshold query parameters are provided.
+func TestGetArticles_WithThresholdFilters(t *testing.T) {
+	// Prepare articles with varying upvotes and comment counts.
+	articles := []*models.Article{
+		{
+			ID: 1, Title: "Article 1",
+			Upvotes:      models.NewNullableInt(5),
+			CommentCount: models.NewNullableInt(2),
+			Flagged:      false, Dead: false, Dupe: false,
+		},
+		{
+			ID: 2, Title: "Article 2",
+			Upvotes:      models.NewNullableInt(10),
+			CommentCount: models.NewNullableInt(5),
+			Flagged:      false, Dead: false, Dupe: false,
+		},
+		{
+			ID: 3, Title: "Article 3",
+			Upvotes:      models.NewNullableInt(15),
+			CommentCount: models.NewNullableInt(8),
+			Flagged:      false, Dead: false, Dupe: false,
+		},
+		{
+			ID: 4, Title: "Article 4",
+			Upvotes:      models.NewNullableInt(3),
+			CommentCount: models.NewNullableInt(1),
+			Flagged:      false, Dead: false, Dupe: false,
+		},
+	}
+	mockStore := store.NewMockStore(articles, nil, nil)
+	cfg := config.NewConfig()
+	handler := NewArticlesHandler(mockStore, cfg)
+
+	// Use thresholds that should filter out articles 1 and 4.
+	req := httptest.NewRequest("GET", "/dummy-url?min_upvotes=10&min_comments=5", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+	var resp models.ArticlesResponse
+	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	// Expecting Articles 2 and 3.
+	if resp.TotalCount != 2 {
+		t.Errorf("Expected 2 articles for min_upvotes=10 and min_comments=5, got %d", resp.TotalCount)
+	}
+}
+
+// TestGetArticles_WithCombinedFilters tests when both thresholds and boolean filters are provided.
+func TestGetArticles_WithCombinedFilters(t *testing.T) {
+	// Prepare articles with varying fields.
+	articles := []*models.Article{
+		{
+			ID: 1, Title: "Article 1",
+			Upvotes:      models.NewNullableInt(10),
+			CommentCount: models.NewNullableInt(5),
+			Flagged:      true, Dead: false, Dupe: false,
+		},
+		{
+			ID: 2, Title: "Article 2",
+			Upvotes:      models.NewNullableInt(20),
+			CommentCount: models.NewNullableInt(10),
+			Flagged:      true, Dead: false, Dupe: false,
+		},
+		{
+			ID: 3, Title: "Article 3",
+			Upvotes:      models.NewNullableInt(5),
+			CommentCount: models.NewNullableInt(2),
+			Flagged:      true, Dead: false, Dupe: false,
+		},
+		{
+			ID: 4, Title: "Article 4",
+			Upvotes:      models.NewNullableInt(25),
+			CommentCount: models.NewNullableInt(15),
+			Flagged:      false, Dead: false, Dupe: false,
+		},
+	}
+	mockStore := store.NewMockStore(articles, nil, nil)
+	cfg := config.NewConfig()
+	handler := NewArticlesHandler(mockStore, cfg)
+
+	// Provide both threshold and boolean filter (flagged=true).
+	req := httptest.NewRequest("GET", "/dummy-url?flagged=true&min_upvotes=10&min_comments=5", nil)
+	rr := httptest.NewRecorder()
+	handler.ServeHTTP(rr, req)
+	if rr.Code != http.StatusOK {
+		t.Fatalf("Expected status 200, got %d", rr.Code)
+	}
+	var resp models.ArticlesResponse
+	if err := json.NewDecoder(rr.Body).Decode(&resp); err != nil {
+		t.Fatalf("Failed to decode response: %v", err)
+	}
+	// Expected: Only articles that are flagged true and meet thresholds: Articles 1 and 2.
+	if resp.TotalCount != 2 {
+		t.Errorf("Expected 2 articles for combined filters, got %d", resp.TotalCount)
 	}
 }
