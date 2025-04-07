@@ -154,37 +154,27 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 	var conditions []string
 	var args []interface{}
 
+	// Append conditions only if pointer is provided; else, use literal FALSE.
 	if flagged != nil {
-		var flaggedVal int
-		if *flagged {
-			flaggedVal = 1
-		} else {
-			flaggedVal = 0
-		}
 		conditions = append(conditions, "flagged = ?")
-		args = append(args, flaggedVal)
+		args = append(args, boolToInt(*flagged))
+	} else {
+		conditions = append(conditions, "flagged = FALSE")
 	}
 	if dead != nil {
-		var deadVal int
-		if *dead {
-			deadVal = 1
-		} else {
-			deadVal = 0
-		}
 		conditions = append(conditions, "dead = ?")
-		args = append(args, deadVal)
+		args = append(args, boolToInt(*dead))
+	} else {
+		conditions = append(conditions, "dead = FALSE")
 	}
 	if dupe != nil {
-		var dupeVal int
-		if *dupe {
-			dupeVal = 1
-		} else {
-			dupeVal = 0
-		}
 		conditions = append(conditions, "dupe = ?")
-		args = append(args, dupeVal)
+		args = append(args, boolToInt(*dupe))
+	} else {
+		conditions = append(conditions, "dupe = FALSE")
 	}
 
+	// Combine conditions into the inner query.
 	if len(conditions) > 0 {
 		innerQuery += " AND " + strings.Join(conditions, " AND ")
 	}
@@ -201,6 +191,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		ORDER BY a.id DESC
 		LIMIT ? OFFSET ?;
 	`
+	// Append pagination parameters.
 	args = append(args, limit, offset)
 	rows, err := store.db.Query(query, args...)
 	if err != nil {
@@ -308,7 +299,7 @@ func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(limit, offset, minU
 		  AND TRIM(summary) != ''
 		  AND summary NOT LIKE 'No summary available%'
 	`
-	// Append boolean filter conditions.
+	// Append boolean filter conditions using placeholders when provided.
 	if flagged != nil {
 		innerQuery += " AND flagged = ?"
 	} else {
@@ -345,19 +336,14 @@ func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(limit, offset, minU
 	var args []interface{}
 	if flagged != nil {
 		args = append(args, boolToInt(*flagged))
-	} else {
-		args = append(args, 0)
 	}
 	if dead != nil {
 		args = append(args, boolToInt(*dead))
-	} else {
-		args = append(args, 0)
 	}
 	if dupe != nil {
 		args = append(args, boolToInt(*dupe))
-	} else {
-		args = append(args, 0)
 	}
+	// Append thresholds and pagination parameters.
 	args = append(args, minUpvotes, minComments, limit, offset)
 
 	rows, err := store.db.Query(fullQuery, args...)
