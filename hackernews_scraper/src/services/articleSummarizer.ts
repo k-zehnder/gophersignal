@@ -5,7 +5,7 @@ import { SingleBar, Presets } from 'cli-progress';
 import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 import Instructor from '@instructor-ai/instructor';
 
-// Emotional stimuli phrases inspired by EmotionPrompt research
+// Emotional stimuli phrases (inspired by EmotionPrompt research)
 // @see {@link https://python.useinstructor.com/prompting/zero_shot/emotion_prompting/|EmotionPrompt Documentation}
 
 const createArticleSummarizer = (
@@ -22,11 +22,22 @@ const createArticleSummarizer = (
     'Accuracy is key—provide a focused, detail-rich summary.',
   ];
 
+  // Replace special HTML characters
   const sanitizeInput = (text: string) =>
     text.replace(
       /[<>&]/g,
       (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[char] || char)
     );
+
+  // Check for captcha and redact IPv4 addresses
+  const sanitizeSummary = (summary: string): string => {
+    if (/captcha/i.test(summary)) {
+      console.error('Captcha detected in summary, flagging as error.');
+      return 'No summary available';
+    }
+    const ipRegex = /(?:(?:\d{1,3}\.){3}\d{1,3})/g;
+    return summary.replace(ipRegex, 'REDACTED');
+  };
 
   const summarizeContent = async (
     title: string,
@@ -37,10 +48,10 @@ const createArticleSummarizer = (
       content.length > MAX_CONTENT_LENGTH
         ? '\n[Truncated for length constraints]'
         : '';
-
     const emotionalDirective =
       EMOTIONAL_STIMULI[Math.floor(Math.random() * EMOTIONAL_STIMULI.length)];
 
+    // Build prompt for summary
     const prompt = `
 SUMMARY REQUEST
 ---------------
@@ -83,11 +94,9 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
         response_model: { schema, name: 'SummarySchema' },
       });
 
-      // Validate response structure
       const parsed = SummaryResponseSchema.safeParse(response);
-
-      // Return summary if valid, otherwise fallback
-      return parsed.data?.summary ?? 'No summary available';
+      const rawSummary = parsed.data?.summary ?? 'No summary available';
+      return sanitizeSummary(rawSummary);
     } catch (error) {
       console.error(
         `Error processing "${title.slice(0, 50)}...":`,
@@ -107,18 +116,14 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
     );
 
     progressBar.start(articles.length, 0);
-
     for (const [index, article] of articles.entries()) {
       console.log(`\nProcessing article: ${article.title.slice(0, 60)}...`);
-
-      // Provide a fallback empty string if article.content is undefined
       article.summary = await summarizeContent(
         article.title,
         article.content ?? ''
       );
       progressBar.update(index + 1);
     }
-
     progressBar.stop();
     return articles;
   };
