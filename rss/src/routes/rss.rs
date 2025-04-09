@@ -18,7 +18,6 @@ pub struct RssQuery {
     pub flagged: Option<bool>,
     pub dead: Option<bool>,
     pub dupe: Option<bool>,
-    // Optional threshold parameters:
     pub min_upvotes: Option<u32>,
     pub min_comments: Option<u32>,
 }
@@ -29,19 +28,43 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Extension(config): Extension<AppConfig>,
     Extension(client): Extension<T>,
 ) -> Result<Response<String>, AppError> {
-    // Fetch articles from the backend API using the query.
     let mut articles = client.fetch_articles(&query, &config).await?;
-    // Sort articles in descending order by id.
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
-    // Build RSS items.
+    // Build title components.
+    let mut components = Vec::new();
+
+    // Add boolean filters.
+    if query.flagged == Some(true) {
+        components.push("Flagged");
+    }
+    if query.dead == Some(true) {
+        components.push("Dead");
+    }
+    if query.dupe == Some(true) {
+        components.push("Dupe");
+    }
+
+    // Add threshold filters.
+    let has_thresholds = query.min_upvotes.filter(|&v| v > 0).is_some()
+        || query.min_comments.filter(|&c| c > 0).is_some();
+
+    if has_thresholds {
+        components.push("Filtered");
+    }
+
+    // Construct final title.
+    let title = match components.is_empty() {
+        true => "Gopher Signal".to_string(),
+        false => format!("Gopher Signal - {}", components.join(", ")),
+    };
+
     let items: Vec<_> = articles.iter().map(build_item).collect();
 
-    // Construct the RSS channel.
     let channel = ChannelBuilder::default()
-        .title("GopherSignal RSS Feed")
+        .title(title)
         .link("https://gophersignal.com")
-        .description("Latest articles from GopherSignal")
+        .description("Latest articles from Gopher Signal")
         .last_build_date(Utc::now().to_rfc2822())
         .items(items)
         .build();
