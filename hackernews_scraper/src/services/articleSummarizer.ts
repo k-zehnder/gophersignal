@@ -5,9 +5,7 @@ import { SingleBar, Presets } from 'cli-progress';
 import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 import Instructor from '@instructor-ai/instructor';
 
-// Emotional stimuli phrases (inspired by EmotionPrompt research)
-// @see {@link https://python.useinstructor.com/prompting/zero_shot/emotion_prompting/|EmotionPrompt Documentation}
-
+// Creates the article summarizer
 const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
@@ -15,12 +13,6 @@ const createArticleSummarizer = (
 ) => {
   const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
   const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
-  const EMOTIONAL_STIMULI = [
-    'This summary is crucial for understanding cutting-edge tech trends.',
-    'Your precise summary will guide critical decision-making.',
-    'Deliver clarity to help readers quickly grasp key insights.',
-    'Accuracy is key—provide a focused, detail-rich summary.',
-  ];
 
   // Replace special HTML characters
   const sanitizeInput = (text: string) =>
@@ -48,28 +40,25 @@ const createArticleSummarizer = (
       content.length > MAX_CONTENT_LENGTH
         ? '\n[Truncated for length constraints]'
         : '';
-    const emotionalDirective =
-      EMOTIONAL_STIMULI[Math.floor(Math.random() * EMOTIONAL_STIMULI.length)];
 
-    // Build prompt for summary
     const prompt = `
-SUMMARY REQUEST
----------------
-INSTRUCTIONS:
-- ${emotionalDirective}
-- Provide a clear, concise summary of the Hacker News article.
-- Emphasize key technical details, context, and innovative ideas.
-- Do NOT preface with generic phrases such as "The article discusses..."
-- Return ONLY a JSON object with a "summary" key containing 
-  the factual summary. Format must be: { "summary": "..." }.
+      SUMMARY REQUEST
+      ---------------
+      INSTRUCTIONS:
+      - Provide a clear, concise summary of the Hacker News article.
+      - The summary should be **2 to 3 sentences** long (approximately 50–70 words) and capture the core idea of the article.
+      - Write in a clear, factual style suitable for a tech-savvy audience; assume the reader wants a quick, informative gist.
+      - Highlight the main point and any important outcome or insight, while omitting trivial details or general background.
+      - The tone should be neutral and informative.
+      - Ensure the summary can stand on its own and remains within the optimal length for easy reading on both desktop and mobile.
 
-ARTICLE:
---- TITLE ---
-${sanitizeInput(title)}
+      ARTICLE:
+      --- TITLE ---
+      ${sanitizeInput(title)}
 
---- TRUNCATED CONTENT ---
-${sanitizeInput(truncatedContent)} ${truncationNotice}
-`;
+      --- CONTENT (truncated) ---
+      ${sanitizeInput(truncatedContent)} ${truncationNotice}
+    `;
 
     try {
       const response = await client.chat.completions.create({
@@ -78,10 +67,9 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
           {
             role: 'system',
             content: `You are a precise summarization AI specialized in Hacker News content. Follow these rules strictly:
-1. Provide factual, technical summaries in a single paragraph.
-2. Avoid generic lead-ins.
-3. Return ONLY a JSON object with a "summary" key containing 
-  the factual summary. Format must be: { "summary": "..." }.`,
+            1. Provide factual, technical summaries in a single paragraph.
+            2. Do NOT preface with generic lead-in phrases.
+            3. Return ONLY a JSON object with a "summary" key containing the summary. Format must be: { "summary": "..." }.`,
           },
           {
             role: 'user',
@@ -116,6 +104,7 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
     );
 
     progressBar.start(articles.length, 0);
+
     for (const [index, article] of articles.entries()) {
       console.log(`\nProcessing article: ${article.title.slice(0, 60)}...`);
       article.summary = await summarizeContent(
@@ -124,6 +113,7 @@ ${sanitizeInput(truncatedContent)} ${truncationNotice}
       );
       progressBar.update(index + 1);
     }
+
     progressBar.stop();
     return articles;
   };
