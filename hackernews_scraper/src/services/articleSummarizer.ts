@@ -46,11 +46,13 @@ const createArticleSummarizer = (
       ---------------
       INSTRUCTIONS:
       - Provide a clear, concise summary of the Hacker News article.
-      - The summary should be **2 to 3 sentences** long (approximately 50–70 words) and capture the core idea of the article.
-      - Write in a clear, factual style suitable for a tech-savvy audience; assume the reader wants a quick, informative gist.
-      - Highlight the main point and any important outcome or insight, while omitting trivial details or general background.
-      - The tone should be neutral and informative.
-      - Ensure the summary can stand on its own and remains within the optimal length for easy reading on both desktop and mobile.
+      - The summary must be exactly 5 lines long, with each line serving a unique role:
+        * Line 1: Provide concise context.
+        * Line 2: State the core idea.
+        * Lines 3 & 4: Present the main insights supporting the core idea.
+        * Line 5: Summarize the author's ultimate conclusion.
+      - Return ONLY a JSON object with a single key "summary" containing the formatted summary.
+      - Write in a neutral, factual tone suitable for a tech-savvy audience.
 
       ARTICLE:
       --- TITLE ---
@@ -66,13 +68,6 @@ const createArticleSummarizer = (
         messages: [
           {
             role: 'system',
-            content: `You are a precise summarization AI specialized in Hacker News content. Follow these rules strictly:
-            1. Provide factual, technical summaries in a single paragraph.
-            2. Do NOT preface with generic lead-in phrases.
-            3. Return ONLY a JSON object with a "summary" key containing the summary. Format must be: { "summary": "..." }.`,
-          },
-          {
-            role: 'user',
             content: prompt,
           },
         ],
