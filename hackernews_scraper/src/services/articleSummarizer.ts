@@ -46,12 +46,11 @@ const createArticleSummarizer = (
       ---------------
       INSTRUCTIONS:
       - Provide a clear, concise summary of the Hacker News article.
-      - The summary must be exactly 5 lines long, each line serving a unique role:
-         * Line 1: Provide concise context.
-         * Line 2: State the core idea.
-         * Lines 3 & 4: Present the main insights supporting the core idea.
-         * Line 5: Summarize the author's ultimate conclusion.
-      - Wrap the five lines in <article> and </article> tags.
+      - The summary must be exactly 5 lines long, with each line serving a unique role:
+        * Line 1: Provide concise context.
+        * Line 2: State the core idea.
+        * Lines 3 & 4: Present the main insights supporting the core idea.
+        * Line 5: Summarize the author's ultimate conclusion.
       - Return ONLY a JSON object with a single key "summary" containing the formatted summary.
       - Write in a neutral, factual tone suitable for a tech-savvy audience.
 
@@ -69,20 +68,6 @@ const createArticleSummarizer = (
         messages: [
           {
             role: 'system',
-            content: `You are a precise summarization AI specialized in Hacker News content. Follow these rules strictly:
-              1. The final output must be a JSON object with a single key named "summary".
-              2. Inside the "summary" key, return exactly five lines of text wrapped in <article>...</article>.
-                - Line 1: Provide concise context.
-                - Line 2: State the core idea.
-                - Line 3: Present one main insight.
-                - Line 4: Present a second main insight.
-                - Line 5: Summarize the author's ultimate conclusion.
-              3. Do not include any leading text, generic phrases, or extraneous content outside the JSON format.
-              4. Use a neutral, factual tone.
-            `,
-          },
-          {
-            role: 'user',
             content: prompt,
           },
         ],
