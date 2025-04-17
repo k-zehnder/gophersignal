@@ -76,8 +76,8 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
 }
 
 fn build_item(article: &Article) -> rss::Item {
-    // Compute a unique publication date using the article ID as an offset.
-    let id_offset = chrono::Duration::seconds(article.id);
+    // Compute publication date offset
+    let id_offset = chrono::Duration::seconds(article.id as i64);
     let pub_date =
         DateTime::parse_from_rfc3339(&article.published_at.as_ref().unwrap_or(&article.created_at))
             .unwrap_or_else(|_| Utc::now().into())
@@ -85,15 +85,25 @@ fn build_item(article: &Article) -> rss::Item {
             .unwrap()
             .to_rfc2822();
 
-    // Parse the domain from the article link.
+    // Use full HN URL as <guid> if it's a Hacker News link
+    let (guid_value, is_permalink) = Url::parse(&article.link)
+        .ok()
+        .and_then(|url| {
+            if url.host_str()? == "news.ycombinator.com" {
+                Some((url.as_str().to_string(), true))
+            } else {
+                None
+            }
+        })
+        .unwrap_or_else(|| (article.link.clone(), false));
+
+    // Parse domain for source
     let domain = Url::parse(&article.link)
         .ok()
         .and_then(|url| url.host_str().map(|h| h.to_string()))
         .unwrap_or_else(|| "source".to_string());
 
     let summary = encode_minimal(article.summary.as_deref().unwrap_or("No summary"));
-
-    // Render comment text.
     let comment_count = article.comment_count.unwrap_or(0);
     let comment_text = if comment_count > 0 {
         format!(
@@ -104,8 +114,6 @@ fn build_item(article: &Article) -> rss::Item {
     } else {
         "💬 0 comments".to_string()
     };
-
-    // Build an info string with upvotes, comment text, and source.
     let upvotes = article.upvotes.unwrap_or(0);
     let info = vec![
         format!("▲ {}", upvotes),
@@ -126,8 +134,8 @@ fn build_item(article: &Article) -> rss::Item {
         .description(Some(description))
         .pub_date(Some(pub_date))
         .guid(Some(Guid {
-            value: article.link.clone(),
-            permalink: true,
+            value: guid_value,
+            permalink: is_permalink,
         }))
         .build()
 }
