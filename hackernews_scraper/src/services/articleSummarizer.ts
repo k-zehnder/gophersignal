@@ -5,7 +5,7 @@ import { SingleBar, Presets } from 'cli-progress';
 import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 import Instructor from '@instructor-ai/instructor';
 
-// Creates the article summarizer.
+// Creates the article summarizer
 const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
@@ -36,9 +36,8 @@ const createArticleSummarizer = (
     title: string,
     content: string
   ): Promise<string> => {
-    // Abort if no real content to work with
     if (!content || content.trim().length < MIN_CONTENT_LENGTH) {
-      return 'ERROR: Article content missing or too short to summarize.';
+      return 'No summary available';
     }
 
     const truncatedContent = content.slice(0, MAX_CONTENT_LENGTH);
@@ -51,7 +50,7 @@ const createArticleSummarizer = (
       SUMMARY REQUEST
       ---------------
       INSTRUCTIONS:
-      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, respond with ERROR (all caps) and do NOT make anything up.
+      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available".
       - NEVER hallucinate or fabricate content; only summarize what’s provided.
       - Provide a clear, concise summary of the Hacker News article.
       - The summary must be exactly 5 lines long, with each line serving a unique role:
