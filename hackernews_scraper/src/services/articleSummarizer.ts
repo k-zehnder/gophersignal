@@ -13,6 +13,7 @@ const createArticleSummarizer = (
 ) => {
   const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
   const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
+  const MIN_CONTENT_LENGTH = 300;
 
   // Replace special HTML characters
   const sanitizeInput = (text: string) =>
@@ -35,6 +36,10 @@ const createArticleSummarizer = (
     title: string,
     content: string
   ): Promise<string> => {
+    if (!content || content.trim().length < MIN_CONTENT_LENGTH) {
+      return 'No summary available';
+    }
+
     const truncatedContent = content.slice(0, MAX_CONTENT_LENGTH);
     const truncationNotice =
       content.length > MAX_CONTENT_LENGTH
@@ -45,6 +50,8 @@ const createArticleSummarizer = (
       SUMMARY REQUEST
       ---------------
       INSTRUCTIONS:
+      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available".
+      - NEVER hallucinate or fabricate content; only summarize what’s provided.
       - Provide a clear, concise summary of the Hacker News article.
       - The summary must be exactly 5 lines long, with each line serving a unique role:
         * Line 1: Provide concise context.
@@ -72,7 +79,7 @@ const createArticleSummarizer = (
           },
         ],
         max_tokens: MAX_OUTPUT_TOKENS,
-        temperature: 0.5,
+        temperature: 0.2,
         top_p: 0.9,
         response_model: { schema, name: 'SummarySchema' },
       });
