@@ -76,7 +76,7 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
 }
 
 fn build_item(article: &Article) -> rss::Item {
-    // Compute publication date offset
+    // Compute a unique publication date using the article ID as an offset.
     let id_offset = chrono::Duration::seconds(article.id as i64);
     let pub_date =
         DateTime::parse_from_rfc3339(&article.published_at.as_ref().unwrap_or(&article.created_at))
@@ -85,7 +85,7 @@ fn build_item(article: &Article) -> rss::Item {
             .unwrap()
             .to_rfc2822();
 
-    // Use full HN URL as <guid> if it's a Hacker News link
+    // Use full HN URL as <guid> if it's a Hacker News link.
     let (guid_value, is_permalink) = Url::parse(&article.link)
         .ok()
         .and_then(|url| {
@@ -97,7 +97,7 @@ fn build_item(article: &Article) -> rss::Item {
         })
         .unwrap_or_else(|| (article.link.clone(), false));
 
-    // Parse domain for source
+    // Parse domain for source.
     let domain = Url::parse(&article.link)
         .ok()
         .and_then(|url| url.host_str().map(|h| h.to_string()))
