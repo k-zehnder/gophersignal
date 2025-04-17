@@ -4,12 +4,12 @@ import { createHackerNewsScraper } from '../services/articleScraper';
 import { createContentFetcher } from '../services/articleContent';
 import { createArticleProcessor } from '../services/articleProcessor';
 import { createArticleSummarizer } from '../services/articleSummarizer';
-import { SummaryResponseSchema } from '../types';
+import { SummaryResponseSchema } from '../services/articleSummarizer';
 import config from '../config/config';
 import { Clients } from '../clients/createClients';
 
 export const createServices = (clients: Clients) => {
-  const { browser, instructorClient, articleHelpers, db, timeUtil } = clients;
+  const { browser, instructorClient, articleHelpers } = clients;
 
   const scraper = createHackerNewsScraper(browser);
   const contentFetcher = createContentFetcher(browser);
@@ -25,7 +25,7 @@ export const createServices = (clients: Clients) => {
   );
 
   return {
-    ...clients, 
+    ...clients,
     scraper,
     articleProcessor,
     articleSummarizer,

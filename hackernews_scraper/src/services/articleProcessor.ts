@@ -1,36 +1,41 @@
-import { Article, Scraper, ContentFetcher } from '../types';
+import { z } from 'zod';
+import { ArticleSchema, type Article, Scraper, ContentFetcher } from '../types';
 import { ArticleHelpers } from '../utils/article';
 
 const createArticleProcessor = (
   scraper: Scraper,
-  contentFetcher: ContentFetcher,
+  fetcher: ContentFetcher,
   helpers: ArticleHelpers
 ) => {
-  // Scrapes top stories using page-number based pagination or next-button logic
+  // Fetch top stories and validate against ArticleSchema
   const scrapeTopStories = async (numPages?: number): Promise<Article[]> => {
-    return await scraper.scrapeTopStories(numPages);
-  };
-
-  // Processes articles by fetching full content
-  const processArticles = async (articles: Article[]): Promise<Article[]> => {
-    for (const article of articles) {
-      try {
-        article.content = await contentFetcher.fetchArticleContent(
-          article.link
-        );
-      } catch (error) {
-        console.error(`Error processing article at ${article.link}:`, error);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+    const raw = await scraper.scrapeTopStories(numPages);
+    const parsed = z.array(ArticleSchema).safeParse(raw);
+    if (!parsed.success) {
+      console.error('Top stories validation failed:', parsed.error.format());
+      return [];
     }
-    return articles;
+    return parsed.data;
   };
 
-  return {
-    scrapeTopStories,
-    processArticles,
-    helpers,
+  // Fetch full content for each article and re-validate
+  const processArticles = async (articles: Article[]): Promise<Article[]> => {
+    const output: Article[] = [];
+    for (const art of articles) {
+      let enriched: Article = art;
+      try {
+        const content = await fetcher.fetchArticleContent(art.link);
+        enriched = ArticleSchema.parse({ ...art, content });
+      } catch (e) {
+        console.error(`Error fetching content for ${art.link}:`, e);
+      }
+      output.push(enriched);
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    return output;
   };
+
+  return { scrapeTopStories, processArticles, helpers };
 };
 
 export { createArticleProcessor };

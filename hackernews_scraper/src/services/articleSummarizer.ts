@@ -1,9 +1,14 @@
 // Provides functions to summarize content using Instructor and Ollama.
 
 import { z } from 'zod';
-import { SingleBar, Presets } from 'cli-progress';
-import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 import Instructor from '@instructor-ai/instructor';
+import { SingleBar, Presets } from 'cli-progress';
+import { type Article, OllamaConfig } from '../types';
+
+export const SummaryResponseSchema = z.object({
+  summary: z.string().optional(),
+  _meta: z.any().optional(),
+});
 
 // Creates the article summarizer
 const createArticleSummarizer = (
@@ -11,46 +16,42 @@ const createArticleSummarizer = (
   config: OllamaConfig,
   schema: z.AnyZodObject = SummaryResponseSchema
 ) => {
-  const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
-  const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
-  const MIN_CONTENT_LENGTH = 300;
+  const MAX_CONTENT = config.maxContentLength ?? 2000;
+  const MAX_TOKENS = config.maxSummaryLength ?? 150;
+  const MIN_LENGTH = 300;
 
   // Replace special HTML characters
   const sanitizeInput = (text: string) =>
     text.replace(
       /[<>&]/g,
-      (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[char] || char)
+      (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] || c)
     );
 
-  // Check for captcha and redact IPv4 addresses
-  const sanitizeSummary = (summary: string): string => {
-    if (/captcha/i.test(summary)) {
-      console.error('Captcha detected in summary, flagging as error.');
-      return 'No summary available';
-    }
-    const ipRegex = /(?:(?:\d{1,3}\.){3}\d{1,3})/g;
-    return summary.replace(ipRegex, 'REDACTED');
-  };
+  // Redact captchas or IPs
+  const sanitizeSummary = (s: string) =>
+    /captcha/i.test(s)
+      ? 'No summary available'
+      : s.replace(/(?:(?:\d{1,3}\.){3}\d{1,3})/g, 'REDACTED');
 
+  // Generate or fallback
   const summarizeContent = async (
     title: string,
     content: string
   ): Promise<string> => {
-    if (!content || content.trim().length < MIN_CONTENT_LENGTH) {
+    if (!content || content.trim().length < MIN_LENGTH) {
       return 'No summary available';
     }
 
-    const truncatedContent = content.slice(0, MAX_CONTENT_LENGTH);
-    const truncationNotice =
-      content.length > MAX_CONTENT_LENGTH
+    const snippet = content.slice(0, MAX_CONTENT);
+    const notice =
+      content.length > MAX_CONTENT
         ? '\n[Truncated for length constraints]'
         : '';
-
     const prompt = `
       SUMMARY REQUEST
       ---------------
       INSTRUCTIONS:
-      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available".
+      - If the article content is missing, unreadable, or under ${MIN_LENGTH} characters, return "No summary available".
       - NEVER hallucinate or fabricate content; only summarize what’s provided.
       - Provide a clear, concise summary of the Hacker News article.
       - The summary must be exactly 5 lines long, with each line serving a unique role:
@@ -66,57 +67,45 @@ const createArticleSummarizer = (
       ${sanitizeInput(title)}
 
       --- CONTENT (truncated) ---
-      ${sanitizeInput(truncatedContent)} ${truncationNotice}
+      ${sanitizeInput(snippet)} ${notice}
     `;
 
     try {
       const response = await client.chat.completions.create({
         model: config.model,
-        messages: [
-          {
-            role: 'system',
-            content: prompt,
-          },
-        ],
-        max_tokens: MAX_OUTPUT_TOKENS,
+        messages: [{ role: 'system', content: prompt }],
+        max_tokens: MAX_TOKENS,
         temperature: 0.2,
         top_p: 0.9,
         response_model: { schema, name: 'SummarySchema' },
       });
 
-      const parsed = SummaryResponseSchema.safeParse(response);
-      const rawSummary = parsed.data?.summary ?? 'No summary available';
-      return sanitizeSummary(rawSummary);
-    } catch (error) {
-      console.error(
-        `Error processing "${title.slice(0, 50)}...":`,
-        error instanceof Error ? error.message : 'Unknown error'
-      );
+      // Zod parse enforces schema and provides default summary
+      const { summary } = schema.parse(response);
+      return sanitizeSummary(summary);
+    } catch {
       return 'No summary available';
     }
   };
 
+  // Process list with progress
   const summarizeArticles = async (articles: Article[]): Promise<Article[]> => {
-    const progressBar = new SingleBar(
-      {
-        format:
-          'Summarizing Articles |{bar}| {percentage}% | {value}/{total} Articles',
-      },
+    const bar = new SingleBar(
+      { format: '|{bar}| {value}/{total}' },
       Presets.shades_classic
     );
+    bar.start(articles.length, 0);
 
-    progressBar.start(articles.length, 0);
-
-    for (const [index, article] of articles.entries()) {
-      console.log(`\nProcessing article: ${article.title.slice(0, 60)}...`);
+    for (const [idx, article] of articles.entries()) {
+      console.log(`Processing: ${article.title}`);
       article.summary = await summarizeContent(
         article.title,
         article.content ?? ''
       );
-      progressBar.update(index + 1);
+      bar.update(idx + 1);
     }
 
-    progressBar.stop();
+    bar.stop();
     return articles;
   };
 

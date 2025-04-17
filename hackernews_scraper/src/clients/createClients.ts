@@ -6,12 +6,12 @@ import { createOpenAIClient } from '../clients/openAI';
 import { createInstructorClient } from '../clients/instructor';
 import createArticleHelpers from '../utils/article';
 import { createTimeUtil } from '../utils/time';
-import { Config } from '../types/config';
+import { type Config } from '../types';
 
 export const createClients = async (config: Config) => {
   const browser = await createBrowserClient();
   const db = await createMySqlClient(config);
-  const openaiClient = createOpenAIClient();
+  const openaiClient = createOpenAIClient(config);
   const instructorClient = createInstructorClient(openaiClient);
   const articleHelpers = createArticleHelpers();
   const timeUtil = createTimeUtil();

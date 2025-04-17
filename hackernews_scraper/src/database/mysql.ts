@@ -1,5 +1,5 @@
 import mysql, { Connection } from 'mysql2/promise';
-import { Article, Config, DBClient } from '../types';
+import { type Article, type Config, type DBClient } from '../types';
 
 const createMySqlClient = async (config: Config): Promise<DBClient> => {
   const mysqlConfig = config.mysql;

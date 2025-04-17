@@ -1,5 +1,5 @@
 import { Connection } from 'mysql2/promise';
-import { Article } from './article';
+import { type Article } from '../types';
 
 export interface DBClient {
   saveArticles: (articles: Article[]) => Promise<void>;
