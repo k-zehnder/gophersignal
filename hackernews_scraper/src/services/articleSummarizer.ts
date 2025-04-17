@@ -5,7 +5,7 @@ import { SingleBar, Presets } from 'cli-progress';
 import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 import Instructor from '@instructor-ai/instructor';
 
-// Creates the article summarizer
+// Creates the article summarizer.
 const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
