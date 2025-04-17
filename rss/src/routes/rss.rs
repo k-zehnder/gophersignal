@@ -76,7 +76,7 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
 }
 
 fn build_item(article: &Article) -> rss::Item {
-    // Compute publication date offset
+    // Compute a unique publication date using the article ID as an offset.
     let id_offset = chrono::Duration::seconds(article.id as i64);
     let pub_date =
         DateTime::parse_from_rfc3339(&article.published_at.as_ref().unwrap_or(&article.created_at))
