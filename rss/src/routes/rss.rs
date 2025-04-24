@@ -70,18 +70,15 @@ fn build_item(article: &Article) -> rss::Item {
         .build()
 }
 
-/// Computes the publication date for an article, adjusting by article ID.
+/// Computes the publication date for an article, using `published_at` or `created_at`.
 fn compute_pub_date(article: &Article) -> String {
     let base_date = article
         .published_at
         .as_deref()
         .unwrap_or(&article.created_at);
-    let offset = chrono::Duration::seconds(article.id.into());
 
     DateTime::parse_from_rfc3339(base_date)
         .unwrap_or_else(|_| Utc::now().into())
-        .checked_add_signed(offset)
-        .unwrap_or_else(|| Utc::now().into())
         .to_rfc2822()
 }
 
@@ -96,7 +93,7 @@ fn extract_hn_guid(link: &str) -> (String, bool) {
 
             url.query_pairs()
                 .find(|(k, _)| k == "id")
-                .map(|(_, v)| (format!("hn_id={}", v), false))
+                .map(|(_, v)| (format!("hn_id={}", v), false)) // Use hn_id as unique identifier
         })
         .unwrap_or_else(|| (link.to_string(), false))
 }
@@ -143,7 +140,13 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Extension(client): Extension<T>,
 ) -> Result<Response<String>, AppError> {
     let mut articles = client.fetch_articles(&query, &config).await?;
-    articles.sort_by_key(|a| std::cmp::Reverse(a.id));
+
+    // Sort articles by published date (most recent first)
+    articles.sort_by(|a, b| {
+        let date_a = a.published_at.as_deref().unwrap_or(&a.created_at);
+        let date_b = b.published_at.as_deref().unwrap_or(&b.created_at);
+        date_b.cmp(date_a) // Compare by published date in descending order
+    });
 
     let channel = ChannelBuilder::default()
         .title(generate_title(&query))
@@ -156,5 +159,5 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/rss+xml")
-        .body(channel.to_string())?)
+        .body(channel.to_string())?) // Return the RSS feed as XML
 }
