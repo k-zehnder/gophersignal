@@ -24,33 +24,35 @@ pub struct RssQuery {
 
 /// Generates the RSS feed title based on the query filters.
 fn generate_title(query: &RssQuery) -> String {
-    let mut components = Vec::with_capacity(4);
+    let mut parts = Vec::with_capacity(4);
 
     // Boolean filters
     [query.flagged, query.dead, query.dupe]
         .iter()
         .zip(["Flagged", "Dead", "Dupe"])
         .filter_map(|(flag, label)| flag.and_then(|f| f.then_some(label)))
-        .for_each(|label| components.push(label));
+        .for_each(|lbl| parts.push(lbl));
 
     // Threshold filters
-    let has_thresholds = [query.min_upvotes, query.min_comments]
+    if [query.min_upvotes, query.min_comments]
         .iter()
-        .any(|&v| v.filter(|&x| x > 0).is_some());
-
-    if has_thresholds {
-        components.push("Filtered");
+        .any(|&v| v.filter(|&x| x > 0).is_some())
+    {
+        parts.push("Filtered");
     }
 
-    match components.is_empty() {
-        true => "Gopher Signal".into(),
-        false => format!("Gopher Signal - {}", components.join(", ")),
+    if parts.is_empty() {
+        "Gopher Signal".into()
+    } else {
+        format!("Gopher Signal – {}", parts.join(", "))
     }
 }
 
 /// Builds an RSS item from an article, including title, description, etc.
 fn build_item(article: &Article) -> rss::Item {
-    let (guid_value, is_permalink) = extract_hn_guid(&article.link);
+    let (guid_val, is_permalink) =
+        extract_hn_guid(&article.link).expect("Expected a valid Hacker News link");
+
     let domain = extract_domain(&article.link);
     let summary = article.summary.as_deref().unwrap_or("No summary");
 
@@ -60,88 +62,84 @@ fn build_item(article: &Article) -> rss::Item {
         .description(Some(format!(
             "{}<br><br><small>{}</small>",
             encode_minimal(summary),
-            build_info(article, &domain)
+            build_info(article, &domain),
         )))
         .pub_date(Some(compute_pub_date(article)))
         .guid(Some(Guid {
-            value: guid_value,
+            value: guid_val,
             permalink: is_permalink,
         }))
         .build()
 }
 
-/// Computes the publication date for an article using `created_at` and applying the ID offset.
+/// Returns RFC-2822 `<pubDate>` that is unique per item:
+/// `created_at − (article_rank − 1)s`  
+///   • rank 1 (newest) keeps original timestamp  
+///   • rank 2 is 1 s earlier, rank 3 is 2 s earlier, ...
 fn compute_pub_date(article: &Article) -> String {
-    // Compute a unique publication date using the article ID as an offset.
-    let id_offset = chrono::Duration::seconds(article.id as i64);
-    let pub_date = DateTime::parse_from_rfc3339(&article.created_at.as_ref())
+    let base = DateTime::parse_from_rfc3339(&article.created_at)
         .unwrap_or_else(|_| Utc::now().into())
-        .checked_add_signed(id_offset)
-        .unwrap()
-        .to_rfc2822();
+        .with_timezone(&Utc);
 
-    pub_date
+    let offset = chrono::Duration::seconds(article.article_rank.saturating_sub(1) as i64);
+
+    base.checked_sub_signed(offset).unwrap().to_rfc2822()
 }
 
 /// Extracts the Hacker News GUID from a Hacker News article.
-fn extract_hn_guid(link: &str) -> (String, bool) {
-    Url::parse(link)
-        .ok()
-        .and_then(|url| {
-            if url.host_str() != Some("news.ycombinator.com") {
-                return None;
-            }
-
-            url.query_pairs()
-                .find(|(k, _)| k == "id")
-                .map(|(_, v)| (format!("hn_id={}", v), false)) // Use hn_id as unique identifier
-        })
-        .unwrap_or_else(|| (link.to_string(), false))
+fn extract_hn_guid(link: &str) -> Option<(String, bool)> {
+    Url::parse(link).ok().and_then(|url| {
+        (url.host_str() == Some("news.ycombinator.com"))
+            .then(|| {
+                url.query_pairs()
+                    .find(|(k, _)| k == "id")
+                    .map(|(_, v)| (format!("hn:{}", v), false))
+            })
+            .flatten()
+    })
 }
 
 /// Extracts the domain from the article's link.
 fn extract_domain(link: &str) -> String {
     Url::parse(link)
         .ok()
-        .and_then(|url| url.host_str().map(ToString::to_string))
+        .and_then(|u| u.host_str().map(ToString::to_string))
         .unwrap_or_else(|| "source".into())
 }
 
 /// Builds additional information for an RSS item, including upvotes, comments, and source.
 fn build_info(article: &Article, domain: &str) -> String {
-    let comment_link = article.comment_link.as_deref().unwrap_or("#");
-    let comment_count = article.comment_count.unwrap_or(0);
-
-    let comment_text = if comment_count == 0 {
-        "💬 0 comments".into()
-    } else {
-        format!(
+    let comments = match article.comment_count.unwrap_or(0) {
+        0 => "💬 0 comments".into(),
+        n => format!(
             "💬 <a href=\"{}\">{}</a>",
-            encode_minimal(comment_link),
-            comment_count
-        )
+            encode_minimal(article.comment_link.as_deref().unwrap_or("#")),
+            n
+        ),
     };
 
     [
         format!("▲ {}", article.upvotes.unwrap_or(0)),
-        comment_text,
+        comments,
         format!(
             "via <a href=\"{}\">{}</a>",
             encode_minimal(&article.link),
-            encode_minimal(domain)
+            encode_minimal(domain),
         ),
     ]
     .join(" · ")
 }
 
-/// Main function to generate the RSS feed using articles fetched via `ArticlesClient`.
+/// Main function to generate the RSS feed.
 pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
     Extension(client): Extension<T>,
 ) -> Result<Response<String>, AppError> {
+    // Fetch (already sorted by backend `article_rank`)
     let articles = client.fetch_articles(&query, &config).await?;
 
+    // Assemble channel
     let channel = ChannelBuilder::default()
         .title(generate_title(&query))
         .link("https://gophersignal.com")
@@ -150,6 +148,7 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
         .items(articles.iter().map(build_item).collect::<Vec<_>>())
         .build();
 
+    // Respond
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/rss+xml")
