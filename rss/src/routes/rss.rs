@@ -9,7 +9,7 @@ use axum::{
 };
 use chrono::{DateTime, Duration, Utc};
 use htmlescape::encode_minimal;
-use rss::{ChannelBuilder, Guid, ItemBuilder};
+use rss::{ChannelBuilder, GuidBuilder, ItemBuilder};
 use serde::Deserialize;
 use url::Url;
 
@@ -32,11 +32,17 @@ where
     T: ArticlesClient + Clone,
 {
     let mut articles = client.fetch_articles(&query, &config).await?;
-    // Sort descending by article ID
+    // Sort newest first
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
     let title = build_title(&query);
-    let items: Vec<_> = articles.iter().map(build_item).collect();
+
+    // Pass the zero-based index into build_item so we can offset by seconds reliably.
+    let items: Vec<_> = articles
+        .iter()
+        .enumerate()
+        .map(|(idx, article)| build_item(article, idx))
+        .collect();
 
     let channel = ChannelBuilder::default()
         .title(title)
@@ -74,45 +80,42 @@ fn build_title(query: &RssQuery) -> String {
     }
 }
 
-/// Build a single RSS <item> from an Article.
-fn build_item(article: &Article) -> rss::Item {
+/// Build a single RSS from an Article, using its index for the pubDate offset.
+fn build_item(article: &Article, index: usize) -> rss::Item {
     ItemBuilder::default()
         .title(Some(article.title.clone()))
-        .link(Some(article.link.clone()))
         .description(Some(format!(
             "{}<br><br><small>{}</small>",
             encode_minimal(article.summary.as_deref().unwrap_or("No summary")),
             build_footer(article)
         )))
-        .pub_date(Some(format_pub_date(article)))
+        .pub_date(Some(format_pub_date(&article.created_at, index)))
         .guid(Some(build_guid(article)))
         .build()
 }
 
-/// Format pubDate by adding the article ID (in seconds) to created_at.
-fn format_pub_date(article: &Article) -> String {
-    let base: DateTime<Utc> = DateTime::parse_from_rfc3339(&article.created_at)
+/// Format pubDate by adding seconds to `created_at`.
+fn format_pub_date(created_at: &str, index: usize) -> String {
+    let base: DateTime<Utc> = DateTime::parse_from_rfc3339(created_at)
         .unwrap_or_else(|_| Utc::now().into())
         .with_timezone(&Utc);
 
     let dt = base
-        .checked_add_signed(Duration::seconds(article.id as i64))
+        .checked_add_signed(Duration::seconds(index as i64))
         .unwrap_or(base);
 
     dt.to_rfc2822()
 }
 
-/// Build a stable GUID: HN thread when hn_id > 0, else fallback to link.
-fn build_guid(article: &Article) -> Guid {
-    let (value, permalink) = if article.hn_id > 0 {
-        (
-            format!("https://news.ycombinator.com/item?id={}", article.hn_id),
-            true,
-        )
-    } else {
-        (article.link.clone(), false)
-    };
-    Guid { value, permalink }
+/// Build a stable GUID
+fn build_guid(article: &Article) -> rss::Guid {
+    GuidBuilder::default()
+        .value(match article.hn_id {
+            Some(hn) => format!("https://news.ycombinator.com/item?id={}", hn),
+            None => article.link.clone(),
+        })
+        .permalink(article.hn_id.is_some())
+        .build()
 }
 
 /// Build the footer HTML of upvotes, comments, via domain.
