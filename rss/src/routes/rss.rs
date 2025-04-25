@@ -11,7 +11,7 @@ use chrono::{DateTime, Utc};
 use htmlescape::encode_minimal;
 use rss::{ChannelBuilder, Guid, ItemBuilder};
 use serde::Deserialize;
-use sha1::{Digest, Sha1}; // add `sha1 = "0.10"` to Cargo.toml
+use sha1::{Digest, Sha1};
 use url::Url;
 
 #[derive(Deserialize, Debug, Clone)]
