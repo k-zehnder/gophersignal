@@ -7,17 +7,21 @@ import (
 	"time"
 )
 
-// NullableInt is a custom type for nullable integers to improve Swagger compatibility.
+// NullableInt is a custom type for nullable integers.
+// swagger:model NullableInt
+// x-nullable: true
+// type: integer
+// format: int64
 type NullableInt struct {
-	sql.NullInt64
+	sql.NullInt64 `swaggerignore:"true"`
 }
 
-// NewNullableInt returns a new NullableInt with the given value marked as valid.
+// NewNullableInt returns a new NullableInt with the given value.
 func NewNullableInt(value int64) NullableInt {
 	return NullableInt{sql.NullInt64{Int64: value, Valid: true}}
 }
 
-// MarshalJSON customizes JSON output for NullableInt.
+// MarshalJSON ensures numeric output or null.
 func (n NullableInt) MarshalJSON() ([]byte, error) {
 	if n.Valid {
 		return json.Marshal(n.Int64)
@@ -25,7 +29,7 @@ func (n NullableInt) MarshalJSON() ([]byte, error) {
 	return json.Marshal(nil)
 }
 
-// UnmarshalJSON customizes JSON input for NullableInt.
+// UnmarshalJSON handles null or numeric input.
 func (n *NullableInt) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		n.Valid = false
@@ -36,12 +40,15 @@ func (n *NullableInt) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// NullableString is a custom type for nullable strings to improve Swagger compatibility.
+// NullableString is a custom type for nullable strings.
+// swagger:model NullableString
+// x-nullable: true
+// type: string
 type NullableString struct {
-	sql.NullString
+	sql.NullString `swaggerignore:"true"`
 }
 
-// MarshalJSON customizes JSON output for NullableString.
+// MarshalJSON ensures string or null output.
 func (n NullableString) MarshalJSON() ([]byte, error) {
 	if n.Valid {
 		return json.Marshal(n.String)
@@ -49,7 +56,7 @@ func (n NullableString) MarshalJSON() ([]byte, error) {
 	return json.Marshal(nil)
 }
 
-// UnmarshalJSON customizes JSON input for NullableString.
+// UnmarshalJSON handles null or string input.
 func (n *NullableString) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" {
 		n.Valid = false
@@ -60,28 +67,30 @@ func (n *NullableString) UnmarshalJSON(data []byte) error {
 	return err
 }
 
-// Article represents the structure for an article in the system.
+// Article represents an article in the system.
 type Article struct {
-	ID           int            `json:"id"`                                  // Unique identifier for the article.
-	Title        string         `json:"title"`                               // Title of the article.
-	Link         string         `json:"link"`                                // URL link to the article.
-	ArticleRank  int            `json:"article_rank"`                        // Article rank extracted from the source.
-	Content      string         `json:"content"`                             // Full content of the article.
-	Summary      NullableString `json:"summary" swaggertype:"string"`        // Summary of the article, nullable.
-	Source       string         `json:"source"`                              // Source from where the article was fetched.
-	CreatedAt    time.Time      `json:"created_at"`                          // Timestamp when the article was created.
-	UpdatedAt    time.Time      `json:"updated_at"`                          // Timestamp when the article was last updated.
-	Upvotes      NullableInt    `json:"upvotes" swaggertype:"integer"`       // Upvote count.
-	CommentCount NullableInt    `json:"comment_count" swaggertype:"integer"` // Number of comments.
-	CommentLink  NullableString `json:"comment_link" swaggertype:"string"`   // Link to the comment thread (if any).
-	Flagged      bool           `json:"flagged"`                             // Whether the article is flagged.
-	Dead         bool           `json:"dead"`                                // Whether the article is dead.
-	Dupe         bool           `json:"dupe"`                                // Whether the article is marked as duplicate.
+	ID           int            `json:"id"`
+	HNID         int            `json:"hn_id"`
+	Title        string         `json:"title"`
+	Link         string         `json:"link"`
+	ArticleRank  int            `json:"article_rank"`
+	Content      string         `json:"content"`
+	Summary      NullableString `json:"summary"`
+	Source       string         `json:"source"`
+	CreatedAt    time.Time      `json:"created_at"`
+	UpdatedAt    time.Time      `json:"updated_at"`
+	Upvotes      NullableInt    `json:"upvotes"`
+	CommentCount NullableInt    `json:"comment_count"`
+	CommentLink  NullableString `json:"comment_link"`
+	Flagged      bool           `json:"flagged"`
+	Dead         bool           `json:"dead"`
+	Dupe         bool           `json:"dupe"`
 }
 
-// NewArticle is a constructor for creating a new Article instance.
+// NewArticle constructs a new Article.
 func NewArticle(
 	id int,
+	hnID int,
 	title, link string,
 	articleRank int,
 	content, summary, source string,
@@ -93,6 +102,7 @@ func NewArticle(
 ) *Article {
 	return &Article{
 		ID:           id,
+		HNID:         hnID,
 		Title:        title,
 		Link:         link,
 		ArticleRank:  articleRank,
@@ -110,17 +120,17 @@ func NewArticle(
 	}
 }
 
-// ArticlesResponse represents the response structure for a list of articles.
+// ArticlesResponse represents the response for multiple articles.
 type ArticlesResponse struct {
-	Code       int        `json:"code"`        // HTTP status code.
-	Status     string     `json:"status"`      // Status message.
-	TotalCount int        `json:"total_count"` // Total count of articles.
-	Articles   []*Article `json:"articles"`    // List of articles.
+	Code       int        `json:"code"`        // HTTP status code
+	Status     string     `json:"status"`      // Response status message
+	TotalCount int        `json:"total_count"` // Total number of articles
+	Articles   []*Article `json:"articles"`    // List of articles
 }
 
-// ErrorResponse represents the format for API error responses.
+// ErrorResponse represents the error response format.
 type ErrorResponse struct {
-	Code    int    `json:"code"`    // HTTP status code.
-	Status  string `json:"status"`  // Error status message.
-	Message string `json:"message"` // Detailed error message.
+	Code    int    `json:"code"`    // HTTP status code
+	Status  string `json:"status"`  // Error status message
+	Message string `json:"message"` // Detailed error message
 }

@@ -28,6 +28,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     // Map articles to an array-of-arrays for the insert
     const values = articles.map(
       ({
+        hn_id,
         title,
         link,
         article_rank,
@@ -40,6 +41,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
         dead = false,
         dupe = false,
       }) => [
+        hn_id,
         title,
         link,
         article_rank,
@@ -60,6 +62,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
 
     const query = `INSERT INTO articles (
+      hn_id,
       title,
       link,
       article_rank,
