@@ -51,7 +51,7 @@ fn generate_title(query: &RssQuery) -> String {
 
 /// Builds an RSS item from an article, including title, description, etc.
 fn build_item(article: &Article) -> rss::Item {
-    // HN link yields hn<id>; else use SHA-1 of the lower-cased title for stable GUID
+    // HN link yields hn<id>; else use SHA-1 of the lower-cased title for stable GUID.
     let (guid_value, is_permalink) = extract_hn_guid(&article.link).unwrap_or_else(|| {
         let hash = format!(
             "{:x}",
