@@ -51,16 +51,22 @@ fn generate_title(query: &RssQuery) -> String {
 
 /// Builds an RSS item from an article, including title, description, etc.
 fn build_item(article: &Article) -> rss::Item {
-    // HN link yields hn<id>; else use SHA-1 of the lower-cased title for stable GUID.
-    let (guid_value, is_permalink) = extract_hn_guid(&article.link).unwrap_or_else(|| {
+    // GUID is comment_link if present, else SHA-1 of title
+    let (guid_value, is_permalink) = if let Some(cl) = article.comment_link.as_deref() {
+        (cl.to_string(), true)
+    } else {
         let hash = format!(
             "{:x}",
             Sha1::digest(article.title.to_lowercase().as_bytes())
         );
-        (format!("title:{hash}"), false)
-    });
+        (format!("title:{}", hash), false)
+    };
 
-    let domain = extract_domain(&article.link);
+    let domain = Url::parse(&article.link)
+        .ok()
+        .and_then(|u| u.host_str().map(ToString::to_string))
+        .unwrap_or_else(|| "source".into());
+
     let summary = article.summary.as_deref().unwrap_or("No summary");
     let pub_date = compute_pub_date(article);
 
@@ -70,7 +76,7 @@ fn build_item(article: &Article) -> rss::Item {
         .description(Some(format!(
             "{}<br><br><small>{}</small>",
             encode_minimal(summary),
-            build_info(article, &domain),
+            build_info(article, &domain)
         )))
         .pub_date(Some(pub_date))
         .guid(Some(Guid {
@@ -85,33 +91,11 @@ fn compute_pub_date(article: &Article) -> String {
     let base = DateTime::parse_from_rfc3339(&article.created_at)
         .unwrap_or_else(|_| Utc::now().into())
         .with_timezone(&Utc);
-
     let offset = chrono::Duration::seconds(article.id as i64);
     base.checked_add_signed(offset).unwrap_or(base).to_rfc2822()
 }
 
-/// If link is a Hacker News discussion, returns (hn<id>, false)
-fn extract_hn_guid(link: &str) -> Option<(String, bool)> {
-    Url::parse(link).ok().and_then(|url| {
-        (url.host_str() == Some("news.ycombinator.com"))
-            .then(|| {
-                url.query_pairs()
-                    .find(|(k, _)| k == "id")
-                    .map(|(_, v)| (format!("hn:{v}"), false))
-            })
-            .flatten()
-    })
-}
-
-/// Extracts the domain from the article's link.
-fn extract_domain(link: &str) -> String {
-    Url::parse(link)
-        .ok()
-        .and_then(|u| u.host_str().map(ToString::to_string))
-        .unwrap_or_else(|| "source".into())
-}
-
-/// Builds the footer shown in the description.
+/// Builds the footer: "▲ upvotes · 💬 comments · via <domain>"
 fn build_info(article: &Article, domain: &str) -> String {
     let comments = match article.comment_count.unwrap_or(0) {
         0 => "💬 0 comments".into(),
@@ -121,20 +105,19 @@ fn build_info(article: &Article, domain: &str) -> String {
             n
         ),
     };
+    let link = encode_minimal(&article.link);
+    let domain_escaped = encode_minimal(domain);
 
-    [
-        format!("▲ {}", article.upvotes.unwrap_or(0)),
+    format!(
+        "▲ {} · {} · via <a href=\"{}\">{}</a>",
+        article.upvotes.unwrap_or(0),
         comments,
-        format!(
-            "via <a href=\"{}\">{}</a>",
-            encode_minimal(&article.link),
-            encode_minimal(domain),
-        ),
-    ]
-    .join(" · ")
+        link,
+        domain_escaped
+    )
 }
 
-/// `GET /rss` Fetch articles, build channel, return RSS XML.
+/// `GET /rss` – fetch articles, build channel, return RSS XML.
 pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Query(query): Query<RssQuery>,
     Extension(cfg): Extension<AppConfig>,
