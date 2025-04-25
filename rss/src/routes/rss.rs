@@ -73,7 +73,7 @@ fn build_item(article: &Article) -> rss::Item {
 }
 
 /// Returns RFC-2822 `<pubDate>` that is unique per item:
-/// `created_at − (article_rank − 1)s`  
+/// `created_at tp (article_rank − 1)s`  
 ///   • rank 1 (newest) keeps original timestamp  
 ///   • rank 2 is 1 s earlier, rank 3 is 2 s earlier, ...
 fn compute_pub_date(article: &Article) -> String {
