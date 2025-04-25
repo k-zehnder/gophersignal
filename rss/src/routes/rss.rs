@@ -11,6 +11,7 @@ use chrono::{DateTime, Utc};
 use htmlescape::encode_minimal;
 use rss::{ChannelBuilder, Guid, ItemBuilder};
 use serde::Deserialize;
+use sha1::{Digest, Sha1};
 use url::Url;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -31,12 +32,12 @@ fn generate_title(query: &RssQuery) -> String {
         .iter()
         .zip(["Flagged", "Dead", "Dupe"])
         .filter_map(|(flag, label)| flag.and_then(|f| f.then_some(label)))
-        .for_each(|lbl| parts.push(lbl));
+        .for_each(|label| parts.push(label));
 
     // Threshold filters
     if [query.min_upvotes, query.min_comments]
         .iter()
-        .any(|&v| v.filter(|&x| x > 0).is_some())
+        .any(|&val| val.filter(|&x| x > 0).is_some())
     {
         parts.push("Filtered");
     }
@@ -50,9 +51,14 @@ fn generate_title(query: &RssQuery) -> String {
 
 /// Builds an RSS item from an article, including title, description, etc.
 fn build_item(article: &Article) -> rss::Item {
-    // Use hn_id when available, otherwise `gophersignal:<db-id>`
-    let (guid_val, is_permalink) = extract_hn_guid(&article.link)
-        .unwrap_or_else(|| (format!("gophersignal:{}", article.id), false));
+    // HN link yields hn<id>; else use SHA-1 of the lower-cased title for stable GUID.
+    let (guid_value, is_permalink) = extract_hn_guid(&article.link).unwrap_or_else(|| {
+        let digest = format!(
+            "{:x}",
+            Sha1::digest(article.title.to_lowercase().as_bytes())
+        );
+        (format!("title:{digest}"), false)
+    });
 
     let domain = extract_domain(&article.link);
     let summary = article.summary.as_deref().unwrap_or("No summary");
@@ -67,7 +73,7 @@ fn build_item(article: &Article) -> rss::Item {
         )))
         .pub_date(Some(compute_pub_date(article)))
         .guid(Some(Guid {
-            value: guid_val,
+            value: guid_value,
             permalink: is_permalink,
         }))
         .build()
@@ -83,7 +89,6 @@ fn compute_pub_date(article: &Article) -> String {
         .with_timezone(&Utc);
 
     let offset = chrono::Duration::seconds(article.article_rank.saturating_sub(1) as i64);
-
     base.checked_sub_signed(offset).unwrap().to_rfc2822()
 }
 
@@ -94,7 +99,7 @@ fn extract_hn_guid(link: &str) -> Option<(String, bool)> {
             .then(|| {
                 url.query_pairs()
                     .find(|(k, _)| k == "id")
-                    .map(|(_, v)| (format!("hn:{}", v), false))
+                    .map(|(_, v)| (format!("hn:{v}"), false))
             })
             .flatten()
     })
@@ -108,7 +113,7 @@ fn extract_domain(link: &str) -> String {
         .unwrap_or_else(|| "source".into())
 }
 
-/// Builds additional information for an RSS item, including upvotes, comments, and source.
+/// Builds the footer shown in the description.
 fn build_info(article: &Article, domain: &str) -> String {
     let comments = match article.comment_count.unwrap_or(0) {
         0 => "💬 0 comments".into(),
@@ -140,7 +145,6 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     // Fetch (already sorted by backend `article_rank`)
     let articles = client.fetch_articles(&query, &config).await?;
 
-    // Assemble channel
     let channel = ChannelBuilder::default()
         .title(generate_title(&query))
         .link("https://gophersignal.com")
@@ -149,7 +153,6 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
         .items(articles.iter().map(build_item).collect::<Vec<_>>())
         .build();
 
-    // Respond
     Ok(Response::builder()
         .status(StatusCode::OK)
         .header(header::CONTENT_TYPE, "application/rss+xml")
