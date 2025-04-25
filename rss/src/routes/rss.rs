@@ -11,7 +11,7 @@ use chrono::{DateTime, Utc};
 use htmlescape::encode_minimal;
 use rss::{ChannelBuilder, Guid, ItemBuilder};
 use serde::Deserialize;
-use sha1::{Digest, Sha1};
+use sha1::{Digest, Sha1}; // add `sha1 = "0.10"` to Cargo.toml
 use url::Url;
 
 #[derive(Deserialize, Debug, Clone)]
@@ -31,13 +31,13 @@ fn generate_title(query: &RssQuery) -> String {
     [query.flagged, query.dead, query.dupe]
         .iter()
         .zip(["Flagged", "Dead", "Dupe"])
-        .filter_map(|(flag, label)| flag.and_then(|f| f.then_some(label)))
-        .for_each(|label| parts.push(label));
+        .filter_map(|(opt, label)| opt.filter(|&flag| flag).map(|_| label))
+        .for_each(|lbl| parts.push(lbl));
 
     // Threshold filters
     if [query.min_upvotes, query.min_comments]
         .iter()
-        .any(|&val| val.filter(|&x| x > 0).is_some())
+        .any(|&opt| opt.filter(|&v| v > 0).is_some())
     {
         parts.push("Filtered");
     }
@@ -51,17 +51,18 @@ fn generate_title(query: &RssQuery) -> String {
 
 /// Builds an RSS item from an article, including title, description, etc.
 fn build_item(article: &Article) -> rss::Item {
-    // HN link yields hn<id>; else use SHA-1 of the lower-cased title for stable GUID.
+    // HN link yields hn<id>; else use SHA-1 of the lower-cased title for stable GUID
     let (guid_value, is_permalink) = extract_hn_guid(&article.link).unwrap_or_else(|| {
-        let digest = format!(
+        let hash = format!(
             "{:x}",
             Sha1::digest(article.title.to_lowercase().as_bytes())
         );
-        (format!("title:{digest}"), false)
+        (format!("title:{hash}"), false)
     });
 
     let domain = extract_domain(&article.link);
     let summary = article.summary.as_deref().unwrap_or("No summary");
+    let pub_date = compute_pub_date(article);
 
     ItemBuilder::default()
         .title(Some(article.title.clone()))
@@ -71,7 +72,7 @@ fn build_item(article: &Article) -> rss::Item {
             encode_minimal(summary),
             build_info(article, &domain),
         )))
-        .pub_date(Some(compute_pub_date(article)))
+        .pub_date(Some(pub_date))
         .guid(Some(Guid {
             value: guid_value,
             permalink: is_permalink,
@@ -79,20 +80,17 @@ fn build_item(article: &Article) -> rss::Item {
         .build()
 }
 
-/// Returns RFC-2822 `<pubDate>` that is unique per item:
-/// `created_at tp (article_rank − 1)s`  
-///   • rank 1 (newest) keeps original timestamp  
-///   • rank 2 is 1 s earlier, rank 3 is 2 s earlier, ...
+/// Returns RFC-2822 `<pubDate>` = parse(created_at) + article.id seconds
 fn compute_pub_date(article: &Article) -> String {
     let base = DateTime::parse_from_rfc3339(&article.created_at)
         .unwrap_or_else(|_| Utc::now().into())
         .with_timezone(&Utc);
 
-    let offset = chrono::Duration::seconds(article.article_rank.saturating_sub(1) as i64);
-    base.checked_sub_signed(offset).unwrap().to_rfc2822()
+    let offset = chrono::Duration::seconds(article.id as i64);
+    base.checked_add_signed(offset).unwrap_or(base).to_rfc2822()
 }
 
-/// Extracts the Hacker News GUID from a Hacker News article.
+/// If link is a Hacker News discussion, returns (hn<id>, false)
 fn extract_hn_guid(link: &str) -> Option<(String, bool)> {
     Url::parse(link).ok().and_then(|url| {
         (url.host_str() == Some("news.ycombinator.com"))
@@ -136,14 +134,13 @@ fn build_info(article: &Article, domain: &str) -> String {
     .join(" · ")
 }
 
-/// Main function to generate the RSS feed.
+/// `GET /rss` Fetch articles, build channel, return RSS XML.
 pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
     Query(query): Query<RssQuery>,
-    Extension(config): Extension<AppConfig>,
+    Extension(cfg): Extension<AppConfig>,
     Extension(client): Extension<T>,
 ) -> Result<Response<String>, AppError> {
-    // Fetch (already sorted by backend `article_rank`)
-    let articles = client.fetch_articles(&query, &config).await?;
+    let articles = client.fetch_articles(&query, &cfg).await?;
 
     let channel = ChannelBuilder::default()
         .title(generate_title(&query))
