@@ -49,24 +49,19 @@ fn generate_title(query: &RssQuery) -> String {
     }
 }
 
-/// Builds an RSS item with a GUID that never changes.
+/// Builds an RSS item with immutable GUID.
 fn build_item(article: &Article) -> rss::Item {
-    // Stable GUID: SHA-1 of canonical external link (host + path)
+    // GUID is SHA-1(host + path) of the canonical article URL.
     let canonical = Url::parse(&article.link)
         .map(|u| format!("{}{}", u.host_str().unwrap_or("").to_lowercase(), u.path()))
         .unwrap_or_else(|_| article.link.to_lowercase());
     let guid_value = format!("sha1:{:x}", Sha1::digest(canonical.as_bytes()));
-    let is_permalink = false;
 
-    // Click target: HN thread if present, else the article URL
-    let link_target = article
-        .comment_link
-        .as_deref()
-        .unwrap_or(&article.link)
-        .to_string();
+    // Optional HN discussion thread URL is used in the footer.
+    let hn_url = article.comment_link.as_deref();
 
-    // Metadata
-    let domain = Url::parse(&link_target)
+    // Misc metadata.
+    let domain = Url::parse(&article.link)
         .ok()
         .and_then(|u| u.host_str().map(ToString::to_string))
         .unwrap_or_else(|| "source".into());
@@ -78,17 +73,17 @@ fn build_item(article: &Article) -> rss::Item {
         .description(Some(format!(
             "{}<br><br><small>{}</small>",
             encode_minimal(summary),
-            build_info(article, &domain)
+            build_info(article, &domain, hn_url)
         )))
         .pub_date(Some(pub_date))
         .guid(Some(Guid {
             value: guid_value,
-            permalink: is_permalink,
+            permalink: false,
         }))
         .build()
 }
 
-/// Compute RFC-2822 pubDate by adding article.id seconds to created_at, preventing identical timestamps.
+/// Compute RFC-2822 pubDate (unique by adding article.id seconds).
 fn compute_pub_date(article: &Article) -> String {
     let base = DateTime::parse_from_rfc3339(&article.created_at)
         .unwrap_or_else(|_| Utc::now().into())
@@ -97,25 +92,20 @@ fn compute_pub_date(article: &Article) -> String {
     base.checked_add_signed(offset).unwrap_or(base).to_rfc2822()
 }
 
-/// Builds the footer: "▲ upvotes · 💬 comments · via <domain>"
-fn build_info(article: &Article, domain: &str) -> String {
-    let comments = match article.comment_count.unwrap_or(0) {
-        0 => "💬 0 comments".into(),
-        n => format!(
-            "💬 <a href=\"{}\">{}</a>",
-            encode_minimal(article.comment_link.as_deref().unwrap_or("#")),
-            n
-        ),
+/// Footer: "▲ upvotes · 💬 comments · via <domain>".
+fn build_info(article: &Article, domain: &str, hn_url: Option<&str>) -> String {
+    let comments = match (article.comment_count.unwrap_or(0), hn_url) {
+        (0, _) => "💬 0 comments".into(),
+        (n, Some(url)) => format!("💬 <a href=\"{}\">{}</a>", encode_minimal(url), n),
+        (n, None) => format!("💬 {n} comments"),
     };
-    let link = encode_minimal(&article.link);
-    let domain_escaped = encode_minimal(domain);
 
     format!(
         "▲ {} · {} · via <a href=\"{}\">{}</a>",
         article.upvotes.unwrap_or(0),
         comments,
-        link,
-        domain_escaped
+        encode_minimal(&article.link),
+        encode_minimal(domain)
     )
 }
 
@@ -137,6 +127,6 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
 
     Ok(Response::builder()
         .status(StatusCode::OK)
-        .header(header::CONTENT_TYPE, "application/rss+xml")
+        .header(header::CONTENT_TYPE, "application/rss+xml; charset=utf-8")
         .body(channel.to_string())?)
 }
