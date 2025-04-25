@@ -50,8 +50,9 @@ fn generate_title(query: &RssQuery) -> String {
 
 /// Builds an RSS item from an article, including title, description, etc.
 fn build_item(article: &Article) -> rss::Item {
-    let (guid_val, is_permalink) =
-        extract_hn_guid(&article.link).expect("Expected a valid Hacker News link");
+    // Use hn_id when available, otherwise `gophersignal:<db-id>`
+    let (guid_val, is_permalink) = extract_hn_guid(&article.link)
+        .unwrap_or_else(|| (format!("gophersignal:{}", article.id), false));
 
     let domain = extract_domain(&article.link);
     let summary = article.summary.as_deref().unwrap_or("No summary");
