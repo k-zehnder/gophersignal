@@ -16,6 +16,7 @@ func TestNewArticle(t *testing.T) {
 
 	article := NewArticle(
 		1,
+		1,
 		"Test Title",
 		"https://example.com",
 		1,
@@ -32,41 +33,26 @@ func TestNewArticle(t *testing.T) {
 		true,
 	)
 
-	if article.ID != 1 {
-		t.Errorf("Expected ID 1, got %d", article.ID)
-	}
-	if article.Title != "Test Title" {
-		t.Errorf("Expected Title 'Test Title', got '%s'", article.Title)
-	}
-	if article.ArticleRank != 1 {
-		t.Errorf("Expected ArticleRank 1, got %d", article.ArticleRank)
-	}
-	if !article.Summary.Valid || article.Summary.String != "Short summary." {
-		t.Errorf("Expected Summary 'Short summary.', got '%v'", article.Summary)
-	}
-	if !article.CommentLink.Valid || article.CommentLink.String != "https://news.ycombinator.com/item?id=1" {
-		t.Errorf("Expected CommentLink 'https://news.ycombinator.com/item?id=1', got '%v'", article.CommentLink)
-	}
-	if article.Flagged {
-		t.Errorf("Expected Flagged false, got true")
-	}
-	if article.Dead {
-		t.Errorf("Expected Dead false, got true")
-	}
-	if article.Dupe != true {
-		t.Errorf("Expected Dupe true, got false")
-	}
+	assert.Equal(t, 1, article.ID)
+	assert.Equal(t, 1, article.HNID)
+	assert.Equal(t, "Test Title", article.Title)
+	assert.Equal(t, 1, article.ArticleRank)
+	assert.True(t, article.Summary.Valid)
+	assert.Equal(t, "Short summary.", article.Summary.String)
+	assert.True(t, article.CommentLink.Valid)
+	assert.Equal(t, "https://news.ycombinator.com/item?id=1", article.CommentLink.String)
+	assert.False(t, article.Flagged)
+	assert.False(t, article.Dead)
+	assert.True(t, article.Dupe)
 }
 
 // TestNullableIntJSONMarshaling tests JSON marshaling for NullableInt.
 func TestNullableIntJSONMarshaling(t *testing.T) {
-	// Valid integer
 	validInt := NullableInt{NullInt64: sql.NullInt64{Int64: 42, Valid: true}}
 	data, err := json.Marshal(validInt)
 	assert.NoError(t, err)
 	assert.JSONEq(t, "42", string(data))
 
-	// Null value
 	invalidInt := NullableInt{NullInt64: sql.NullInt64{Valid: false}}
 	data, err = json.Marshal(invalidInt)
 	assert.NoError(t, err)
@@ -75,13 +61,11 @@ func TestNullableIntJSONMarshaling(t *testing.T) {
 
 // TestNullableStringJSONMarshaling tests JSON marshaling for NullableString.
 func TestNullableStringJSONMarshaling(t *testing.T) {
-	// Valid string
 	validString := NullableString{NullString: sql.NullString{String: "test", Valid: true}}
 	data, err := json.Marshal(validString)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `"test"`, string(data))
 
-	// Null value
 	invalidString := NullableString{NullString: sql.NullString{Valid: false}}
 	data, err = json.Marshal(invalidString)
 	assert.NoError(t, err)
@@ -94,10 +78,11 @@ func TestArticleMarshaling(t *testing.T) {
 	updatedAt := createdAt.Add(time.Hour)
 
 	article := NewArticle(
-		1,
+		2,
+		5,
 		"Test Article",
 		"https://example.com",
-		2, // ArticleRank
+		2,
 		"Full content here",
 		"Summary here",
 		"Example Source",
@@ -119,6 +104,7 @@ func TestArticleMarshaling(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, article.ID, result.ID)
+	assert.Equal(t, article.HNID, result.HNID)
 	assert.Equal(t, article.Title, result.Title)
 	assert.Equal(t, article.Link, result.Link)
 	assert.Equal(t, article.ArticleRank, result.ArticleRank)

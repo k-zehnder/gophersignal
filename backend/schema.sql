@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS articles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     link VARCHAR(512) NOT NULL,
+    hn_id INT NOT NULL, 
     article_rank INT NOT NULL, 
     content TEXT,
     summary VARCHAR(2000),

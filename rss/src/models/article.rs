@@ -2,7 +2,8 @@ use serde::Deserialize;
 
 #[derive(Deserialize, Debug, Clone, sqlx::FromRow)]
 pub struct Article {
-    pub id: i64,
+    pub id: i32,
+    pub hn_id: Option<i32>,
     pub title: String,
     pub link: String,
     #[serde(default)]
@@ -39,6 +40,7 @@ mod tests {
         let json = r#"
         {
             "id": 1,
+            "hn_id": 42,
             "title": "Test Article",
             "link": "http://example.com",
             "content": "Some content",
@@ -57,7 +59,9 @@ mod tests {
         "#;
         let article: Article = serde_json::from_str(json).unwrap();
         assert_eq!(article.id, 1);
+        assert_eq!(article.hn_id, Some(42));
         assert_eq!(article.title, "Test Article");
+        assert_eq!(article.article_rank, 0);
     }
 
     #[test]
@@ -69,6 +73,7 @@ mod tests {
             "total_count": 1,
             "articles": [{
                 "id": 1,
+                "hn_id": 42,
                 "title": "Test Article",
                 "link": "http://example.com",
                 "content": "Some content",
@@ -92,5 +97,6 @@ mod tests {
         let articles = response.articles.unwrap();
         assert_eq!(articles.len(), 1);
         assert_eq!(articles[0].id, 1);
+        assert_eq!(articles[0].hn_id, Some(42));
     }
 }

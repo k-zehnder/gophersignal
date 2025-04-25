@@ -7,9 +7,9 @@ use axum::{
     http::{header, StatusCode},
     response::Response,
 };
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use htmlescape::encode_minimal;
-use rss::{ChannelBuilder, Guid, ItemBuilder};
+use rss::{ChannelBuilder, GuidBuilder, ItemBuilder};
 use serde::Deserialize;
 use url::Url;
 
@@ -22,44 +22,27 @@ pub struct RssQuery {
     pub min_comments: Option<u32>,
 }
 
-/// Generate the RSS feed.
-pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
+/// Generate the RSS feed based on query filters.
+pub async fn generate_rss_feed<T>(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
     Extension(client): Extension<T>,
-) -> Result<Response<String>, AppError> {
+) -> Result<Response<String>, AppError>
+where
+    T: ArticlesClient + Clone,
+{
     let mut articles = client.fetch_articles(&query, &config).await?;
+    // Sort newest first
     articles.sort_by(|a, b| b.id.cmp(&a.id));
 
-    // Build title components.
-    let mut components = Vec::new();
+    let title = build_title(&query);
 
-    // Add boolean filters.
-    if query.flagged == Some(true) {
-        components.push("Flagged");
-    }
-    if query.dead == Some(true) {
-        components.push("Dead");
-    }
-    if query.dupe == Some(true) {
-        components.push("Dupe");
-    }
-
-    // Add threshold filters.
-    let has_thresholds = query.min_upvotes.filter(|&v| v > 0).is_some()
-        || query.min_comments.filter(|&c| c > 0).is_some();
-
-    if has_thresholds {
-        components.push("Filtered");
-    }
-
-    // Construct final title.
-    let title = match components.is_empty() {
-        true => "Gopher Signal".to_string(),
-        false => format!("Gopher Signal - {}", components.join(", ")),
-    };
-
-    let items: Vec<_> = articles.iter().map(build_item).collect();
+    // Pass the zero-based index into build_item so we can offset by seconds reliably.
+    let items: Vec<_> = articles
+        .iter()
+        .enumerate()
+        .map(|(idx, article)| build_item(article, idx))
+        .collect();
 
     let channel = ChannelBuilder::default()
         .title(title)
@@ -71,71 +54,92 @@ pub async fn generate_rss_feed<T: ArticlesClient + Clone>(
 
     Ok(Response::builder()
         .status(StatusCode::OK)
-        .header(header::CONTENT_TYPE, "application/rss+xml")
+        .header(header::CONTENT_TYPE, "application/rss+xml; charset=utf-8")
         .body(channel.to_string())?)
 }
 
-fn build_item(article: &Article) -> rss::Item {
-    // Compute a unique publication date using the article ID as an offset.
-    let id_offset = chrono::Duration::seconds(article.id as i64);
-    let pub_date =
-        DateTime::parse_from_rfc3339(&article.published_at.as_ref().unwrap_or(&article.created_at))
-            .unwrap_or_else(|_| Utc::now().into())
-            .checked_add_signed(id_offset)
-            .unwrap()
-            .to_rfc2822();
+/// Build the RSS feed title from query filters.
+fn build_title(query: &RssQuery) -> String {
+    let mut parts = Vec::new();
+    if query.flagged.unwrap_or(false) {
+        parts.push("Flagged");
+    }
+    if query.dead.unwrap_or(false) {
+        parts.push("Dead");
+    }
+    if query.dupe.unwrap_or(false) {
+        parts.push("Dupe");
+    }
+    if query.min_upvotes.unwrap_or(0) > 0 || query.min_comments.unwrap_or(0) > 0 {
+        parts.push("Filtered");
+    }
+    if parts.is_empty() {
+        "Gopher Signal".into()
+    } else {
+        format!("Gopher Signal - {}", parts.join(", "))
+    }
+}
 
-    // Use full HN URL as <guid> if it's a Hacker News link.
-    let (guid_value, is_permalink) = Url::parse(&article.link)
-        .ok()
-        .and_then(|url| {
-            if url.host_str()? == "news.ycombinator.com" {
-                Some((url.as_str().to_string(), true))
-            } else {
-                None
-            }
+/// Build a single RSS from an Article, using its index for the pubDate offset.
+fn build_item(article: &Article, index: usize) -> rss::Item {
+    ItemBuilder::default()
+        .title(Some(article.title.clone()))
+        .description(Some(format!(
+            "{}<br><br><small>{}</small>",
+            encode_minimal(article.summary.as_deref().unwrap_or("No summary")),
+            build_footer(article)
+        )))
+        .pub_date(Some(format_pub_date(&article.created_at, index)))
+        .guid(Some(build_guid(article)))
+        .build()
+}
+
+/// Format pubDate by adding seconds to `created_at`.
+fn format_pub_date(created_at: &str, index: usize) -> String {
+    let base: DateTime<Utc> = DateTime::parse_from_rfc3339(created_at)
+        .unwrap_or_else(|_| Utc::now().into())
+        .with_timezone(&Utc);
+
+    let dt = base
+        .checked_add_signed(Duration::seconds(index as i64))
+        .unwrap_or(base);
+
+    dt.to_rfc2822()
+}
+
+/// Build a stable GUID
+fn build_guid(article: &Article) -> rss::Guid {
+    GuidBuilder::default()
+        .value(match article.hn_id {
+            Some(hn) => format!("https://news.ycombinator.com/item?id={}", hn),
+            None => article.link.clone(),
         })
-        .unwrap_or_else(|| (article.link.clone(), false));
+        .permalink(article.hn_id.is_some())
+        .build()
+}
 
-    // Parse domain for source.
-    let domain = Url::parse(&article.link)
-        .ok()
-        .and_then(|url| url.host_str().map(|h| h.to_string()))
-        .unwrap_or_else(|| "source".to_string());
-
-    let summary = encode_minimal(article.summary.as_deref().unwrap_or("No summary"));
-    let comment_count = article.comment_count.unwrap_or(0);
-    let comment_text = if comment_count > 0 {
+/// Build the footer HTML of upvotes, comments, via domain.
+fn build_footer(article: &Article) -> String {
+    let up = article.upvotes.unwrap_or(0);
+    let comments = article.comment_count.unwrap_or(0);
+    let comment_html = if comments > 0 {
         format!(
             "💬 <a href=\"{}\">{}</a>",
             encode_minimal(article.comment_link.as_deref().unwrap_or("#")),
-            comment_count
+            comments
         )
     } else {
-        "💬 0 comments".to_string()
+        "💬 0 comments".into()
     };
-    let upvotes = article.upvotes.unwrap_or(0);
-    let info = vec![
-        format!("▲ {}", upvotes),
-        comment_text,
-        format!(
-            "via <a href=\"{}\">{}</a>",
-            encode_minimal(&article.link),
-            encode_minimal(&domain)
-        ),
-    ]
-    .join(" · ");
-
-    let description = format!("{}<br><br><small>{}</small>", summary, info);
-
-    ItemBuilder::default()
-        .title(Some(article.title.clone()))
-        .link(Some(article.link.clone()))
-        .description(Some(description))
-        .pub_date(Some(pub_date))
-        .guid(Some(Guid {
-            value: guid_value,
-            permalink: is_permalink,
-        }))
-        .build()
+    let domain = Url::parse(&article.link)
+        .ok()
+        .and_then(|u| u.host_str().map(str::to_string))
+        .unwrap_or_else(|| "source".into());
+    format!(
+        "▲ {} · {} · via <a href=\"{}\">{}</a>",
+        up,
+        comment_html,
+        encode_minimal(&article.link),
+        encode_minimal(&domain)
+    )
 }

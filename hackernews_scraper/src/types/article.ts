@@ -2,6 +2,7 @@
 export interface Article {
   title: string;
   link: string;
+  hn_id: number;
   article_rank: number;
   flagged: boolean;
   dead: boolean;

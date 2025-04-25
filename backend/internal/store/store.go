@@ -40,6 +40,7 @@ func NewMySQLStore(dataSourceName string) (*MySQLStore, error) {
 func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 	stmt, err := store.db.Prepare(`
         INSERT INTO articles (
+          hn_id,
           title,
           link,
           article_rank,
@@ -55,7 +56,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
@@ -64,6 +65,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 
 	for _, article := range articles {
 		_, execErr := stmt.Exec(
+			article.HNID,
 			article.Title,
 			article.Link,
 			article.ArticleRank,
@@ -90,7 +92,7 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 // GetArticles retrieves deduplicated articles.
 func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, error) {
 	query := `
-		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
+		SELECT a.id, a.hn_id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
 		       a.dead, a.dupe, a.created_at, a.updated_at
 		FROM articles a
@@ -119,6 +121,7 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 		var article models.Article
 		if err := rows.Scan(
 			&article.ID,
+			&article.HNID,
 			&article.Title,
 			&article.Link,
 			&article.ArticleRank,
@@ -174,14 +177,13 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		conditions = append(conditions, "dupe = FALSE")
 	}
 
-	// Combine conditions into the inner query.
 	if len(conditions) > 0 {
 		innerQuery += " AND " + strings.Join(conditions, " AND ")
 	}
 	innerQuery += " GROUP BY title"
 
 	query := `
-		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
+		SELECT a.id, a.hn_id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
 		       a.dead, a.dupe, a.created_at, a.updated_at
 		FROM articles a
@@ -191,7 +193,6 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		ORDER BY a.id DESC
 		LIMIT ? OFFSET ?;
 	`
-	// Append pagination parameters.
 	args = append(args, limit, offset)
 	rows, err := store.db.Query(query, args...)
 	if err != nil {
@@ -204,6 +205,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		var article models.Article
 		if err := rows.Scan(
 			&article.ID,
+			&article.HNID,
 			&article.Title,
 			&article.Link,
 			&article.ArticleRank,
@@ -232,7 +234,7 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 // GetArticlesWithThresholds retrieves articles using provided minimum upvote and comment thresholds.
 func (store *MySQLStore) GetArticlesWithThresholds(limit, offset, minUpvotes, minComments int) ([]*models.Article, error) {
 	query := `
-		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
+		SELECT a.id, a.hn_id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
 		       a.dead, a.dupe, a.created_at, a.updated_at
 		FROM articles a
@@ -252,7 +254,6 @@ func (store *MySQLStore) GetArticlesWithThresholds(limit, offset, minUpvotes, mi
 		ORDER BY a.id DESC
 		LIMIT ? OFFSET ?;
 	`
-	// If minUpvotes or minComments is 0, the query condition ">= 0" includes all articles.
 	rows, err := store.db.Query(query, minUpvotes, minComments, limit, offset)
 	if err != nil {
 		return nil, fmt.Errorf("failed to execute query: %w", err)
@@ -264,6 +265,7 @@ func (store *MySQLStore) GetArticlesWithThresholds(limit, offset, minUpvotes, mi
 		var article models.Article
 		if err := rows.Scan(
 			&article.ID,
+			&article.HNID,
 			&article.Title,
 			&article.Link,
 			&article.ArticleRank,
@@ -291,7 +293,10 @@ func (store *MySQLStore) GetArticlesWithThresholds(limit, offset, minUpvotes, mi
 
 // GetArticlesWithThresholdsAndFilters retrieves articles that satisfy both threshold
 // conditions (minUpvotes and minComments) and additional boolean filters (flagged, dead, dupe).
-func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(limit, offset, minUpvotes, minComments int, flagged, dead, dupe *bool) ([]*models.Article, error) {
+func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(
+	limit, offset, minUpvotes, minComments int,
+	flagged, dead, dupe *bool,
+) ([]*models.Article, error) {
 	innerQuery := `
 		SELECT title, MAX(id) AS max_id
 		FROM articles
@@ -299,7 +304,6 @@ func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(limit, offset, minU
 		  AND TRIM(summary) != ''
 		  AND summary NOT LIKE 'No summary available%'
 	`
-	// Append boolean filter conditions using placeholders when provided.
 	if flagged != nil {
 		innerQuery += " AND flagged = ?"
 	} else {
@@ -316,23 +320,20 @@ func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(limit, offset, minU
 		innerQuery += " AND dupe = FALSE"
 	}
 
-	// Append threshold conditions.
 	innerQuery += " AND upvotes >= ? AND comment_count >= ? GROUP BY title"
 
-	// Build the outer query.
 	fullQuery := `
-		SELECT a.id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
+		SELECT a.id, a.hn_id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
 		       a.dead, a.dupe, a.created_at, a.updated_at
 		FROM articles a
 		INNER JOIN (
-			` + innerQuery + `
+	` + innerQuery + `
 		) b ON a.title = b.title AND a.id = b.max_id
 		ORDER BY a.id DESC
 		LIMIT ? OFFSET ?;
 	`
 
-	// Build the arguments list.
 	var args []interface{}
 	if flagged != nil {
 		args = append(args, boolToInt(*flagged))
@@ -343,7 +344,6 @@ func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(limit, offset, minU
 	if dupe != nil {
 		args = append(args, boolToInt(*dupe))
 	}
-	// Append thresholds and pagination parameters.
 	args = append(args, minUpvotes, minComments, limit, offset)
 
 	rows, err := store.db.Query(fullQuery, args...)
@@ -357,6 +357,7 @@ func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(limit, offset, minU
 		var article models.Article
 		if err := rows.Scan(
 			&article.ID,
+			&article.HNID,
 			&article.Title,
 			&article.Link,
 			&article.ArticleRank,

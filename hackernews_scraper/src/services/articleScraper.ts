@@ -7,13 +7,15 @@ import { Article, Scraper } from '../types';
 const TOP_BASE_URL = 'https://news.ycombinator.com';
 const FRONT_BASE_URL = 'https://news.ycombinator.com/front';
 
+type ScrapeResult = { articles: Article[]; nextUrl: string | null };
+
 // Creates a Hacker News scraper
 const createHackerNewsScraper = (browser: Browser): Scraper => {
   // Scrapes a page and returns articles and the next URL; isTop distinguishes / vs /front
   const scrapePageWithNext = async (
     pageUrl: string,
     isTop: boolean = false
-  ): Promise<{ articles: Article[]; nextUrl: string | null }> => {
+  ): Promise<ScrapeResult> => {
     const page = await browser.newPage();
     try {
       await page.goto(pageUrl, { waitUntil: 'networkidle2' });
@@ -22,6 +24,7 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
           const articles: Article[] = [];
           const rows = Array.from(document.querySelectorAll('tr.athing'));
           rows.forEach((row: Element) => {
+            const hn_id = parseInt((row as HTMLElement).id, 10) || 0;
             const rankElement = row.querySelector(
               'td.title > span.rank'
             ) as HTMLElement | null;
@@ -29,11 +32,13 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
               ? rankElement.innerText.replace(/\D/g, '').trim()
               : '0';
             const article_rank = parseInt(rankStr, 10) || 0;
+
             const titleElement = row.querySelector(
               'td.title > span.titleline a'
             ) as HTMLAnchorElement | null;
             const title = titleElement?.innerText || 'No title';
             const link = titleElement?.href || 'No link';
+
             const titleContainer =
               titleElement?.parentElement as HTMLElement | null;
             const titleText = titleContainer?.innerText || '';
@@ -42,9 +47,11 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
             const dupe = titleText.includes('[dupe]');
             // For /front, include only flagged, dead, or duplicate articles
             if (!isTop && !(flagged || dead || dupe)) return;
+
             let upvotes = 0,
               comment_count = 0;
             let comment_link = 'No comments link';
+
             const subtextRow = row.nextElementSibling;
             if (subtextRow) {
               const subtext = subtextRow.querySelector('.subtext');
@@ -64,9 +71,11 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
                 }
               }
             }
+
             articles.push({
               title,
               link,
+              hn_id,
               article_rank,
               flagged,
               dead,
@@ -76,6 +85,7 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
               comment_link,
             });
           });
+
           // Find the "more" button to get the next URL
           const moreLinkElem = document.querySelector(
             'a.morelink'
