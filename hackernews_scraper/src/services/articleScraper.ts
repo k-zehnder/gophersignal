@@ -24,9 +24,7 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
           const articles: Article[] = [];
           const rows = Array.from(document.querySelectorAll('tr.athing'));
           rows.forEach((row: Element) => {
-            // Extract the Hacker News item ID from the row's `id` attribute
             const hn_id = parseInt((row as HTMLElement).id, 10) || 0;
-
             const rankElement = row.querySelector(
               'td.title > span.rank'
             ) as HTMLElement | null;
