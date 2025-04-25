@@ -86,7 +86,7 @@ fn build_item(article: &Article) -> rss::Item {
         .build()
 }
 
-/// Returns RFC-2822 `<pubDate>` = parse(created_at) + article.id seconds
+/// Compute RFC-2822 pubDate by adding article.id seconds to created_at, preventing identical timestamps.
 fn compute_pub_date(article: &Article) -> String {
     let base = DateTime::parse_from_rfc3339(&article.created_at)
         .unwrap_or_else(|_| Utc::now().into())
