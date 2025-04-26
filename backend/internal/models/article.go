@@ -77,6 +77,8 @@ type Article struct {
 	Content      string         `json:"content"`
 	Summary      NullableString `json:"summary"`
 	Source       string         `json:"source"`
+	CommitHash   string         `json:"commit_hash"`
+	ModelName    string         `json:"model_name"`
 	CreatedAt    time.Time      `json:"created_at"`
 	UpdatedAt    time.Time      `json:"updated_at"`
 	Upvotes      NullableInt    `json:"upvotes"`
@@ -94,6 +96,7 @@ func NewArticle(
 	title, link string,
 	articleRank int,
 	content, summary, source string,
+	commitHash, modelName string,
 	createdAt, updatedAt time.Time,
 	upvotes int64,
 	commentCount int64,
@@ -109,6 +112,8 @@ func NewArticle(
 		Content:      content,
 		Summary:      NullableString{NullString: sql.NullString{String: summary, Valid: summary != ""}},
 		Source:       source,
+		CommitHash:   commitHash,
+		ModelName:    modelName,
 		CreatedAt:    createdAt,
 		UpdatedAt:    updatedAt,
 		Upvotes:      NullableInt{NullInt64: sql.NullInt64{Int64: upvotes, Valid: true}},

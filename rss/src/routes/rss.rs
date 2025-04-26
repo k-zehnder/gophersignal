@@ -37,8 +37,7 @@ where
     build_rss_response(channel)
 }
 
-// Sort by ID descending to have newest first.
-// idx 0 has highest ID giving newest pubDate.
+// Sort by ID descending so newest appears first.
 fn build_rss_channel(mut articles: Vec<Article>, query: &RssQuery) -> rss::Channel {
     articles.sort_by(|a, b| b.id.cmp(&a.id));
     let total = articles.len();
@@ -61,7 +60,6 @@ fn build_rss_channel(mut articles: Vec<Article>, query: &RssQuery) -> rss::Chann
 // Build RSS title from active filters.
 fn build_feed_title(query: &RssQuery) -> String {
     let mut parts = Vec::new();
-
     if query.flagged.unwrap_or(false) {
         parts.push("Flagged");
     }
@@ -82,7 +80,7 @@ fn build_feed_title(query: &RssQuery) -> String {
     }
 }
 
-// Convert article to RSS item with staggered pubDate.
+// Convert an Article into an RSS <item>.
 fn build_rss_item(article: &Article, total: usize, idx: usize) -> rss::Item {
     let offset = (total - 1 - idx) as i64;
     ItemBuilder::default()
@@ -93,14 +91,24 @@ fn build_rss_item(article: &Article, total: usize, idx: usize) -> rss::Item {
         .build()
 }
 
-// Escape summary and append footer.
+// Escape summary, append inline “model @ hash” if present, then the footer.
 fn build_item_description(article: &Article) -> String {
-    let sum = article.summary.as_deref().unwrap_or("No summary");
-    format!(
-        "{}<br><br><small>{}</small>",
-        encode_minimal(sum),
+    let mut html = encode_minimal(article.summary.as_deref().unwrap_or("No summary"));
+    if let (Some(model), Some(hash)) = (&article.model_name, &article.commit_hash) {
+        if !model.is_empty() && !hash.is_empty() {
+            html.push_str(&format!(
+                "<br><br><small style=\"font-size:0.875em;color:#6b7280;\">\
+                 {} @ {}</small>",
+                encode_minimal(model),
+                encode_minimal(hash),
+            ));
+        }
+    }
+    html.push_str(&format!(
+        "<br><br><small>{}</small>",
         build_item_footer(article)
-    )
+    ));
+    html
 }
 
 // Format creation date with offset as RFC2822.
@@ -114,7 +122,7 @@ fn format_pub_date(ts: &str, off: i64) -> String {
     dt.to_rfc2822()
 }
 
-// Convert article to a <guid>.
+// Build a <guid> element for RSS.
 fn build_item_guid(article: &Article) -> rss::Guid {
     let (value, is_permalink) = match article.hn_id {
         Some(id) if id > 0 => (format!("https://news.ycombinator.com/item?id={}", id), true),
@@ -126,26 +134,32 @@ fn build_item_guid(article: &Article) -> rss::Guid {
         .build()
 }
 
-// Footer shows upvotes comments link and source domain.
+// Footer shows votes, comments, and source domain.
 fn build_item_footer(article: &Article) -> String {
     let upvotes = article.upvotes.unwrap_or(0);
-    let count = article.comment_count.unwrap_or(0);
-    let clink = article.comment_link.as_deref().unwrap_or("#");
-    let comments = format!("💬 <a href=\"{}\">{}</a>", encode_minimal(clink), count);
+    let comments_count = article.comment_count.unwrap_or(0);
+    let comments_link = article.comment_link.as_deref().unwrap_or("#");
+    let comments_html = format!(
+        "💬 <a href=\"{}\">{}</a>",
+        encode_minimal(comments_link),
+        comments_count
+    );
+
     let domain = Url::parse(&article.link)
         .ok()
         .and_then(|u| u.host_str().map(str::to_string))
         .unwrap_or_else(|| "source".into());
+
     format!(
         "▲ {} · {} · via <a href=\"{}\">{}</a>",
         upvotes,
-        comments,
+        comments_html,
         encode_minimal(&article.link),
-        encode_minimal(&domain)
+        encode_minimal(&domain),
     )
 }
 
-// Wrap channel in HTTP response.
+// Wrap channel XML in an HTTP response.
 fn build_rss_response(channel: rss::Channel) -> Result<Response<String>, AppError> {
     Response::builder()
         .status(StatusCode::OK)

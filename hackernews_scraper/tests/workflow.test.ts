@@ -6,7 +6,6 @@ describe('Workflow', () => {
   let workflow: ReturnType<typeof createWorkflow>;
 
   beforeEach(() => {
-    // Set up a mocked version of the Services interface
     mockServices = {
       scraper: {
         scrapeFront: jest.fn().mockResolvedValue([]),
@@ -24,6 +23,9 @@ describe('Workflow', () => {
       articleSummarizer: {
         summarizeArticles: jest.fn().mockResolvedValue([]),
       },
+      githubService: {
+        getCommitHash: jest.fn().mockResolvedValue('abcdef0'),
+      },
       db: {
         saveArticles: jest.fn().mockResolvedValue(undefined),
         closeDatabaseConnection: jest.fn().mockResolvedValue(undefined),
@@ -37,29 +39,28 @@ describe('Workflow', () => {
       },
     } as unknown as jest.Mocked<Services>;
 
-    // Create the workflow using the factory function
     workflow = createWorkflow(mockServices);
   });
 
   it('should execute the workflow successfully', async () => {
     await expect(workflow.run()).resolves.not.toThrow();
 
-    // Verify that the expected service functions were called
     expect(mockServices.scraper.scrapeFront).toHaveBeenCalledTimes(1);
     expect(mockServices.scraper.scrapeTopStories).toHaveBeenCalledTimes(1);
     expect(mockServices.articleProcessor.processArticles).toHaveBeenCalledTimes(
       1
     );
+    // Summarizer is called twice (flagged + top)
     expect(
       mockServices.articleSummarizer.summarizeArticles
     ).toHaveBeenCalledTimes(2);
+    expect(mockServices.githubService.getCommitHash).toHaveBeenCalledTimes(1);
     expect(mockServices.db.saveArticles).toHaveBeenCalledTimes(1);
   });
 
   it('should handle shutdown gracefully', async () => {
     await expect(workflow.shutdown()).resolves.not.toThrow();
 
-    // Verify that resources are properly closed
     expect(mockServices.db.closeDatabaseConnection).toHaveBeenCalledTimes(1);
     expect(mockServices.browser.close).toHaveBeenCalledTimes(1);
   });

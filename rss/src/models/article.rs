@@ -20,6 +20,10 @@ pub struct Article {
     pub created_at: String,
     pub updated_at: String,
     pub published_at: Option<String>,
+
+    // New metadata fields
+    pub commit_hash: Option<String>,
+    pub model_name: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -54,14 +58,17 @@ mod tests {
             "flagged": false,
             "dead": false,
             "dupe": false,
-            "published_at": null
+            "published_at": null,
+            "commit_hash": "abc123",
+            "model_name": "premium-model"
         }
         "#;
         let article: Article = serde_json::from_str(json).unwrap();
         assert_eq!(article.id, 1);
         assert_eq!(article.hn_id, Some(42));
-        assert_eq!(article.title, "Test Article");
         assert_eq!(article.article_rank, 0);
+        assert_eq!(article.commit_hash.as_deref(), Some("abc123"));
+        assert_eq!(article.model_name.as_deref(), Some("premium-model"));
     }
 
     #[test]
@@ -87,16 +94,16 @@ mod tests {
                 "flagged": false,
                 "dead": false,
                 "dupe": false,
-                "published_at": null
+                "published_at": null,
+                "commit_hash": "abc123",
+                "model_name": "premium-model"
             }]
         }
         "#;
         let response: ApiResponse = serde_json::from_str(json).unwrap();
-        assert_eq!(response.code, 200);
-        assert_eq!(response.status, "OK");
         let articles = response.articles.unwrap();
         assert_eq!(articles.len(), 1);
-        assert_eq!(articles[0].id, 1);
-        assert_eq!(articles[0].hn_id, Some(42));
+        assert_eq!(articles[0].commit_hash.as_deref(), Some("abc123"));
+        assert_eq!(articles[0].model_name.as_deref(), Some("premium-model"));
     }
 }

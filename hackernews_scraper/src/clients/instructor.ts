@@ -11,3 +11,5 @@ export const createInstructorClient = (
   });
   return instructorClient;
 };
+
+export type InstructorClient = ReturnType<typeof Instructor>;

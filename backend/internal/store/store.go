@@ -53,10 +53,12 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
           flagged,
           dead,
           dupe,
+          commit_hash,
+          model_name,
           created_at,
           updated_at
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to prepare statement: %w", err)
@@ -78,6 +80,8 @@ func (store *MySQLStore) SaveArticles(articles []*models.Article) error {
 			article.Flagged,
 			article.Dead,
 			article.Dupe,
+			article.CommitHash,
+			article.ModelName,
 			article.CreatedAt,
 			article.UpdatedAt,
 		)
@@ -94,7 +98,7 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 	query := `
 		SELECT a.id, a.hn_id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
+		       a.dead, a.dupe, a.commit_hash, a.model_name, a.created_at, a.updated_at
 		FROM articles a
 		INNER JOIN (
 			SELECT title, MAX(id) AS max_id
@@ -134,6 +138,8 @@ func (store *MySQLStore) GetArticles(limit, offset int) ([]*models.Article, erro
 			&article.Flagged,
 			&article.Dead,
 			&article.Dupe,
+			&article.CommitHash,
+			&article.ModelName,
 			&article.CreatedAt,
 			&article.UpdatedAt,
 		); err != nil {
@@ -157,7 +163,6 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 	var conditions []string
 	var args []interface{}
 
-	// Append conditions only if pointer is provided; else, use literal FALSE.
 	if flagged != nil {
 		conditions = append(conditions, "flagged = ?")
 		args = append(args, boolToInt(*flagged))
@@ -177,15 +182,13 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 		conditions = append(conditions, "dupe = FALSE")
 	}
 
-	if len(conditions) > 0 {
-		innerQuery += " AND " + strings.Join(conditions, " AND ")
-	}
+	innerQuery += " AND " + strings.Join(conditions, " AND ")
 	innerQuery += " GROUP BY title"
 
 	query := `
 		SELECT a.id, a.hn_id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
+		       a.dead, a.dupe, a.commit_hash, a.model_name, a.created_at, a.updated_at
 		FROM articles a
 		INNER JOIN (
 	` + innerQuery + `
@@ -218,6 +221,8 @@ func (store *MySQLStore) GetFilteredArticles(flagged, dead, dupe *bool, limit, o
 			&article.Flagged,
 			&article.Dead,
 			&article.Dupe,
+			&article.CommitHash,
+			&article.ModelName,
 			&article.CreatedAt,
 			&article.UpdatedAt,
 		); err != nil {
@@ -236,7 +241,7 @@ func (store *MySQLStore) GetArticlesWithThresholds(limit, offset, minUpvotes, mi
 	query := `
 		SELECT a.id, a.hn_id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
+		       a.dead, a.dupe, a.commit_hash, a.model_name, a.created_at, a.updated_at
 		FROM articles a
 		INNER JOIN (
 			SELECT title, MAX(id) AS max_id
@@ -278,6 +283,8 @@ func (store *MySQLStore) GetArticlesWithThresholds(limit, offset, minUpvotes, mi
 			&article.Flagged,
 			&article.Dead,
 			&article.Dupe,
+			&article.CommitHash,
+			&article.ModelName,
 			&article.CreatedAt,
 			&article.UpdatedAt,
 		); err != nil {
@@ -325,7 +332,7 @@ func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(
 	fullQuery := `
 		SELECT a.id, a.hn_id, a.title, a.link, a.article_rank, a.content, a.summary, a.source,
 		       a.upvotes, a.comment_count, a.comment_link, a.flagged,
-		       a.dead, a.dupe, a.created_at, a.updated_at
+		       a.dead, a.dupe, a.commit_hash, a.model_name, a.created_at, a.updated_at
 		FROM articles a
 		INNER JOIN (
 	` + innerQuery + `
@@ -370,6 +377,8 @@ func (store *MySQLStore) GetArticlesWithThresholdsAndFilters(
 			&article.Flagged,
 			&article.Dead,
 			&article.Dupe,
+			&article.CommitHash,
+			&article.ModelName,
 			&article.CreatedAt,
 			&article.UpdatedAt,
 		); err != nil {
