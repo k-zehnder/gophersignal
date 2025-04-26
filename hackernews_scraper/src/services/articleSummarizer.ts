@@ -27,7 +27,14 @@ export const createArticleSummarizer = (
       ? 'No summary available'
       : summary.replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, 'REDACTED');
 
-  // Capture the model name once for metadata
+  // Strip any “Label:” prefixes (e.g. “Context:”, “Core idea:”) from each line.
+  const stripLabels = (text: string): string =>
+    text
+      .split('\n')
+      .map((line) => line.replace(/^\s*\w+:\s*/, ''))
+      .join('\n');
+
+  // Capture the model name for metadata
   const modelName = config.model;
 
   // Summarize a single article's content.
@@ -53,10 +60,10 @@ export const createArticleSummarizer = (
       - NEVER hallucinate or fabricate content; only summarize what's provided.
       - Provide a clear, concise summary of the Hacker News article.
       - The summary must be exactly 5 lines long, with each line serving a unique role:
-        * Line 1: Provide concise context.
-        * Line 2: State the core idea.
-        * Lines 3 & 4: Present the main insights supporting the core idea.
-        * Line 5: Summarize the author's ultimate conclusion.
+        * Line 1: Provide concise context (no “Context:” prefix).
+        * Line 2: State the core idea (no “Core idea:” prefix).
+        * Lines 3 & 4: Present the main insights (no literal labels).
+        * Line 5: Summarize the author's ultimate conclusion (no label).
       - Return ONLY a JSON object with a single key "summary" containing the formatted summary.
       - Write in a neutral, factual tone suitable for a tech-savvy audience.
 
@@ -87,24 +94,18 @@ export const createArticleSummarizer = (
 
       // Extract parsed data only
       const container = (response as any).data ?? (response as any);
-      const summaryStr: string | undefined =
-        container && typeof container.summary === 'string'
-          ? container.summary.trim()
-          : undefined;
+      const rawSummary = container.summary as string | undefined;
 
-      // Finalize or fallback immediately
-      if (!summaryStr) {
+      if (!rawSummary?.trim()) {
         return 'No summary available';
       }
 
-      const finalSummary = sanitizeSummary(summaryStr);
-      console.log('Result:', finalSummary);
-      return finalSummary;
+      // Sanitize and strip any label prefixes
+      const sanitized = sanitizeSummary(rawSummary.trim());
+      const cleaned = stripLabels(sanitized);
+
+      return cleaned;
     } catch (err) {
-      console.error(
-        `Error processing "${title.slice(0, 50)}...":`,
-        err instanceof Error ? err.message : err
-      );
       return 'No summary available';
     }
   };
@@ -120,7 +121,6 @@ export const createArticleSummarizer = (
     bar.start(articles.length, 0);
 
     for (let i = 0; i < articles.length; i++) {
-      console.log(`\nProcessing: ${articles[i].title.slice(0, 60)}...`);
       articles[i].summary = await summarizeContent(
         articles[i].title,
         articles[i].content || ''
