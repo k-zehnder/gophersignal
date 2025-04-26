@@ -1,12 +1,11 @@
-// Provides functions to summarize content using Instructor and Ollama.
+// Provides functions to summarize content using Instructor and Ollama with robust JSON parsing and proper message roles.
 
 import { z } from 'zod';
 import { SingleBar, Presets } from 'cli-progress';
-import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 import Instructor from '@instructor-ai/instructor';
+import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 
-// Creates the article summarizer
-const createArticleSummarizer = (
+export const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
   schema: z.AnyZodObject = SummaryResponseSchema
@@ -15,23 +14,20 @@ const createArticleSummarizer = (
   const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
   const MIN_CONTENT_LENGTH = 300;
 
-  // Replace special HTML characters
+  // Escape HTML chars to avoid prompt injection.
   const sanitizeInput = (text: string) =>
     text.replace(
       /[<>&]/g,
-      (char) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[char] || char)
+      (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c] || c)
     );
 
-  // Check for captcha and redact IPv4 addresses
-  const sanitizeSummary = (summary: string): string => {
-    if (/captcha/i.test(summary)) {
-      console.error('Captcha detected in summary, flagging as error.');
-      return 'No summary available';
-    }
-    const ipRegex = /(?:(?:\d{1,3}\.){3}\d{1,3})/g;
-    return summary.replace(ipRegex, 'REDACTED');
-  };
+  // Redact IPs and handle captcha flags.
+  const sanitizeSummary = (summary: string): string =>
+    /captcha/i.test(summary)
+      ? 'No summary available'
+      : summary.replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, 'REDACTED');
 
+  // Summarize a single article's content.
   const summarizeContent = async (
     title: string,
     content: string
@@ -51,7 +47,7 @@ const createArticleSummarizer = (
       ---------------
       INSTRUCTIONS:
       - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available".
-      - NEVER hallucinate or fabricate content; only summarize what’s provided.
+      - NEVER hallucinate or fabricate content; only summarize what's provided.
       - Provide a clear, concise summary of the Hacker News article.
       - The summary must be exactly 5 lines long, with each line serving a unique role:
         * Line 1: Provide concise context.
@@ -66,8 +62,8 @@ const createArticleSummarizer = (
       ${sanitizeInput(title)}
 
       --- CONTENT (truncated) ---
-      ${sanitizeInput(truncatedContent)} ${truncationNotice}
-    `;
+      ${sanitizeInput(truncatedContent)}${truncationNotice}
+    `.trim();
 
     try {
       const response = await client.chat.completions.create({
@@ -75,52 +71,63 @@ const createArticleSummarizer = (
         messages: [
           {
             role: 'system',
-            content: prompt,
+            content:
+              'You are a helpful assistant. Respond with only the JSON object containing a "summary" field.',
           },
+          { role: 'user', content: prompt },
         ],
         max_tokens: MAX_OUTPUT_TOKENS,
         temperature: 0.2,
         top_p: 0.9,
-        response_model: { schema, name: 'SummarySchema' },
+        response_model: { schema, name: 'SummaryResponse' },
       });
 
-      const parsed = SummaryResponseSchema.safeParse(response);
-      const rawSummary = parsed.data?.summary ?? 'No summary available';
-      return sanitizeSummary(rawSummary);
-    } catch (error) {
+      // Extract parsed data only
+      const container = (response as any).data ?? (response as any);
+      const summaryStr: string | undefined =
+        container && typeof container.summary === 'string'
+          ? container.summary.trim()
+          : undefined;
+
+      // Finalize or fallback immediately
+      if (!summaryStr) {
+        return 'No summary available';
+      }
+
+      const finalSummary = sanitizeSummary(summaryStr);
+      console.log('Result:', finalSummary);
+      return finalSummary;
+    } catch (err) {
       console.error(
         `Error processing "${title.slice(0, 50)}...":`,
-        error instanceof Error ? error.message : 'Unknown error'
+        err instanceof Error ? err.message : err
       );
       return 'No summary available';
     }
   };
 
+  // Summarize an array of articles with a progress bar.
   const summarizeArticles = async (articles: Article[]): Promise<Article[]> => {
-    const progressBar = new SingleBar(
+    const bar = new SingleBar(
       {
-        format:
-          'Summarizing Articles |{bar}| {percentage}% | {value}/{total} Articles',
+        format: 'Summarizing Articles |{bar}| {percentage}% | {value}/{total}',
       },
       Presets.shades_classic
     );
+    bar.start(articles.length, 0);
 
-    progressBar.start(articles.length, 0);
-
-    for (const [index, article] of articles.entries()) {
-      console.log(`\nProcessing article: ${article.title.slice(0, 60)}...`);
-      article.summary = await summarizeContent(
-        article.title,
-        article.content ?? ''
+    for (let i = 0; i < articles.length; i++) {
+      console.log(`\nProcessing: ${articles[i].title.slice(0, 60)}...`);
+      articles[i].summary = await summarizeContent(
+        articles[i].title,
+        articles[i].content || ''
       );
-      progressBar.update(index + 1);
+      bar.update(i + 1);
     }
 
-    progressBar.stop();
+    bar.stop();
     return articles;
   };
 
   return { summarizeArticles };
 };
-
-export { createArticleSummarizer };
