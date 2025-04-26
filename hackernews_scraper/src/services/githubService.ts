@@ -9,7 +9,7 @@ export function createGitHubService(
   client: Octokit,
   cfg: GitHubConfig
 ): GitHubService {
-  async function getCommitHash(): Promise<string> {
+  const getCommitHash = async (): Promise<string> => {
     let sha: string | undefined;
 
     // Env override
@@ -50,7 +50,7 @@ export function createGitHubService(
     }
 
     return sha;
-  }
+  };
 
   // Expose the service API
   return {
