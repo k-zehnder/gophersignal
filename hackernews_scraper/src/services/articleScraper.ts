@@ -1,5 +1,5 @@
 // Scrapes a page and returns articles and the next URL. The IsTop flag distinguishes
-// Between the homepage (fresh stories) and /front (dup, dead, flagged articles).
+// between the homepage (fresh stories) and /front (dup, dead, flagged articles).
 
 import { Browser } from 'puppeteer';
 import { Article, Scraper } from '../types';
@@ -123,11 +123,6 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
         },
         isTop,
         FRONT_BASE_URL
-      );
-
-      // Debug-log each HN ID
-      result.articles.forEach(({ hn_id }) =>
-        console.debug(`[scraper-debug] hn_id=${hn_id}`)
       );
 
       return result;

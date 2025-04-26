@@ -23,7 +23,8 @@ pub struct RssQuery {
     pub min_comments: Option<u32>,
 }
 
-// Entry point fetch build channel return response.
+/// Generate the RSS feed based on query filters.
+
 pub async fn generate_rss_feed<T>(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
