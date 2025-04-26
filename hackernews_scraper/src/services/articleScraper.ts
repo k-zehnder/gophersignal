@@ -1,4 +1,4 @@
-// Scrapes a page and returns the articles and next URL. The isTop flag distinguishes
+// Scrapes a page and returns articles and the next URL. The isTop flag distinguishes
 // between the homepage (fresh stories) and /front (dup, dead, flagged articles).
 
 import { Browser } from 'puppeteer';
@@ -9,66 +9,75 @@ const FRONT_BASE_URL = 'https://news.ycombinator.com/front';
 
 type ScrapeResult = { articles: Article[]; nextUrl: string | null };
 
-// Creates a Hacker News scraper
 const createHackerNewsScraper = (browser: Browser): Scraper => {
   // Scrapes a page and returns articles and the next URL; isTop distinguishes / vs /front
   const scrapePageWithNext = async (
     pageUrl: string,
-    isTop: boolean = false
+    isTop = false
   ): Promise<ScrapeResult> => {
     const page = await browser.newPage();
     try {
       await page.goto(pageUrl, { waitUntil: 'networkidle2' });
+
       const result = await page.evaluate(
-        (isTop: boolean, frontBase: string) => {
+        (isTopFlag, frontBase) => {
           const articles: Article[] = [];
           const rows = Array.from(document.querySelectorAll('tr.athing'));
-          rows.forEach((row: Element) => {
-            const hn_id = parseInt((row as HTMLElement).id, 10) || 0;
-            const rankElement = row.querySelector(
+
+          rows.forEach((row) => {
+            // Get HN ID or fallback to comment link
+            const rawId = (row as HTMLElement).id;
+            let hn_id = parseInt(rawId, 10) || 0;
+            if (!hn_id) {
+              const href =
+                row.nextElementSibling?.querySelector<HTMLAnchorElement>(
+                  'a[href*="item?id="]'
+                )?.href;
+              const match = href?.match(/item\?id=(\d+)/);
+              hn_id = match ? parseInt(match[1], 10) : 0;
+            }
+            if (!hn_id) return;
+
+            // Parse rank
+            const rankEl = row.querySelector(
               'td.title > span.rank'
             ) as HTMLElement | null;
-            const rankStr = rankElement
-              ? rankElement.innerText.replace(/\D/g, '').trim()
-              : '0';
-            const article_rank = parseInt(rankStr, 10) || 0;
+            const rankText = rankEl?.innerText.replace(/\D/g, '').trim() || '0';
+            const article_rank = parseInt(rankText, 10) || 0;
 
-            const titleElement = row.querySelector(
+            // Parse title and link
+            const titleEl = row.querySelector(
               'td.title > span.titleline a'
             ) as HTMLAnchorElement | null;
-            const title = titleElement?.innerText || 'No title';
-            const link = titleElement?.href || 'No link';
+            const title = titleEl?.innerText || 'No title';
+            const link = titleEl?.href || 'No link';
 
-            const titleContainer =
-              titleElement?.parentElement as HTMLElement | null;
-            const titleText = titleContainer?.innerText || '';
-            const flagged = titleText.includes('[flagged]');
-            const dead = titleText.includes('[dead]');
-            const dupe = titleText.includes('[dupe]');
-            // For /front, include only flagged, dead, or duplicate articles
-            if (!isTop && !(flagged || dead || dupe)) return;
+            // Determine flags
+            const containerText = titleEl?.parentElement?.innerText || '';
+            const flagged = containerText.includes('[flagged]');
+            const dead = containerText.includes('[dead]');
+            const dupe = containerText.includes('[dupe]');
+            if (!isTopFlag && !(flagged || dead || dupe)) return;
 
-            let upvotes = 0,
-              comment_count = 0;
+            // Parse upvotes and comments
+            let upvotes = 0;
+            let comment_count = 0;
             let comment_link = 'No comments link';
-
             const subtextRow = row.nextElementSibling;
             if (subtextRow) {
-              const subtext = subtextRow.querySelector('.subtext');
-              if (subtext) {
-                const scoreEl = subtext.querySelector('.score');
-                if (scoreEl?.textContent) {
-                  const match = scoreEl.textContent.match(/\d+/);
-                  upvotes = match ? parseInt(match[0], 10) : 0;
-                }
-                const commentLinkElement = Array.from(
-                  subtext.querySelectorAll('a') as NodeListOf<HTMLAnchorElement>
-                ).find((a) => a.textContent?.includes('comment'));
-                if (commentLinkElement) {
-                  const match = commentLinkElement.textContent?.match(/\d+/);
-                  comment_count = match ? parseInt(match[0], 10) : 0;
-                  comment_link = commentLinkElement.href;
-                }
+              const scoreEl = subtextRow.querySelector('.score');
+              const scoreMatch = scoreEl?.textContent?.match(/\d+/);
+              upvotes = scoreMatch ? parseInt(scoreMatch[0], 10) : 0;
+
+              const commentAnchor = Array.from(
+                subtextRow.querySelectorAll('a')
+              ).find((a) => a.textContent?.includes('comment')) as
+                | HTMLAnchorElement
+                | undefined;
+              if (commentAnchor) {
+                const countMatch = commentAnchor.textContent?.match(/\d+/);
+                comment_count = countMatch ? parseInt(countMatch[0], 10) : 0;
+                comment_link = commentAnchor.href;
               }
             }
 
@@ -87,29 +96,31 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
           });
 
           // Find the "more" button to get the next URL
-          const moreLinkElem = document.querySelector(
+          const moreLink = document.querySelector(
             'a.morelink'
           ) as HTMLAnchorElement | null;
           let nextUrl: string | null = null;
-          if (moreLinkElem) {
-            if (isTop) {
-              nextUrl = moreLinkElem.href;
+          if (moreLink) {
+            if (isTopFlag) {
+              nextUrl = moreLink.href;
             } else {
-              const match = moreLinkElem.href.match(
+              const match = moreLink.href.match(
                 /day=(\d{4}-\d{2}-\d{2})&p=(\d+)/
               );
               if (match) {
                 const day = match[1];
-                const nextPage = parseInt(match[2], 10);
-                nextUrl = `${frontBase}?day=${day}&p=${nextPage}`;
+                const pageNum = parseInt(match[2], 10);
+                nextUrl = `${frontBase}?day=${day}&p=${pageNum}`;
               }
             }
           }
+
           return { articles, nextUrl };
         },
         isTop,
         FRONT_BASE_URL
       );
+
       return result;
     } catch (error) {
       console.error(`Error scraping ${pageUrl}:`, error);
@@ -119,51 +130,56 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
     }
   };
 
-  // Scrapes top stories from the root (/)
+  // Scrapes top stories from /
   const scrapeTopStories = async (maxPages?: number): Promise<Article[]> => {
-    let articles: Article[] = [];
+    const articles: Article[] = [];
     let nextUrl: string | null = TOP_BASE_URL;
     let pageCount = 0;
+
     while (nextUrl) {
-      console.log(`Scraping top stories page: ${nextUrl}`);
-      const { articles: pageArticles, nextUrl: newNextUrl } =
+      console.log(`Scraping top stories: ${nextUrl}`);
+      const { articles: pageArticles, nextUrl: newNext } =
         await scrapePageWithNext(nextUrl, true);
-      articles = articles.concat(pageArticles);
-      nextUrl = newNextUrl;
+      articles.push(...pageArticles);
+      nextUrl = newNext;
       pageCount++;
       if (maxPages && pageCount >= maxPages) break;
     }
+
     return articles;
   };
 
-  // Scrapes flagged articles from the front pages (/front)
-  const scrapeFront = async (maxPages: number = 10): Promise<Article[]> => {
-    let articles: Article[] = [];
+  // Scrapes flagged, dead, and duplicate stories from /front
+  const scrapeFront = async (maxPages = 10): Promise<Article[]> => {
+    const articles: Article[] = [];
     let nextUrl: string | null = FRONT_BASE_URL;
     let pageCount = 0;
-    while (nextUrl) {
+
+    while (nextUrl && pageCount < maxPages) {
       console.log(`Scraping front page: ${nextUrl}`);
-      const { articles: pageArticles, nextUrl: newNextUrl } =
+      const { articles: pageArticles, nextUrl: newNext } =
         await scrapePageWithNext(nextUrl, false);
-      articles = articles.concat(pageArticles);
-      nextUrl = newNextUrl;
+      articles.push(...pageArticles);
+      nextUrl = newNext;
       pageCount++;
-      if (pageCount >= maxPages) break;
     }
+
     return articles;
   };
 
-  // Scrapes front pages for a specific day from (/front)
+  // Scrapes flagged stories for a specific day from /front
   const scrapeFrontForDay = async (day: string): Promise<Article[]> => {
-    let articles: Article[] = [];
+    const articles: Article[] = [];
     let nextUrl: string | null = `${FRONT_BASE_URL}?day=${day}&p=1`;
+
     while (nextUrl) {
-      console.log(`Scraping front page for ${day}: ${nextUrl}`);
-      const { articles: pageArticles, nextUrl: newNextUrl } =
+      console.log(`Scraping front for ${day}: ${nextUrl}`);
+      const { articles: pageArticles, nextUrl: newNext } =
         await scrapePageWithNext(nextUrl, false);
-      articles = articles.concat(pageArticles);
-      nextUrl = newNextUrl;
+      articles.push(...pageArticles);
+      nextUrl = newNext;
     }
+
     return articles;
   };
 
