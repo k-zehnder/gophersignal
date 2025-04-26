@@ -66,7 +66,7 @@ export const createArticleSummarizer = (
       - The summary must be exactly 5 lines long, with each line serving a unique role:
         * Line 1: Provide concise context (no “Context:” prefix).
         * Line 2: State the core idea (no “Core idea:” prefix).
-        * Lines 3 & 4: Present the main insights (no literal labels).
+        * Lines 3 & 4: Present the main insights supporting the core idea (no literal labels).
         * Line 5: Summarize the author's ultimate conclusion (no label).
       - Return ONLY a JSON object with a single key "summary" containing the formatted summary.
       - Write in a neutral, factual tone suitable for a tech-savvy audience.
@@ -96,7 +96,6 @@ export const createArticleSummarizer = (
         response_model: { schema, name: 'SummaryResponse' },
       });
 
-      // Extract parsed data only
       const container = (response as any).data ?? (response as any);
       const rawSummary = container.summary as string | undefined;
 
@@ -107,9 +106,7 @@ export const createArticleSummarizer = (
       // Sanitize, strip labels, then collapse blank lines
       const sanitized = sanitizeSummary(rawSummary.trim());
       const labeledStripped = stripLabels(sanitized);
-      const cleaned = collapseBlankLines(labeledStripped);
-
-      return cleaned;
+      return collapseBlankLines(labeledStripped);
     } catch {
       return 'No summary available';
     }
