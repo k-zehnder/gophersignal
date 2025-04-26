@@ -34,7 +34,11 @@ export const createArticleSummarizer = (
       .map((line) => line.replace(/^\s*\w+:\s*/, ''))
       .join('\n');
 
-  // Capture the model name for metadata
+  // Collapse multiple blank lines into a single newline.
+  const collapseBlankLines = (text: string): string =>
+    text.replace(/\n\s*\n+/g, '\n');
+
+  // Capture the model name for metadata.
   const modelName = config.model;
 
   // Summarize a single article's content.
@@ -100,12 +104,13 @@ export const createArticleSummarizer = (
         return 'No summary available';
       }
 
-      // Sanitize and strip any label prefixes
+      // Sanitize, strip labels, then collapse blank lines
       const sanitized = sanitizeSummary(rawSummary.trim());
-      const cleaned = stripLabels(sanitized);
+      const labeledStripped = stripLabels(sanitized);
+      const cleaned = collapseBlankLines(labeledStripped);
 
       return cleaned;
-    } catch (err) {
+    } catch {
       return 'No summary available';
     }
   };
