@@ -84,6 +84,8 @@ const createHackerNewsScraper = (browser: Browser): Scraper => {
               upvotes,
               commentCount,
               commentLink,
+              commitHash: '',
+              modelName: '',
             });
           });
 

@@ -40,6 +40,8 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
         flagged = false,
         dead = false,
         dupe = false,
+        commitHash,
+        modelName,
       }) => [
         hnId,
         title,
@@ -56,6 +58,8 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
         flagged,
         dead,
         dupe,
+        commitHash,
+        modelName,
         currentTimestamp,
         currentTimestamp,
       ]
@@ -75,6 +79,8 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
       flagged,
       dead,
       dupe,
+      commit_hash,
+      model_name,
       created_at,
       updated_at
     ) VALUES ?`;

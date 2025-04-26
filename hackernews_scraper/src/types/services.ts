@@ -21,3 +21,7 @@ export interface ArticleProcessor {
 export interface ArticleSummarizer {
   summarizeArticles: (articles: Required<Article>[]) => Promise<Article[]>;
 }
+
+export interface GitHubService {
+  getCommitHash(): Promise<string>;
+}

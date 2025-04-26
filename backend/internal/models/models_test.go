@@ -23,6 +23,8 @@ func TestNewArticle(t *testing.T) {
 		"Full content here.",
 		"Short summary.",
 		"Hacker News",
+		"commit123",
+		"test-model",
 		createdAt,
 		updatedAt,
 		100,
@@ -44,6 +46,8 @@ func TestNewArticle(t *testing.T) {
 	assert.False(t, article.Flagged)
 	assert.False(t, article.Dead)
 	assert.True(t, article.Dupe)
+	assert.Equal(t, "commit123", article.CommitHash)
+	assert.Equal(t, "test-model", article.ModelName)
 }
 
 // TestNullableIntJSONMarshaling tests JSON marshaling for NullableInt.
@@ -86,6 +90,8 @@ func TestArticleMarshaling(t *testing.T) {
 		"Full content here",
 		"Summary here",
 		"Example Source",
+		"commit456",
+		"prod-model",
 		createdAt,
 		updatedAt,
 		123,
@@ -110,6 +116,8 @@ func TestArticleMarshaling(t *testing.T) {
 	assert.Equal(t, article.ArticleRank, result.ArticleRank)
 	assert.Equal(t, article.Content, result.Content)
 	assert.Equal(t, article.Summary.String, result.Summary.String)
+	assert.Equal(t, article.CommitHash, result.CommitHash)
+	assert.Equal(t, article.ModelName, result.ModelName)
 	assert.Equal(t, article.Upvotes.Int64, result.Upvotes.Int64)
 	assert.Equal(t, article.CommentCount.Int64, result.CommentCount.Int64)
 	assert.Equal(t, article.CommentLink.String, result.CommentLink.String)

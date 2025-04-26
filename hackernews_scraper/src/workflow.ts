@@ -43,8 +43,8 @@ export const createWorkflow = (services: Services) => {
       await services.articleSummarizer.summarizeArticles(flaggedWithContent);
 
     const summarizedLinks = [
-      ...summarizedTop.map((a: Article) => a.link),
-      ...summarizedFlagged.map((a: Article) => a.link),
+      ...summarizedTop.map((a) => a.link),
+      ...summarizedFlagged.map((a) => a.link),
     ];
 
     return [
@@ -56,37 +56,44 @@ export const createWorkflow = (services: Services) => {
     ];
   };
 
-  // Main workflow to scrape, process, summarize, and save articles
+  // Main workflow to scrape, process, summarize, annotate, and save articles
   const run = async (): Promise<void> => {
     try {
+      // Scrape & categorize
       const frontArticles = await services.scraper.scrapeFront();
-      console.info(`Front articles count: ${frontArticles.length}`);
-      const fetchedFrontTitles = frontArticles.map((a) => a.title);
-      console.log(frontArticles.map((a) => a.title));
-
-      const categorizedArticles =
+      const categorized =
         services.articleProcessor.helpers.categorizeArticles(frontArticles);
 
       const topArticles = await services.scraper.scrapeTopStories(
         MAX_TOP_STORY_PAGES
       );
-      console.info(`Top stories scraped: ${topArticles.length}`);
 
-      const allArticles = mergeArticles(topArticles, categorizedArticles);
-      console.info(`Total articles to process: ${allArticles.length}`);
-
+      // Merge & process content
+      const allArticles = mergeArticles(topArticles, categorized);
       const processedArticles = await services.articleProcessor.processArticles(
         allArticles
       );
+
+      // Summarize & preserve order
       const finalArticles = await filterAndSummarizeArticles(
         processedArticles,
         topArticles,
-        categorizedArticles.flagged
+        categorized.flagged
       );
 
-      await services.db.saveArticles(finalArticles);
+      // Fetch commit SHA
+      const commitHash = await services.githubService.getCommitHash();
+
+      // Annotate each article with metadata
+      const articlesWithMeta: Article[] = finalArticles.map((a) => ({
+        ...a,
+        commitHash,
+      }));
+
+      // Persist to DB
+      await services.db.saveArticles(articlesWithMeta);
       console.info(
-        `Workflow completed. Saved ${finalArticles.length} articles`
+        `Workflow completed. Saved ${articlesWithMeta.length} articles @ ${commitHash}`
       );
     } catch (error) {
       console.error('Workflow execution error:', error);

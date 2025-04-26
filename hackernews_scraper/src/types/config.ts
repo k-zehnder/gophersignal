@@ -14,7 +14,15 @@ export interface OllamaConfig {
   maxSummaryLength: number;
 }
 
+export interface GitHubConfig {
+  token?: string;
+  owner: string;
+  repo: string;
+  branch: string;
+}
+
 export interface Config {
   mysql: MySQLConfig;
   ollama: OllamaConfig;
+  github: GitHubConfig;
 }

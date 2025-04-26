@@ -27,6 +27,9 @@ export const createArticleSummarizer = (
       ? 'No summary available'
       : summary.replace(/\b(?:\d{1,3}\.){3}\d{1,3}\b/g, 'REDACTED');
 
+  // Capture the model name once for metadata
+  const modelName = config.model;
+
   // Summarize a single article's content.
   const summarizeContent = async (
     title: string,
@@ -122,6 +125,7 @@ export const createArticleSummarizer = (
         articles[i].title,
         articles[i].content || ''
       );
+      articles[i].modelName = modelName;
       bar.update(i + 1);
     }
 

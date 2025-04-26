@@ -13,4 +13,6 @@ export interface Article {
   content?: string;
   summary?: string;
   category?: string;
+  commitHash: string;
+  modelName: string;
 }
