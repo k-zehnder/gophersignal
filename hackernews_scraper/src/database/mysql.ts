@@ -15,7 +15,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
 
   console.log('Database connected successfully');
 
-  // Inserts multiple articles into the database in bulk
+  // Inserts multiple articles into the database in bulk.
   const saveArticles = async (articles: Article[]): Promise<void> => {
     if (articles.length === 0) return;
 
@@ -25,34 +25,34 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
       .slice(0, 19)
       .replace('T', ' ');
 
-    // Map articles to an array-of-arrays for the insert
+    // Map articles to an array-of-arrays for bulk insert
     const values = articles.map(
       ({
-        hn_id,
+        hnId,
         title,
         link,
-        article_rank,
+        articleRank,
         content = '',
         summary,
         upvotes = 0,
-        comment_count = 0,
-        comment_link = '',
+        commentCount = 0,
+        commentLink = '',
         flagged = false,
         dead = false,
         dupe = false,
       }) => [
-        hn_id,
+        hnId,
         title,
         link,
-        article_rank,
+        articleRank,
         content.length > maxContentLength
           ? content.slice(0, maxContentLength)
           : content,
         summary,
         'Hacker News',
         upvotes,
-        comment_count,
-        comment_link,
+        commentCount,
+        commentLink,
         flagged,
         dead,
         dupe,
@@ -82,7 +82,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     await connection.query(query, [values]);
   };
 
-  // Updates an article's summary and sets the updated_at timestamp
+  // Updates an article's summary and timestamp.
   const updateArticleSummary = async (
     id: number,
     summary: string
@@ -93,7 +93,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
-  // Marks an article as dead and updates the timestamp
+  // Marks an article as dead with updated timestamp.
   const markArticleAsDead = async (id: number): Promise<void> => {
     await connection.execute(
       'UPDATE articles SET dead = TRUE, updated_at = NOW() WHERE id = ?',
@@ -101,7 +101,7 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
-  // Marks an article as duplicate and updates the timestamp
+  // Marks an article as duplicate with updated timestamp.
   const markArticleAsDuplicate = async (id: number): Promise<void> => {
     await connection.execute(
       'UPDATE articles SET dupe = TRUE, updated_at = NOW() WHERE id = ?',
@@ -109,12 +109,10 @@ const createMySqlClient = async (config: Config): Promise<DBClient> => {
     );
   };
 
-  // Closes the MySQL database connection
+  // Closes the MySQL database connection.
   const closeDatabaseConnection = async (): Promise<void> => {
-    if (connection) {
-      await connection.end();
-      console.log('Database connection closed');
-    }
+    await connection.end();
+    console.log('Database connection closed');
   };
 
   return {
