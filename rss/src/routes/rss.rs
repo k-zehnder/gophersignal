@@ -24,7 +24,6 @@ pub struct RssQuery {
 }
 
 /// Generate the RSS feed based on query filters.
-
 pub async fn generate_rss_feed<T>(
     Query(query): Query<RssQuery>,
     Extension(config): Extension<AppConfig>,
@@ -60,24 +59,26 @@ fn build_rss_channel(mut articles: Vec<Article>, query: &RssQuery) -> rss::Chann
 }
 
 // Build RSS title from active filters.
-fn build_feed_title(q: &RssQuery) -> String {
-    let mut f = Vec::new();
-    if q.flagged.unwrap_or(false) {
-        f.push("Flagged");
+fn build_feed_title(query: &RssQuery) -> String {
+    let mut parts = Vec::new();
+
+    if query.flagged.unwrap_or(false) {
+        parts.push("Flagged");
     }
-    if q.dead.unwrap_or(false) {
-        f.push("Dead");
+    if query.dead.unwrap_or(false) {
+        parts.push("Dead");
     }
-    if q.dupe.unwrap_or(false) {
-        f.push("Dupe");
+    if query.dupe.unwrap_or(false) {
+        parts.push("Dupe");
     }
-    if q.min_upvotes.unwrap_or(0) > 0 || q.min_comments.unwrap_or(0) > 0 {
-        f.push("Filtered");
+    if query.min_upvotes.unwrap_or(0) > 0 || query.min_comments.unwrap_or(0) > 0 {
+        parts.push("Filtered");
     }
-    if f.is_empty() {
+
+    if parts.is_empty() {
         "Gopher Signal".into()
     } else {
-        format!("Gopher Signal - {}", f.join(", "))
+        format!("Gopher Signal - {}", parts.join(", "))
     }
 }
 
