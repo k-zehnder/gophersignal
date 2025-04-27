@@ -72,7 +72,6 @@ Follow these instructions precisely:
       `.trim();
 
       const userPrompt = `
-ARTICLE:
 <title>${sanitizeInput(title)}</title>
 <content>${sanitizeInput(truncatedContent)}${truncationNotice}</content>
       `.trim();
