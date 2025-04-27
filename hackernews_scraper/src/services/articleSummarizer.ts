@@ -74,18 +74,35 @@ export const createArticleSummarizer = (
       ARTICLE:
       <title>${sanitizeInput(title)}</title>
       <content>${sanitizeInput(truncatedContent)}${truncationNotice}</content>
-    `.trim();
+      `.trim();
+
+      const systemPrompt = `
+You are a helpful assistant tasked with summarizing Hacker News articles.
+Follow these instructions precisely:
+- If the article content is missing or unreadable, return "No summary available".
+- NEVER hallucinate or fabricate content; only summarize what's provided.
+- Provide a clear, concise summary of the Hacker News article.
+- The summary must be exactly 5 lines long, with each line serving a unique role:
+  * Line 1: Provide concise context (no “Context:” prefix).
+  * Line 2: State the core idea (no “Core idea:” prefix).
+  * Lines 3 & 4: Present the main insights supporting the core idea (no literal labels).
+  * Line 5: Summarize the author's ultimate conclusion (no label).
+- Write in a neutral, factual tone suitable for a tech-savvy audience.
+- Respond ONLY with a JSON object containing a single key "summary" holding the formatted summary string.
+      `.trim();
+
+      const userPrompt = `
+ARTICLE:
+<title>${sanitizeInput(title)}</title>
+<content>${sanitizeInput(truncatedContent)}${truncationNotice}</content>
+      `.trim();
 
     try {
       const response = await client.chat.completions.create({
         model: config.model,
         messages: [
-          {
-            role: 'system',
-            content:
-              'You are a helpful assistant. Respond with only the JSON object containing a "summary" field.',
-          },
-          { role: 'user', content: prompt },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
         ],
         max_tokens: MAX_OUTPUT_TOKENS,
         temperature: 0.2,
