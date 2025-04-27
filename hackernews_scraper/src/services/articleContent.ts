@@ -1,4 +1,3 @@
-// src/clients/createContentFetcher.ts
 // Fetches full article content from Hacker News links, handling cookie consents, popups, and arXiv abstracts.
 
 import { Browser, Page } from 'puppeteer';
