@@ -56,26 +56,6 @@ export const createArticleSummarizer = (
         ? '\n[Truncated for length constraints]'
         : '';
 
-    const prompt = `
-      SUMMARY REQUEST
-      ---------------
-      INSTRUCTIONS:
-      - If the article content is missing or unreadable, return "No summary available".
-      - NEVER hallucinate or fabricate content; only summarize what's provided.
-      - Provide a clear, concise summary of the Hacker News article.
-      - The summary must be exactly 5 lines long, with each line serving a unique role:
-        * Line 1: Provide concise context (no “Context:” prefix).
-        * Line 2: State the core idea (no “Core idea:” prefix).
-        * Lines 3 & 4: Present the main insights supporting the core idea (no literal labels).
-        * Line 5: Summarize the author's ultimate conclusion (no label).
-      - Return ONLY a JSON object with a single key "summary" containing the formatted summary.
-      - Write in a neutral, factual tone suitable for a tech-savvy audience.
-
-      ARTICLE:
-      <title>${sanitizeInput(title)}</title>
-      <content>${sanitizeInput(truncatedContent)}${truncationNotice}</content>
-      `.trim();
-
       const systemPrompt = `
 You are a helpful assistant tasked with summarizing Hacker News articles.
 Follow these instructions precisely:
