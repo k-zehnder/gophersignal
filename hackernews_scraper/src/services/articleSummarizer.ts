@@ -72,11 +72,8 @@ export const createArticleSummarizer = (
       - Write in a neutral, factual tone suitable for a tech-savvy audience.
 
       ARTICLE:
-      --- TITLE ---
-      ${sanitizeInput(title)}
-
-      --- CONTENT (truncated) ---
-      ${sanitizeInput(truncatedContent)}${truncationNotice}
+      <title>${sanitizeInput(title)}</title>
+      <content>${sanitizeInput(truncatedContent)}${truncationNotice}</content>
     `.trim();
 
     try {
