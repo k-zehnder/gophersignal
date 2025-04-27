@@ -1,8 +1,13 @@
-// Fetches full article content from Hacker News links, handling cookie consents and popups.
+// src/clients/createContentFetcher.ts
+// Fetches full article content from Hacker News links, handling cookie consents, popups, and arXiv abstracts.
 
 import { Browser, Page } from 'puppeteer';
 
 const createContentFetcher = (browser: Browser) => {
+  // 1) Detect arXiv abstract pages by URL
+  const isArxivUrl = (url: string): boolean =>
+    /^https?:\/\/(?:www\.)?arxiv\.org\/abs\//.test(url);
+
   // Handles cookie consent on web pages by clicking on common cookie consent buttons
   const acceptCookieConsent = async (page: Page): Promise<boolean> => {
     const commonSelectors = [
@@ -38,18 +43,56 @@ const createContentFetcher = (browser: Browser) => {
       await dialog.accept();
     });
 
+    // Give dialogs a moment to appear
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return false;
   };
 
+  // Try parsing an arXiv abstract page
+  const tryParseArxiv = async (
+    page: Page,
+    url: string
+  ): Promise<string | null> => {
+    if (!isArxivUrl(url)) {
+      return null;
+    }
+
+    const { title, authors, abstract } = await page.evaluate(() => {
+      const t =
+        document
+          .querySelector('h1.title')
+          ?.textContent?.replace('Title:', '')
+          .trim() || '';
+      const a = Array.from(document.querySelectorAll('.authors a'))
+        .map((el) => el.textContent?.trim() || '')
+        .filter(Boolean);
+      const abs =
+        document
+          .querySelector('blockquote.abstract')
+          ?.textContent?.replace('Abstract:', '')
+          .trim() || '';
+      return { title: t, authors: a, abstract: abs };
+    });
+
+    console.info(`Parsed arXiv page: ${url}`);
+    return [
+      `Title: ${title}`,
+      `Authors: ${authors.join(', ')}`,
+      '',
+      'Abstract:',
+      abstract,
+    ].join('\n');
+  };
+
   // Fetches the main content of an article from a given URL using Puppeteer
   const fetchArticleContent = async (url: string): Promise<string> => {
-    const navigationTimeout = 30000;
+    const navigationTimeout = 30_000;
+    const page = await browser.newPage();
 
     try {
-      const page = await browser.newPage();
+      // Block images, stylesheets, and fonts for faster loading
       await page.setRequestInterception(true);
-      page.on('request', (req: any) => {
+      page.on('request', (req) => {
         if (['image', 'stylesheet', 'font'].includes(req.resourceType())) {
           req.abort();
         } else {
@@ -63,36 +106,35 @@ const createContentFetcher = (browser: Browser) => {
         timeout: navigationTimeout,
       });
 
-      const acceptCookie = await acceptCookieConsent(page);
-      if (acceptCookie) {
-        console.info('Cookie consent was accepted successfully.');
-      } else {
-        console.info('No cookie consent found.');
+      // arXiv-specific parsing
+      const arxivResult = await tryParseArxiv(page, url);
+      if (arxivResult !== null) {
+        await page.close();
+        return arxivResult;
       }
 
-      const popupClosed = await handlePopups(page);
-      if (popupClosed) {
-        console.info('A popup was successfully closed.');
-      } else {
-        console.info('No popup found.');
-      }
+      // Generic flow for other domains
+      const accepted = await acceptCookieConsent(page);
+      console.info(
+        accepted ? 'Cookie consent accepted' : 'No cookie consent found'
+      );
+
+      const closedPopup = await handlePopups(page);
+      console.info(closedPopup ? 'Popup closed' : 'No popup found');
 
       const content = await page.evaluate(() => {
-        const mainContentSelector =
-          'main, article, .post, .text, [role="main"]';
-        let mainContent = document.querySelector(mainContentSelector);
+        const mainSelectors = 'main, article, .post, .text, [role="main"]';
+        let root =
+          document.querySelector(mainSelectors) ||
+          (document.body as HTMLElement);
 
-        if (!mainContent) {
-          mainContent = document.querySelector('body');
-          const nonContentSelectors =
-            'nav, aside, footer, header, .sidebar, .menu, .footer';
-          document
-            .querySelectorAll(nonContentSelectors)
-            .forEach((el) => el.remove());
-        }
+        // Remove navigation, sidebars, footers, headers
+        document
+          .querySelectorAll('nav, aside, footer, header, .sidebar, .menu')
+          .forEach((el) => el.remove());
 
-        const paragraphs = mainContent?.querySelectorAll('p');
-        return Array.from(paragraphs!)
+        const paragraphs = root.querySelectorAll('p');
+        return Array.from(paragraphs)
           .map((p) => p.innerText.trim())
           .join('\n\n');
       });
@@ -107,6 +149,7 @@ const createContentFetcher = (browser: Browser) => {
         } seconds:`,
         error
       );
+      await page.close();
       return '';
     }
   };
