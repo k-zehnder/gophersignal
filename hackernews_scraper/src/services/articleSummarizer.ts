@@ -6,14 +6,16 @@ import Instructor from '@instructor-ai/instructor';
 import { Article, OllamaConfig } from '../types/index';
 
 // Define the structured schema based on the desired 5-line output format
+// Define the structured schema based on the desired multi-line output format
 const StructuredSummarySchema = z.object({
-  context: z.string().describe('Line 1: Context of the article.'),
-  core_idea: z.string().describe('Line 2: Core idea of the article.'),
-  insight_1: z.string().describe('Line 3: First main insight.'),
-  insight_2: z.string().describe('Line 4: Second main insight.'),
-  author_conclusion: z
-    .string()
-    .describe("Line 5: Author's conclusion or final point."),
+  context: z.string().describe('Context of the article.'),
+  core_idea: z.string().describe('Core idea of the article.'),
+  insight_1: z.string().describe('First main insight.'),
+  insight_2: z.string().describe('Second main insight.'),
+  insight_3: z.string().describe('Third main insight.'),
+  insight_4: z.string().describe('Fourth main insight.'),
+  insight_5: z.string().describe('Fifth main insight.'),
+  author_conclusion: z.string().describe("Author's conclusion or final point."),
 });
 
 export const createArticleSummarizer = (
@@ -77,6 +79,9 @@ You are a helpful assistant summarizing Hacker News articles. Follow these instr
   * core_idea: State the core idea.
   * insight_1: Detail the first main insight.
   * insight_2: Detail the second main insight.
+  * insight_3: Detail the third main insight.
+  * insight_4: Detail the fourth main insight.
+  * insight_5: Detail the fifth main insight.
   * author_conclusion: Describe the author's conclusion.
 - Use a neutral, factual tone suitable for a tech audience.
 - Respond ONLY with the structured data requested.
@@ -113,16 +118,19 @@ You are a helpful assistant summarizing Hacker News articles. Follow these instr
         return 'No summary available';
       }
 
-      // Combine the structured fields into the desired 5-line format
+      // Combine the structured fields into the desired multi-line format
       const combinedSummary = [
         structuredSummary.context,
         structuredSummary.core_idea,
         structuredSummary.insight_1,
         structuredSummary.insight_2,
+        structuredSummary.insight_3,
+        structuredSummary.insight_4,
+        structuredSummary.insight_5,
         structuredSummary.author_conclusion,
       ]
         .map((line) => line?.trim() || '') // Trim each line, handle potential undefined/null
-        .filter((line) => line.length > 0) // Remove empty lines if any field was empty
+        .filter((line) => line.length > 0) // Remove empty lines if any field was empty/missing
         .join('\n');
 
       if (!combinedSummary) {
