@@ -4,7 +4,7 @@
 import { Browser, Page } from 'puppeteer';
 
 const createContentFetcher = (browser: Browser) => {
-  // 1) Detect arXiv abstract pages by URL
+  // Detect arXiv abstract pages by URL
   const isArxivUrl = (url: string): boolean =>
     /^https?:\/\/(?:www\.)?arxiv\.org\/abs\//.test(url);
 
