@@ -60,7 +60,7 @@ export const createArticleSummarizer = (
       SUMMARY REQUEST
       ---------------
       INSTRUCTIONS:
-      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available".
+      - If the article content is missing or unreadable, return "No summary available".
       - NEVER hallucinate or fabricate content; only summarize what's provided.
       - Provide a clear, concise summary of the Hacker News article.
       - The summary must be exactly 5 lines long, with each line serving a unique role:
