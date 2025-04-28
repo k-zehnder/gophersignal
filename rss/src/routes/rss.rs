@@ -138,10 +138,21 @@ fn build_item_guid(article: &Article) -> rss::Guid {
 fn build_item_footer(article: &Article) -> String {
     let upvotes = article.upvotes.unwrap_or(0);
     let comments_count = article.comment_count.unwrap_or(0);
-    let comments_link = article.comment_link.as_deref().unwrap_or("#");
+
+    // Fallback to Hacker News discussion URL when comment_link is missing or empty
+    let comments_link = article
+        .comment_link
+        .as_deref()
+        .filter(|s| !s.is_empty())
+        .map(str::to_string)
+        .unwrap_or_else(|| match article.hn_id {
+            Some(id) if id > 0 => format!("https://news.ycombinator.com/item?id={}", id),
+            _ => "#".to_string(),
+        });
+
     let comments_html = format!(
         "💬 <a href=\"{}\">{}</a>",
-        encode_minimal(comments_link),
+        encode_minimal(&comments_link),
         comments_count
     );
 
