@@ -1,17 +1,31 @@
-// Provides functions to summarize content using Instructor and Ollama with robust JSON parsing and proper message roles.
+// Provides functions to summarize content using Instructor and Ollama with structured output and proper message roles.
 
 import { z } from 'zod';
 import { SingleBar, Presets } from 'cli-progress';
 import Instructor from '@instructor-ai/instructor';
-import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
+import { Article, OllamaConfig } from '../types/index';
+
+// Define the structured schema based on the desired 5-line output format
+// Define the structured schema based on the desired multi-line output format
+const StructuredSummarySchema = z.object({
+  context: z.string().describe('Context of the article.'),
+  core_idea: z.string().describe('Core idea of the article.'),
+  insight_1: z.string().describe('First main insight.'),
+  insight_2: z.string().describe('Second main insight.'),
+  insight_3: z.string().describe('Third main insight.'),
+  insight_4: z.string().describe('Fourth main insight.'),
+  insight_5: z.string().describe('Fifth main insight.'),
+  author_conclusion: z.string().describe("Author's conclusion or final point."),
+});
 
 export const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
-  schema: z.AnyZodObject = SummaryResponseSchema
+  // Default schema is now the structured one
+  schema: z.AnyZodObject = StructuredSummarySchema
 ) => {
   const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
-  const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
+  const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 200; // Increased slightly for structured output
   const MIN_CONTENT_LENGTH = 300;
 
   // Escape HTML chars to avoid prompt injection.
@@ -56,58 +70,79 @@ export const createArticleSummarizer = (
         ? '\n[Truncated for length constraints]'
         : '';
 
-    const prompt = `
-      SUMMARY REQUEST
-      ---------------
-      INSTRUCTIONS:
-      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available".
-      - NEVER hallucinate or fabricate content; only summarize what's provided.
-      - Provide a clear, concise summary of the Hacker News article.
-      - The summary must be exactly 5 lines long, with each line serving a unique role:
-        * Line 1: Provide concise context (no “Context:” prefix).
-        * Line 2: State the core idea (no “Core idea:” prefix).
-        * Lines 3 & 4: Present the main insights supporting the core idea (no literal labels).
-        * Line 5: Summarize the author's ultimate conclusion (no label).
-      - Return ONLY a JSON object with a single key "summary" containing the formatted summary.
-      - Write in a neutral, factual tone suitable for a tech-savvy audience.
+      const systemPrompt = `
+You are a helpful assistant summarizing Hacker News articles. Follow these instructions precisely:
+- Return "No summary available" if content is missing, unreadable, or you cannot extract the required fields.
+- NEVER hallucinate; summarize only the provided content.
+- Extract the following fields based on the content:
+  * context: Provide the context.
+  * core_idea: State the core idea.
+  * insight_1: Detail the first main insight.
+  * insight_2: Detail the second main insight.
+  * insight_3: Detail the third main insight.
+  * insight_4: Detail the fourth main insight.
+  * insight_5: Detail the fifth main insight.
+  * author_conclusion: Describe the author's conclusion.
+- Use a neutral, factual tone suitable for a tech audience.
+- Respond ONLY with the structured data requested.
+      `.trim();
 
-      ARTICLE:
-      --- TITLE ---
-      ${sanitizeInput(title)}
-
-      --- CONTENT (truncated) ---
-      ${sanitizeInput(truncatedContent)}${truncationNotice}
-    `.trim();
+      const userPrompt = `
+<title>${sanitizeInput(title)}</title>
+<content>${sanitizeInput(truncatedContent)}${truncationNotice}</content>
+      `.trim();
 
     try {
       const response = await client.chat.completions.create({
         model: config.model,
         messages: [
-          {
-            role: 'system',
-            content:
-              'You are a helpful assistant. Respond with only the JSON object containing a "summary" field.',
-          },
-          { role: 'user', content: prompt },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
         ],
         max_tokens: MAX_OUTPUT_TOKENS,
-        temperature: 0.2,
+        temperature: 0.2, // Keep low for factual summary
         top_p: 0.9,
-        response_model: { schema, name: 'SummaryResponse' },
+        // Use the structured schema for the response model
+        response_model: { schema: StructuredSummarySchema, name: 'StructuredSummary' },
       });
 
-      const container = (response as any).data ?? (response as any);
-      const rawSummary = container.summary as string | undefined;
+      // Type assertion for the structured response
+      const structuredSummary = response as z.infer<typeof StructuredSummarySchema>;
 
-      if (!rawSummary?.trim()) {
+      // Check if essential fields are present
+      if (
+        !structuredSummary.context?.trim() ||
+        !structuredSummary.core_idea?.trim()
+      ) {
+        console.warn(`Missing essential fields for title: ${title}`);
         return 'No summary available';
       }
 
-      // Sanitize, strip labels, then collapse blank lines
-      const sanitized = sanitizeSummary(rawSummary.trim());
-      const labeledStripped = stripLabels(sanitized);
+      // Combine the structured fields into the desired multi-line format
+      const combinedSummary = [
+        structuredSummary.context,
+        structuredSummary.core_idea,
+        structuredSummary.insight_1,
+        structuredSummary.insight_2,
+        structuredSummary.insight_3,
+        structuredSummary.insight_4,
+        structuredSummary.insight_5,
+        structuredSummary.author_conclusion,
+      ]
+        .map((line) => line?.trim() || '') // Trim each line, handle potential undefined/null
+        .filter((line) => line.length > 0) // Remove empty lines if any field was empty/missing
+        .join('\n');
+
+      if (!combinedSummary) {
+        return 'No summary available';
+      }
+
+      // Apply existing post-processing (sanitization, label stripping, line collapsing)
+      const sanitized = sanitizeSummary(combinedSummary);
+      const labeledStripped = stripLabels(sanitized); // May not be needed now, but kept for safety
       return collapseBlankLines(labeledStripped);
-    } catch {
+    } catch (error) {
+      console.error(`Error summarizing article "${title}":`, error);
       return 'No summary available';
     }
   };
