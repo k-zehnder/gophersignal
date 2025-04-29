@@ -91,9 +91,18 @@ fn build_rss_item(article: &Article, total: usize, idx: usize) -> rss::Item {
         .build()
 }
 
-// Escape summary, append inline “model @ hash” if present, then the footer.
+// Escape summary, replace newlines with <br>, append metadata, then the footer.
 fn build_item_description(article: &Article) -> String {
-    let mut html = encode_minimal(article.summary.as_deref().unwrap_or("No summary"));
+    // Get the summary, defaulting to "No summary" if None
+    let summary_text = article.summary.as_deref().unwrap_or("No summary");
+
+    // First, perform minimal HTML escaping
+    let escaped_summary = encode_minimal(summary_text);
+
+    // Then, replace newline characters with <br> tags
+    let mut html = escaped_summary.replace('\n', "<br>");
+
+    // Append model/hash metadata if available
     if let (Some(model), Some(hash)) = (&article.model_name, &article.commit_hash) {
         if !model.is_empty() && !hash.is_empty() {
             html.push_str(&format!(
