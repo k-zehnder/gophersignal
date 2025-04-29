@@ -107,8 +107,7 @@ fn build_item_description(article: &Article) -> String {
         "{}<br><br><small>{}</small>",
         html,
         build_item_footer(article)
-    ));
-    html
+    )
 }
 
 // Format creation date with offset as RFC2822.
