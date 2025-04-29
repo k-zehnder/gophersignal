@@ -100,21 +100,12 @@ fn build_item_description(article: &Article) -> String {
     let escaped_summary = encode_minimal(summary_text);
 
     // Then, replace newline characters with <br> tags
-    let mut html = escaped_summary.replace('\n', "<br>");
+    let html = escaped_summary.replace('\n', "<br>");
 
-    // Append model/hash metadata if available
-    if let (Some(model), Some(hash)) = (&article.model_name, &article.commit_hash) {
-        if !model.is_empty() && !hash.is_empty() {
-            html.push_str(&format!(
-                "<br><br><small style=\"font-size:0.875em;color:#6b7280;\">\
-                 {} @ {}</small>",
-                encode_minimal(model),
-                encode_minimal(hash),
-            ));
-        }
-    }
-    html.push_str(&format!(
-        "<br><br><small>{}</small>",
+    // Append the footer, which now includes model/hash info if available
+    format!(
+        "{}<br><br><small>{}</small>",
+        html,
         build_item_footer(article)
     ));
     html
@@ -170,13 +161,26 @@ fn build_item_footer(article: &Article) -> String {
         .and_then(|u| u.host_str().map(str::to_string))
         .unwrap_or_else(|| "source".into());
 
-    format!(
+    let mut footer = format!(
         "▲ {} · {} · via <a href=\"{}\">{}</a>",
         upvotes,
         comments_html,
         encode_minimal(&article.link),
         encode_minimal(&domain),
-    )
+    );
+
+    // Append model/hash metadata if available
+    if let (Some(model), Some(hash)) = (&article.model_name, &article.commit_hash) {
+        if !model.is_empty() && !hash.is_empty() {
+            footer.push_str(&format!(
+                " by {}({})",
+                encode_minimal(model),
+                encode_minimal(hash),
+            ));
+        }
+    }
+
+    footer
 }
 
 // Wrap channel XML in an HTTP response.
