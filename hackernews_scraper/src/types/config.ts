@@ -12,6 +12,7 @@ export interface OllamaConfig {
   apiKey?: string;
   maxContentLength: number;
   maxSummaryLength: number;
+  numCtx: number; // Context window size for Ollama model, read from OLLAMA_CONTEXT_LENGTH env var
 }
 
 export interface GitHubConfig {

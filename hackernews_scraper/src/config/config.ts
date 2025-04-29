@@ -16,6 +16,7 @@ const envSchema = z.object({
   OLLAMA_BASE_URL: z.string().default('http://localhost:11434/api/generate'),
   OLLAMA_MODEL: z.string().default('llama3:instruct'),
   OLLAMA_API_KEY: z.string().optional(),
+  OLLAMA_CONTEXT_LENGTH: z.string().optional(), // Add env var for context length
   MAX_CONTENT_LENGTH: z.string().default('2000'),
   MAX_SUMMARY_LENGTH: z.string().default('500'),
 
@@ -41,6 +42,8 @@ const config: Config = {
     apiKey: env.OLLAMA_API_KEY,
     maxContentLength: parseInt(env.MAX_CONTENT_LENGTH, 10),
     maxSummaryLength: parseInt(env.MAX_SUMMARY_LENGTH, 10),
+    // Parse OLLAMA_CONTEXT_LENGTH, default to 8192 if not set or invalid
+    numCtx: parseInt(env.OLLAMA_CONTEXT_LENGTH || '8192', 10) || 8192,
   },
   github: {
     token: env.GH_TOKEN,

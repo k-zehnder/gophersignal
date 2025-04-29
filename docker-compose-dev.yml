@@ -71,6 +71,7 @@ services:
       - ollama:/ollama
     environment:
       - OLLAMA_CONFIG=/ollama/config
+      - OLLAMA_CONTEXT_LENGTH=8192
     healthcheck:
       test: ['CMD', 'test', '-f', '/tmp/ollama_model_ready']
       interval: 10s
