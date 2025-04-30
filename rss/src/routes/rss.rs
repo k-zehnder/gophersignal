@@ -134,15 +134,14 @@ fn build_item_guid(article: &Article) -> rss::Guid {
         .build()
 }
 
-// Footer shows ▲ upvotes · 💬 comments (linked if >0) · 🤖 model · 🔨 commit · 🌐 domain
+// Footer shows upvotes, comments, model, commit, and domain.
 fn build_item_footer(article: &Article) -> String {
     let upvotes = article.upvotes.unwrap_or(0);
     let comments_count = article.comment_count.unwrap_or(0);
 
-    // ▲ upvotes
     let upvotes_html = format!("▲ {}", upvotes);
 
-    // 💬 comments count; link only if >0
+    // Comments count (link only if >0)
     let comments_html = {
         let count = comments_count;
         let text = format!("{}", count);
@@ -169,7 +168,6 @@ fn build_item_footer(article: &Article) -> String {
         }
     };
 
-    // 🤖 model
     let model_html = article
         .model_name
         .as_deref()
@@ -177,7 +175,6 @@ fn build_item_footer(article: &Article) -> String {
         .map(|m| format!("🤖 {}", encode_minimal(m)))
         .unwrap_or_default();
 
-    // 🔨 commit
     let commit_html = article
         .commit_hash
         .as_deref()
@@ -185,14 +182,12 @@ fn build_item_footer(article: &Article) -> String {
         .map(|h| format!("🔨 {}", encode_minimal(h)))
         .unwrap_or_default();
 
-    // 🌐 domain
     let domain = Url::parse(&article.link)
         .ok()
         .and_then(|u| u.host_str().map(str::to_string))
         .unwrap_or_else(|| "source".into());
     let domain_html = format!("🌐 {}", encode_minimal(&domain));
 
-    // join with " · "
     vec![
         upvotes_html,
         comments_html,
