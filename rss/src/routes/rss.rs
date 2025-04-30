@@ -91,19 +91,9 @@ fn build_rss_item(article: &Article, total: usize, idx: usize) -> rss::Item {
         .build()
 }
 
-// Escape summary, append inline “model @ hash” if present, then the footer.
+// Escape the summary and append the footer metadata.
 fn build_item_description(article: &Article) -> String {
     let mut html = encode_minimal(article.summary.as_deref().unwrap_or("No summary"));
-    if let (Some(model), Some(hash)) = (&article.model_name, &article.commit_hash) {
-        if !model.is_empty() && !hash.is_empty() {
-            html.push_str(&format!(
-                "<br><br><small style=\"font-size:0.875em;color:#6b7280;\">\
-                 {} @ {}</small>",
-                encode_minimal(model),
-                encode_minimal(hash),
-            ));
-        }
-    }
     html.push_str(&format!(
         "<br><br><small>{}</small>",
         build_item_footer(article)
@@ -134,40 +124,72 @@ fn build_item_guid(article: &Article) -> rss::Guid {
         .build()
 }
 
-// Footer shows votes, comments, and source domain.
+// Footer metadata showing upvotes comments model commit domain.
 fn build_item_footer(article: &Article) -> String {
-    let upvotes = article.upvotes.unwrap_or(0);
-    let comments_count = article.comment_count.unwrap_or(0);
+    let upvotes_html = format!("▲ {}", article.upvotes.unwrap_or(0));
 
-    // Fallback to Hacker News discussion URL when comment_link is missing or empty
-    let comments_link = article
-        .comment_link
+    // Comments count (link only if >0)
+    let comments_html = {
+        let cnt = article.comment_count.unwrap_or(0);
+        let txt = cnt.to_string();
+        if cnt > 0 {
+            let url = article
+                .comment_link
+                .as_deref()
+                .filter(|s| !s.is_empty())
+                .map(ToString::to_string)
+                .unwrap_or_else(|| {
+                    article
+                        .hn_id
+                        .filter(|&id| id > 0)
+                        .map(|id| format!("https://news.ycombinator.com/item?id={}", id))
+                        .unwrap_or_else(|| "#".into())
+                });
+            format!(
+                r#"<a href="{url}">💬 {txt}</a>"#,
+                url = encode_minimal(&url),
+                txt = txt
+            )
+        } else {
+            format!("💬 {}", txt)
+        }
+    };
+
+    let model_html = article
+        .model_name
         .as_deref()
-        .filter(|s| !s.is_empty())
-        .map(str::to_string)
-        .unwrap_or_else(|| match article.hn_id {
-            Some(id) if id > 0 => format!("https://news.ycombinator.com/item?id={}", id),
-            _ => "#".to_string(),
-        });
+        .filter(|m| !m.is_empty())
+        .map(|m| format!("🤖 {}", encode_minimal(m)))
+        .unwrap_or_default();
 
-    let comments_html = format!(
-        "💬 <a href=\"{}\">{}</a>",
-        encode_minimal(&comments_link),
-        comments_count
-    );
+    let commit_html = article
+        .commit_hash
+        .as_deref()
+        .filter(|h| !h.is_empty())
+        .map(|h| format!("🔨 {}", encode_minimal(h)))
+        .unwrap_or_default();
 
-    let domain = Url::parse(&article.link)
+    let domain_display = Url::parse(&article.link)
         .ok()
         .and_then(|u| u.host_str().map(str::to_string))
         .unwrap_or_else(|| "source".into());
+    let domain_html = format!(
+        r#"<a href="{href}">🌐 {display}</a>"#,
+        href = encode_minimal(&article.link),
+        display = encode_minimal(&domain_display)
+    );
 
-    format!(
-        "▲ {} · {} · via <a href=\"{}\">{}</a>",
-        upvotes,
+    vec![
+        upvotes_html,
         comments_html,
-        encode_minimal(&article.link),
-        encode_minimal(&domain),
-    )
+        model_html,
+        commit_html,
+        domain_html,
+    ]
+    .into_iter()
+    .filter(|s| !s.is_empty())
+    .collect::<Vec<_>>()
+    .join(" · ")
 }
 
 // Wrap channel XML in an HTTP response.
