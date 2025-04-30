@@ -91,19 +91,9 @@ fn build_rss_item(article: &Article, total: usize, idx: usize) -> rss::Item {
         .build()
 }
 
-// Escape summary, append inline “model @ hash” if present, then the footer.
+// Escape the summary and append the footer metadata.
 fn build_item_description(article: &Article) -> String {
     let mut html = encode_minimal(article.summary.as_deref().unwrap_or("No summary"));
-    if let (Some(model), Some(hash)) = (&article.model_name, &article.commit_hash) {
-        if !model.is_empty() && !hash.is_empty() {
-            html.push_str(&format!(
-                "<br><br><small style=\"font-size:0.875em;color:#6b7280;\">\
-                 {} @ {}</small>",
-                encode_minimal(model),
-                encode_minimal(hash),
-            ));
-        }
-    }
     html.push_str(&format!(
         "<br><br><small>{}</small>",
         build_item_footer(article)
@@ -134,19 +124,16 @@ fn build_item_guid(article: &Article) -> rss::Guid {
         .build()
 }
 
-// Footer shows upvotes, comments, model, commit, and domain.
+// Footer shows upvotes, comments, model, commit, and a clickable domain.
 fn build_item_footer(article: &Article) -> String {
-    let upvotes = article.upvotes.unwrap_or(0);
-    let comments_count = article.comment_count.unwrap_or(0);
+    let upvotes_html = format!("▲ {}", article.upvotes.unwrap_or(0));
 
-    let upvotes_html = format!("▲ {}", upvotes);
-
-    // Comments count (link only if >0).
+    // Comments count (link only if >0)
     let comments_html = {
-        let count = comments_count;
-        let text = format!("{}", count);
-        if count > 0 {
-            let link = article
+        let cnt = article.comment_count.unwrap_or(0);
+        let txt = cnt.to_string();
+        if cnt > 0 {
+            let url = article
                 .comment_link
                 .as_deref()
                 .filter(|s| !s.is_empty())
@@ -160,11 +147,11 @@ fn build_item_footer(article: &Article) -> String {
                 });
             format!(
                 r#"<a href="{url}">💬 {txt}</a>"#,
-                url = encode_minimal(&link),
-                txt = text
+                url = encode_minimal(&url),
+                txt = txt
             )
         } else {
-            format!("💬 {}", text)
+            format!("💬 {}", txt)
         }
     };
 
@@ -182,11 +169,15 @@ fn build_item_footer(article: &Article) -> String {
         .map(|h| format!("🔨 {}", encode_minimal(h)))
         .unwrap_or_default();
 
-    let domain = Url::parse(&article.link)
+    let domain_display = Url::parse(&article.link)
         .ok()
         .and_then(|u| u.host_str().map(str::to_string))
         .unwrap_or_else(|| "source".into());
-    let domain_html = format!("🌐 {}", encode_minimal(&domain));
+    let domain_html = format!(
+        r#"<a href="{href}">🌐 {display}</a>"#,
+        href = encode_minimal(&article.link),
+        display = encode_minimal(&domain_display)
+    );
 
     vec![
         upvotes_html,
