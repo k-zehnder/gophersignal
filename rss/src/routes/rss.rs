@@ -134,40 +134,76 @@ fn build_item_guid(article: &Article) -> rss::Guid {
         .build()
 }
 
-// Footer shows votes, comments, and source domain.
+// Footer shows ▲ upvotes · 💬 comments (linked if >0) · 🤖 model · 🔨 commit · 🌐 domain
 fn build_item_footer(article: &Article) -> String {
     let upvotes = article.upvotes.unwrap_or(0);
     let comments_count = article.comment_count.unwrap_or(0);
 
-    // Fallback to Hacker News discussion URL when comment_link is missing or empty
-    let comments_link = article
-        .comment_link
+    // ▲ upvotes
+    let upvotes_html = format!("▲ {}", upvotes);
+
+    // 💬 comments count; link only if >0
+    let comments_html = {
+        let count = comments_count;
+        let text = format!("{}", count);
+        if count > 0 {
+            let link = article
+                .comment_link
+                .as_deref()
+                .filter(|s| !s.is_empty())
+                .map(ToString::to_string)
+                .unwrap_or_else(|| {
+                    article
+                        .hn_id
+                        .filter(|&id| id > 0)
+                        .map(|id| format!("https://news.ycombinator.com/item?id={}", id))
+                        .unwrap_or_else(|| "#".into())
+                });
+            format!(
+                r#"<a href="{url}">💬 {txt}</a>"#,
+                url = encode_minimal(&link),
+                txt = text
+            )
+        } else {
+            format!("💬 {}", text)
+        }
+    };
+
+    // 🤖 model
+    let model_html = article
+        .model_name
         .as_deref()
-        .filter(|s| !s.is_empty())
-        .map(str::to_string)
-        .unwrap_or_else(|| match article.hn_id {
-            Some(id) if id > 0 => format!("https://news.ycombinator.com/item?id={}", id),
-            _ => "#".to_string(),
-        });
+        .filter(|m| !m.is_empty())
+        .map(|m| format!("🤖 {}", encode_minimal(m)))
+        .unwrap_or_default();
 
-    let comments_html = format!(
-        "💬 <a href=\"{}\">{}</a>",
-        encode_minimal(&comments_link),
-        comments_count
-    );
+    // 🔨 commit
+    let commit_html = article
+        .commit_hash
+        .as_deref()
+        .filter(|h| !h.is_empty())
+        .map(|h| format!("🔨 {}", encode_minimal(h)))
+        .unwrap_or_default();
 
+    // 🌐 domain
     let domain = Url::parse(&article.link)
         .ok()
         .and_then(|u| u.host_str().map(str::to_string))
         .unwrap_or_else(|| "source".into());
+    let domain_html = format!("🌐 {}", encode_minimal(&domain));
 
-    format!(
-        "▲ {} · {} · via <a href=\"{}\">{}</a>",
-        upvotes,
+    // join with " · "
+    vec![
+        upvotes_html,
         comments_html,
-        encode_minimal(&article.link),
-        encode_minimal(&domain),
-    )
+        model_html,
+        commit_html,
+        domain_html,
+    ]
+    .into_iter()
+    .filter(|s| !s.is_empty())
+    .collect::<Vec<_>>()
+    .join(" · ")
 }
 
 // Wrap channel XML in an HTTP response.
