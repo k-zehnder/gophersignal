@@ -24,8 +24,10 @@ export const createArticleSummarizer = (
   // Default schema is now the structured one
   schema: z.AnyZodObject = StructuredSummarySchema
 ) => {
-  const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
-  const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 200; // Increased slightly for structured output
+  const MAX_CONTENT_LENGTH = config.maxContentLength;
+  const MAX_OUTPUT_TOKENS = config.maxSummaryLength; // Increased slightly for structured output
+  // NUM_CTX is guaranteed to be a number by the config loader
+  const NUM_CTX = config.numCtx;
   const MIN_CONTENT_LENGTH = 300;
 
   // Escape HTML chars to avoid prompt injection.
@@ -102,6 +104,10 @@ You are a helpful assistant summarizing Hacker News articles. Follow these instr
         max_tokens: MAX_OUTPUT_TOKENS,
         temperature: 0.2, // Keep low for factual summary
         top_p: 0.9,
+        // Pass Ollama-specific options, ensuring NUM_CTX is defined
+        options: {
+          num_ctx: NUM_CTX, // NUM_CTX is defined above with env/config/fallback logic
+        },
         // Use the structured schema for the response model
         response_model: { schema: StructuredSummarySchema, name: 'StructuredSummary' },
       });
