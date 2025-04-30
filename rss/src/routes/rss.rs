@@ -141,7 +141,7 @@ fn build_item_footer(article: &Article) -> String {
 
     let upvotes_html = format!("▲ {}", upvotes);
 
-    // Comments count (link only if >0)
+    // Comments count (link only if >0).
     let comments_html = {
         let count = comments_count;
         let text = format!("{}", count);
