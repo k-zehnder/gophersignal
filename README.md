@@ -200,6 +200,35 @@ Contributions are welcome! Please follow these general guidelines:
 5.  Update documentation if necessary.
 6.  Submit a Pull Request using the provided template (`.github/pull_request_template.md`).
 
+## FAQ
+
+**Q: How can I use a different Ollama model for summarization?**
+
+A: To use a different model:
+1.  Modify the `OLLAMA_MODEL` variable in your `.env` file to specify the desired model tag (e.g., `OLLAMA_MODEL=mistral:latest`).
+2.  Ensure the Ollama service pulls this model. You might need to manually pull it inside the running `ollama` container (`docker compose exec ollama ollama pull your-model-tag`) or adjust the `ollama/bin/start-ollama.sh` script if you rebuild the image.
+3.  Restart the development environment (`make dev`) or redeploy.
+
+**Q: Where is the prompt used for generating summaries defined?**
+
+A: The system and user prompts used to instruct the Ollama model for summarization are located within the `summarizeContent` function inside the file: `hackernews_scraper/src/services/articleSummarizer.ts`. You can modify the prompts in this file if you wish to change the summarization style or instructions. Remember to rebuild the `hackernews_scraper` image (`make dev` or `docker compose build hackernews_scraper`) after making changes.
+
+**Q: Does the scraper run automatically at regular intervals?**
+
+A: No, the scraper does not run automatically on a schedule by default. You need to trigger it manually using the command:
+```bash
+make scrape
+```
+Or, without Make:
+```bash
+# For development environment
+docker compose -f docker-compose-dev.yml run --rm hackernews_scraper npm run start
+
+# For production environment (adjust docker-compose.yml if needed or run on host)
+# Example: docker compose run --rm hackernews_scraper npm run start
+```
+To run the scraper periodically (e.g., daily or hourly), you need to set up an external scheduling mechanism like `cron` on your host machine or use a dedicated scheduling container to execute the `make scrape` command (or the equivalent Docker command) at your desired frequency.
+
 ## License
 
 MIT
