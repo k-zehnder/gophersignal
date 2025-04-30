@@ -5,9 +5,13 @@ import { SingleBar, Presets } from 'cli-progress';
 import Instructor from '@instructor-ai/instructor';
 import { Article, OllamaConfig } from '../types/index';
 
-// Define the structured schema based on the desired 5-line output format
 // Define the structured schema based on the desired multi-line output format
 const StructuredSummarySchema = z.object({
+  thinking: z
+    .string()
+    .describe(
+      'Think step-by-step to analyze the content and plan the summary.'
+    ),
   context: z.string().describe('Context of the article.'),
   core_idea: z.string().describe('Core idea of the article.'),
   insight_1: z.string().describe('First main insight.'),
@@ -74,6 +78,7 @@ export const createArticleSummarizer = (
 
       const systemPrompt = `
 You are a helpful assistant summarizing Hacker News articles. Follow these instructions precisely:
+- Use the 'thinking' field to think step-by-step about the content before generating the summary fields. This field will not be part of the final output.
 - Return "No summary available" if content is missing, unreadable, or you cannot extract the required fields.
 - NEVER hallucinate; summarize only the provided content.
 - Extract the following fields based on the content:
@@ -124,7 +129,7 @@ You are a helpful assistant summarizing Hacker News articles. Follow these instr
         return 'No summary available';
       }
 
-      // Combine the structured fields into the desired multi-line format
+      // Combine the structured fields (excluding 'thinking') into the desired multi-line format
       const combinedSummary = [
         structuredSummary.context,
         structuredSummary.core_idea,
