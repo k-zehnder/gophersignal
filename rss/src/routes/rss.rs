@@ -124,7 +124,7 @@ fn build_item_guid(article: &Article) -> rss::Guid {
         .build()
 }
 
-// Footer shows upvotes, comments, model, commit, and a clickable domain.
+// Footer metadata showing upvotes comments model commit domain.
 fn build_item_footer(article: &Article) -> String {
     let upvotes_html = format!("▲ {}", article.upvotes.unwrap_or(0));
 
