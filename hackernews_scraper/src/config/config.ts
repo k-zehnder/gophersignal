@@ -14,7 +14,7 @@ const envSchema = z.object({
   MYSQL_DATABASE: z.string().default('database_name'),
 
   OLLAMA_BASE_URL: z.string().default('http://localhost:11434/api/generate'),
-  OLLAMA_MODEL: z.string().default('llama3:instruct'),
+  OLLAMA_MODEL: z.string().default('qwen3:8b'),
   OLLAMA_API_KEY: z.string().optional(),
   OLLAMA_CONTEXT_LENGTH: z.string().optional(), // Add env var for context length
   MAX_CONTENT_LENGTH: z.string().default('2000'),
