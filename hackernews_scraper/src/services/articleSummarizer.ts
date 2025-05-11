@@ -94,8 +94,8 @@ Instructions:
 1.  **JSON ONLY**: Respond with a single, valid JSON object matching 'StructuredSummary'. No extra text.
 2.  **Schema**:
     *   'thinking': Internal analysis. Not for user.
-    *   Required: 'context', 'core_idea', 'insight_1', 'insight_2', 'author_conclusion'.
-    *   Optional: 'insight_3' to 'insight_5'. Omit if weak/absent or article too short.
+    *   Required: 'context', 'core_idea', 'insight_1', 'insight_2', 'insight_3', 'author_conclusion'.
+    *   Optional: 'insight_4', 'insight_5'. Omit if weak/absent or article too short.
     *   NO HALLUCINATION. Use only provided text. Empty string or omit if info missing.
 3.  **Issues**:
     *   'error': For CRITICAL issues (unreadable, CAPTCHA, too short <${MIN_CONTENT_LENGTH} chars, irrelevant). Sets other fields to "No summary available".
@@ -137,18 +137,17 @@ Instructions:
             console.warn(`[Structured Summary LLM Warning] For article "${title}": ${warning}`);
           }
 
-          const essentialFields = [context, core_idea, insight_1, insight_2, author_conclusion];
+          const essentialFields = [context, core_idea, insight_1, insight_2, insight_3, author_conclusion];
           if (essentialFields.some(field => !field?.trim())) {
-            console.warn(`[Structured Summary] Essential fields (context, core_idea, insight_1, insight_2, author_conclusion) missing or empty for "${title}". Proceeding to fallback.`);
+            console.warn(`[Structured Summary] Essential fields (context, core_idea, insight_1, insight_2, insight_3, author_conclusion) missing or empty for "${title}". Proceeding to fallback.`);
           } else {
-            // Log warnings for missing truly optional fields (insights 3-5)
-            if (!insight_3?.trim()) console.warn(`[Structured Summary] Optional field 'insight_3' missing or empty for "${title}".`);
+            // Log warnings for missing truly optional fields (insights 4-5)
             if (!insight_4?.trim()) console.warn(`[Structured Summary] Optional field 'insight_4' missing or empty for "${title}".`);
             if (!insight_5?.trim()) console.warn(`[Structured Summary] Optional field 'insight_5' missing or empty for "${title}".`);
 
             const summaryLines = [
-              context, core_idea, insight_1, insight_2,
-              insight_3, insight_4, insight_5, // These can be undefined/empty
+              context, core_idea, insight_1, insight_2, insight_3,
+              insight_4, insight_5, // These can be undefined/empty
               author_conclusion
             ]
             .map(line => line?.trim() || '')
