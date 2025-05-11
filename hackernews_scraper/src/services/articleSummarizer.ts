@@ -1,4 +1,4 @@
-// Provides functions to summarize content using Instructor and Ollama with robust JSON parsing and proper message roles.
+// Provides functions to summarize content using Instructor and Ollama with structured output and proper message roles.
 
 import { z } from 'zod';
 import { SingleBar, Presets } from 'cli-progress';
