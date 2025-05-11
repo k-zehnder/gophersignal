@@ -8,23 +8,17 @@ import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 
 // Define the new StructuredSummarySchema
 const StructuredSummarySchema = z.object({
-  thinking: z.string().optional().describe(
-    "Briefly outline your analysis and summary plan here. This is for internal reasoning and NOT part of the user-facing summary."
-  ),
-  context: z.string().optional().describe("Article's background/setting."),
-  core_idea: z.string().optional().describe("Article's central message/thesis."),
-  insight_1: z.string().optional().describe("First key insight or argument."),
-  insight_2: z.string().optional().describe("Second key insight or argument."),
-  insight_3: z.string().optional().describe("Third key insight. Omit if not distinct or strong."),
-  insight_4: z.string().optional().describe("Fourth key insight. Omit if not distinct or strong."),
-  insight_5: z.string().optional().describe("Fifth key insight. Omit if not distinct or strong."),
-  author_conclusion: z.string().optional().describe("Author's main conclusion or call to action."),
-  warning: z.string().optional().describe(
-    "Note non-critical issues (e.g., minor ambiguity, slight off-topic). Still attempt summary."
-  ),
-  error: z.string().optional().describe(
-    "CRITICAL: Use ONLY if summary is impossible (e.g., unreadable, CAPTCHA, irrelevant). If used, other fields may be 'No summary available'."
-  ),
+  thinking: z.string().optional().describe("Internal analysis plan. NOT for user summary."),
+  context: z.string().optional().describe("Article background/setting."),
+  core_idea: z.string().optional().describe("Article central message/thesis."),
+  insight_1: z.string().optional().describe("First key insight/argument."),
+  insight_2: z.string().optional().describe("Second key insight/argument."),
+  insight_3: z.string().optional().describe("Third insight. Omit if weak/absent."),
+  insight_4: z.string().optional().describe("Fourth insight. Omit if weak/absent."),
+  insight_5: z.string().optional().describe("Fifth insight. Omit if weak/absent."),
+  author_conclusion: z.string().optional().describe("Author's conclusion/call to action."),
+  warning: z.string().optional().describe("Note non-critical issues (e.g., ambiguity). Attempt summary."),
+  error: z.string().optional().describe("CRITICAL: Use if summary IMPOSSIBLE (unreadable, CAPTCHA). Other fields: 'No summary available'."),
 });
 
 export const createArticleSummarizer = (
@@ -94,21 +88,19 @@ export const createArticleSummarizer = (
 
     // --- Attempt 1: Structured Summary ---
     const structuredSystemPrompt = `
-You are an assistant specializing in summarizing Hacker News articles into a structured JSON format.
-Your task is to populate a JSON object according to the 'StructuredSummary' schema.
-Refer to the schema field descriptions for specific instructions on each field.
+You are an assistant. Summarize Hacker News articles into structured JSON using the 'StructuredSummary' schema.
 
-Key Instructions:
-1.  **JSON Output ONLY**: Your entire response MUST be a single, valid JSON object matching the 'StructuredSummary' schema. No extra text, markdown, or explanations before or after the JSON.
-2.  **Schema Adherence**:
-    *   Use the 'thinking' field for your internal pre-summary analysis (not for the user).
-    *   Prioritize 'context', 'core_idea', 'insight_1', 'insight_2', 'author_conclusion'.
-    *   'insight_3' to 'insight_5' are optional; omit if not clearly present or if article is too short.
-    *   NEVER hallucinate. Summarize based ONLY on the provided text. If info for a field is missing, use an empty string or omit (all fields are optional strings).
-3.  **Issue Handling**:
-    *   **Critical Issues**: If content is unusable (e.g., unreadable, CAPTCHA, too short <${MIN_CONTENT_LENGTH} chars, irrelevant to title), populate the 'error' field and set summary fields (context, core_idea, etc.) to "No summary available".
-    *   **Non-Critical Issues**: Note minor issues (e.g., ambiguity) in the 'warning' field. Still attempt to provide the main summary.
-4.  **Tone**: Neutral, factual, for a technical audience.
+Instructions:
+1.  **JSON ONLY**: Respond with a single, valid JSON object matching 'StructuredSummary'. No extra text.
+2.  **Schema**:
+    *   'thinking': Internal analysis. Not for user.
+    *   Required: 'context', 'core_idea', 'insight_1', 'insight_2', 'author_conclusion'.
+    *   Optional: 'insight_3' to 'insight_5'. Omit if weak/absent or article too short.
+    *   NO HALLUCINATION. Use only provided text. Empty string or omit if info missing.
+3.  **Issues**:
+    *   'error': For CRITICAL issues (unreadable, CAPTCHA, too short <${MIN_CONTENT_LENGTH} chars, irrelevant). Sets other fields to "No summary available".
+    *   'warning': For NON-CRITICAL issues (e.g., ambiguity). Still attempt summary.
+4.  **Tone**: Neutral, factual, technical.
     `.trim();
 
     const structuredUserPrompt = `
@@ -179,21 +171,18 @@ Key Instructions:
     // --- Fallback: Simple "summary" field (original method) ---
     console.log(`[Fallback Summary] Attempting simple summary for "${title}".`);
     
-    const fallbackSystemPrompt = 'You are a helpful assistant. Respond with only the JSON object containing a "summary" field.';
+    const fallbackSystemPrompt = 'Assistant: Respond with JSON: {"summary": "your_summary_here"}.';
     const fallbackUserPrompt = `
-      SUMMARY REQUEST
-      ---------------
-      INSTRUCTIONS:
-      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available" inside the "summary" field.
-      - NEVER hallucinate or fabricate content; only summarize what's provided.
-      - Provide a clear, concise summary of the Hacker News article.
-      - The summary must be exactly 5 lines long, with each line serving a unique role:
-        * Line 1: Provide concise context (no “Context:” prefix).
-        * Line 2: State the core idea (no “Core idea:” prefix).
-        * Lines 3 & 4: Present the main insights supporting the core idea (no literal labels).
-        * Line 5: Summarize the author's ultimate conclusion (no label).
-      - Return ONLY a JSON object with a single key "summary" containing the formatted summary.
-      - Write in a neutral, factual tone suitable for a tech-savvy audience.
+      SUMMARY REQUEST:
+      - Content missing, unreadable, or < ${MIN_CONTENT_LENGTH} chars? "summary": "No summary available".
+      - NO HALLUCINATION. Summarize provided text only.
+      - Summary: 5 lines, each with a unique role:
+        1. Context (no "Context:" prefix).
+        2. Core idea (no "Core idea:" prefix).
+        3 & 4. Main insights (no labels).
+        5. Author's conclusion (no label).
+      - JSON ONLY: {"summary": "formatted_summary"}.
+      - Tone: Neutral, factual, technical.
 
       ARTICLE:
       --- TITLE ---
