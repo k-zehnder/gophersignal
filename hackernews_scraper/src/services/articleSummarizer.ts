@@ -19,6 +19,12 @@ const StructuredSummarySchema = z.object({
   insight_4: z.string().optional().describe('Fourth main insight (optional).'),
   insight_5: z.string().optional().describe('Fifth main insight (optional).'),
   author_conclusion: z.string().optional().describe("Author's conclusion or final point."),
+  warning: z.string().optional().describe(
+    "Use this field to flag any non-critical issues with the content or task that the author should be aware of (e.g., suspected missing context, ambiguity). The summarization will still be attempted."
+  ),
+  error: z.string().optional().describe(
+    "Use this field ONLY if there's a critical issue that prevents a valid summary from being generated (e.g., content is entirely unreadable, nonsensical, or completely unrelated to the title). This indicates the summary should not be trusted."
+  ),
 });
 
 export const createArticleSummarizer = (
@@ -90,7 +96,7 @@ export const createArticleSummarizer = (
     const structuredSystemPrompt = `
 You are a helpful assistant summarizing Hacker News articles. Follow these instructions precisely:
 - Use the 'thinking' field to think step-by-step about the content before generating the summary fields. This field will not be part of the final output.
-- Return "No summary available" if content is missing, unreadable, or you cannot extract the required fields.
+- Return "No summary available" if content is missing, unreadable, or you cannot extract the required fields. If you encounter such issues, or other problems that make summarization difficult or impossible, use the 'error' or 'warning' fields as described below.
 - NEVER hallucinate; summarize only the provided content.
 - Extract the following fields based on the content:
   * context: Provide the context.
@@ -102,8 +108,12 @@ You are a helpful assistant summarizing Hacker News articles. Follow these instr
   * insight_5: Detail the fifth main insight. (Optional, omit if not applicable or content is short)
   * author_conclusion: Describe the author's conclusion.
 - Omit any fields that are not applicable or cannot be confidently extracted from the text.
+- If you encounter issues with the content (e.g., it's unreadable, nonsensical, too short, or seems to be a placeholder) or the task itself, try to generate the summary fields nonetheless but also:
+  * Use the 'warning' field to describe any non-critical problems. This information will be sent to the author for troubleshooting.
+  * Use the 'error' field if there is a significant issue that you believe invalidates the summary (e.g., the content is completely irrelevant to the title, entirely garbled, or clearly a CAPTCHA page).
+- Strive to complete the primary summary fields even if issuing a warning. Use 'error' sparingly and only for critical failures.
 - Use a neutral, factual tone suitable for a tech audience.
-- Respond ONLY with the structured JSON data requested.
+- Respond ONLY with the structured JSON data requested, including all specified fields.
     `.trim();
 
     const structuredUserPrompt = `
@@ -129,29 +139,39 @@ You are a helpful assistant summarizing Hacker News articles. Follow these instr
 
       if (parseResult.success) {
         const data = parseResult.data;
-        const { context, core_idea, insight_1, insight_2, insight_3, insight_4, insight_5, author_conclusion } = data;
+        const { context, core_idea, insight_1, insight_2, insight_3, insight_4, insight_5, author_conclusion, warning, error } = data;
 
-        const essentialFields = [context, core_idea, insight_1, insight_2, author_conclusion];
-        if (essentialFields.some(field => !field?.trim())) {
-          console.warn(`[Structured Summary] Essential fields (context, core_idea, insight_1, insight_2, author_conclusion) missing or empty for "${title}". Proceeding to fallback.`);
+        // Check for LLM-reported critical errors first
+        if (error && error.trim().length >= 10) {
+          console.warn(`[Structured Summary] LLM reported critical error for "${title}": ${error}. Proceeding to fallback.`);
         } else {
-          // Log warnings for missing truly optional fields
-          if (!insight_3?.trim()) console.warn(`[Structured Summary] Optional field 'insight_3' missing or empty for "${title}".`);
-          if (!insight_4?.trim()) console.warn(`[Structured Summary] Optional field 'insight_4' missing or empty for "${title}".`);
-          if (!insight_5?.trim()) console.warn(`[Structured Summary] Optional field 'insight_5' missing or empty for "${title}".`);
+          // Log LLM-reported warnings
+          if (warning && warning.trim().length > 0) {
+            console.warn(`[Structured Summary LLM Warning] For article "${title}": ${warning}`);
+          }
 
-          const summaryLines = [
-            context, core_idea, insight_1, insight_2,
-            insight_3, insight_4, insight_5, // These can be undefined/empty
-            author_conclusion
-          ]
-          .map(line => line?.trim() || '')
-          .filter(line => line.length > 0);
-
-          if (summaryLines.length < 2) {
-            console.warn(`[Structured Summary] Resulting summary for "${title}" has less than 2 lines (${summaryLines.length}). Proceeding to fallback.`);
+          const essentialFields = [context, core_idea, insight_1, insight_2, author_conclusion];
+          if (essentialFields.some(field => !field?.trim())) {
+            console.warn(`[Structured Summary] Essential fields (context, core_idea, insight_1, insight_2, author_conclusion) missing or empty for "${title}". Proceeding to fallback.`);
           } else {
-            return postProcessText(summaryLines.join('\n'));
+            // Log warnings for missing truly optional fields (insights 3-5)
+            if (!insight_3?.trim()) console.warn(`[Structured Summary] Optional field 'insight_3' missing or empty for "${title}".`);
+            if (!insight_4?.trim()) console.warn(`[Structured Summary] Optional field 'insight_4' missing or empty for "${title}".`);
+            if (!insight_5?.trim()) console.warn(`[Structured Summary] Optional field 'insight_5' missing or empty for "${title}".`);
+
+            const summaryLines = [
+              context, core_idea, insight_1, insight_2,
+              insight_3, insight_4, insight_5, // These can be undefined/empty
+              author_conclusion
+            ]
+            .map(line => line?.trim() || '')
+            .filter(line => line.length > 0);
+
+            if (summaryLines.length < 2) {
+              console.warn(`[Structured Summary] Resulting summary for "${title}" has less than 2 lines (${summaryLines.length}). Proceeding to fallback.`);
+            } else {
+              return postProcessText(summaryLines.join('\n'));
+            }
           }
         }
       } else {
