@@ -172,6 +172,15 @@ fn build_item_footer(article: &Article) -> String {
     let domain_display = Url::parse(&article.link)
         .ok()
         .and_then(|u| u.host_str().map(str::to_string))
+        .map(|host| {
+            // Check case-insensitively and ensure host is longer than "www."
+            // to prevent panic on slicing if host is exactly "www."
+            if host.len() > 4 && host.to_lowercase().starts_with("www.") {
+                host[4..].to_string() // Slice the original host string
+            } else {
+                host // Return the original host string if no "www." prefix or if host is just "www."
+            }
+        })
         .unwrap_or_else(|| "source".into());
     let domain_html = format!(
         r#"<a href="{href}">🌐 {display}</a>"#,
