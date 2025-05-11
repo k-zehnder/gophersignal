@@ -215,10 +215,9 @@ Instructions:
       }
       return postProcessText(rawSummary);
     } catch (fallbackError: any) {
-      const errorMessage = `CRITICAL: Fallback summarization for article "${title}" failed. Original error: ${fallbackError.message}`;
+      const errorMessage = `ERROR: Fallback summarization for article "${title}" failed. Original error: ${fallbackError.message}. Returning 'No summary available'.`;
       console.error(errorMessage, fallbackError);
-      // As per requirement "if the fallback fails, we crash with a helpful message."
-      throw new Error(errorMessage);
+      return 'No summary available';
     }
   };
 
