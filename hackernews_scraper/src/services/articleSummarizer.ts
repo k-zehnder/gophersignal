@@ -3,7 +3,6 @@
 import { z } from 'zod';
 import { SingleBar, Presets } from 'cli-progress';
 import Instructor from '@instructor-ai/instructor';
-// Keep existing SummaryResponseSchema import
 import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 
 // Define the new StructuredSummarySchema
@@ -21,11 +20,12 @@ const StructuredSummarySchema = z.object({
   error: z.string().optional().describe("CRITICAL: Use if summary IMPOSSIBLE (unreadable, CAPTCHA). Other fields: 'No summary available'."),
 });
 
+
 export const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
-  // Default schema for the `response_model` parameter is not directly used here anymore,
-  // as summarizeContent will manage its schemas explicitly.
+  // Default schema for the `response_model` parameter is not directly used anymore,
+  // as summarizeContent will manage its schemas explicitly to trigger falling back or not.
   // We can leave the original default or remove `schema` if not used elsewhere.
   // For this change, we ensure `summarizeContent` uses the correct schemas internally.
   // The diff showed `schema: z.AnyZodObject = StructuredSummarySchema`, let's update this for consistency,
@@ -106,6 +106,7 @@ Instructions:
     const structuredUserPrompt = `
 <title>${sanitizeInput(title)}</title>
 <content>${sanitizeInput(truncatedContent)}${truncationNotice}</content>
+
     `.trim();
 
     try {
