@@ -9,21 +9,21 @@ import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
 // Define the new StructuredSummarySchema
 const StructuredSummarySchema = z.object({
   thinking: z.string().optional().describe(
-    'Step-by-step thinking process to analyze content and plan summary. This field is not part of the final output.'
+    "Briefly outline your analysis and summary plan here. This is for internal reasoning and NOT part of the user-facing summary."
   ),
-  context: z.string().optional().describe('Context of the article.'),
-  core_idea: z.string().optional().describe('Core idea of the article.'),
-  insight_1: z.string().optional().describe('First main insight.'),
-  insight_2: z.string().optional().describe('Second main insight.'),
-  insight_3: z.string().optional().describe('Third main insight (optional).'),
-  insight_4: z.string().optional().describe('Fourth main insight (optional).'),
-  insight_5: z.string().optional().describe('Fifth main insight (optional).'),
-  author_conclusion: z.string().optional().describe("Author's conclusion or final point."),
+  context: z.string().optional().describe("Article's background/setting."),
+  core_idea: z.string().optional().describe("Article's central message/thesis."),
+  insight_1: z.string().optional().describe("First key insight or argument."),
+  insight_2: z.string().optional().describe("Second key insight or argument."),
+  insight_3: z.string().optional().describe("Third key insight. Omit if not distinct or strong."),
+  insight_4: z.string().optional().describe("Fourth key insight. Omit if not distinct or strong."),
+  insight_5: z.string().optional().describe("Fifth key insight. Omit if not distinct or strong."),
+  author_conclusion: z.string().optional().describe("Author's main conclusion or call to action."),
   warning: z.string().optional().describe(
-    "Use this field to flag any non-critical issues with the content or task that the author should be aware of (e.g., suspected missing context, ambiguity). The summarization will still be attempted."
+    "Note non-critical issues (e.g., minor ambiguity, slight off-topic). Still attempt summary."
   ),
   error: z.string().optional().describe(
-    "Use this field ONLY if there's a critical issue that prevents a valid summary from being generated (e.g., content is entirely unreadable, nonsensical, or completely unrelated to the title). This indicates the summary should not be trusted."
+    "CRITICAL: Use ONLY if summary is impossible (e.g., unreadable, CAPTCHA, irrelevant). If used, other fields may be 'No summary available'."
   ),
 });
 
@@ -94,26 +94,21 @@ export const createArticleSummarizer = (
 
     // --- Attempt 1: Structured Summary ---
     const structuredSystemPrompt = `
-You are a helpful assistant summarizing Hacker News articles. Follow these instructions precisely:
-- Use the 'thinking' field to think step-by-step about the content before generating the summary fields. This field will not be part of the final output.
-- Return "No summary available" if content is missing, unreadable, or you cannot extract the required fields. If you encounter such issues, or other problems that make summarization difficult or impossible, use the 'error' or 'warning' fields as described below.
-- NEVER hallucinate; summarize only the provided content.
-- Extract the following fields based on the content:
-  * context: Provide the context.
-  * core_idea: State the core idea.
-  * insight_1: Detail the first main insight.
-  * insight_2: Detail the second main insight.
-  * insight_3: Detail the third main insight. (Optional, omit if not applicable or content is short)
-  * insight_4: Detail the fourth main insight. (Optional, omit if not applicable or content is short)
-  * insight_5: Detail the fifth main insight. (Optional, omit if not applicable or content is short)
-  * author_conclusion: Describe the author's conclusion.
-- Omit any fields that are not applicable or cannot be confidently extracted from the text.
-- If you encounter issues with the content (e.g., it's unreadable, nonsensical, too short, or seems to be a placeholder) or the task itself, try to generate the summary fields nonetheless but also:
-  * Use the 'warning' field to describe any non-critical problems. This information will be sent to the author for troubleshooting.
-  * Use the 'error' field if there is a significant issue that you believe invalidates the summary (e.g., the content is completely irrelevant to the title, entirely garbled, or clearly a CAPTCHA page).
-- Strive to complete the primary summary fields even if issuing a warning. Use 'error' sparingly and only for critical failures.
-- Use a neutral, factual tone suitable for a tech audience.
-- Respond ONLY with the structured JSON data requested, including all specified fields.
+You are an assistant specializing in summarizing Hacker News articles into a structured JSON format.
+Your task is to populate a JSON object according to the 'StructuredSummary' schema.
+Refer to the schema field descriptions for specific instructions on each field.
+
+Key Instructions:
+1.  **JSON Output ONLY**: Your entire response MUST be a single, valid JSON object matching the 'StructuredSummary' schema. No extra text, markdown, or explanations before or after the JSON.
+2.  **Schema Adherence**:
+    *   Use the 'thinking' field for your internal pre-summary analysis (not for the user).
+    *   Prioritize 'context', 'core_idea', 'insight_1', 'insight_2', 'author_conclusion'.
+    *   'insight_3' to 'insight_5' are optional; omit if not clearly present or if article is too short.
+    *   NEVER hallucinate. Summarize based ONLY on the provided text. If info for a field is missing, use an empty string or omit (all fields are optional strings).
+3.  **Issue Handling**:
+    *   **Critical Issues**: If content is unusable (e.g., unreadable, CAPTCHA, too short <${MIN_CONTENT_LENGTH} chars, irrelevant to title), populate the 'error' field and set summary fields (context, core_idea, etc.) to "No summary available".
+    *   **Non-Critical Issues**: Note minor issues (e.g., ambiguity) in the 'warning' field. Still attempt to provide the main summary.
+4.  **Tone**: Neutral, factual, for a technical audience.
     `.trim();
 
     const structuredUserPrompt = `
