@@ -3,16 +3,39 @@
 import { z } from 'zod';
 import { SingleBar, Presets } from 'cli-progress';
 import Instructor from '@instructor-ai/instructor';
+// Keep existing SummaryResponseSchema import
 import { Article, OllamaConfig, SummaryResponseSchema } from '../types/index';
+
+// Define the new StructuredSummarySchema
+const StructuredSummarySchema = z.object({
+  thinking: z.string().optional().describe(
+    'Step-by-step thinking process to analyze content and plan summary. This field is not part of the final output.'
+  ),
+  context: z.string().optional().describe('Context of the article.'),
+  core_idea: z.string().optional().describe('Core idea of the article.'),
+  insight_1: z.string().optional().describe('First main insight.'),
+  insight_2: z.string().optional().describe('Second main insight.'),
+  insight_3: z.string().optional().describe('Third main insight (optional).'),
+  insight_4: z.string().optional().describe('Fourth main insight (optional).'),
+  insight_5: z.string().optional().describe('Fifth main insight (optional).'),
+  author_conclusion: z.string().optional().describe("Author's conclusion or final point."),
+});
 
 export const createArticleSummarizer = (
   client: ReturnType<typeof Instructor>,
   config: OllamaConfig,
-  schema: z.AnyZodObject = SummaryResponseSchema
+  // Default schema for the `response_model` parameter is not directly used here anymore,
+  // as summarizeContent will manage its schemas explicitly.
+  // We can leave the original default or remove `schema` if not used elsewhere.
+  // For this change, we ensure `summarizeContent` uses the correct schemas internally.
+  // The diff showed `schema: z.AnyZodObject = StructuredSummarySchema`, let's update this for consistency,
+  // though summarizeContent will override it.
+  _schema_param_not_directly_used_in_summarize_content: z.AnyZodObject = StructuredSummarySchema // Renamed to clarify
 ) => {
   const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
-  const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150;
+  const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150; // Consider if structured needs more
   const MIN_CONTENT_LENGTH = 300;
+  const NUM_CTX = config.numCtx; // From OllamaConfig
 
   // Escape HTML chars to avoid prompt injection.
   const sanitizeInput = (text: string) =>
@@ -38,6 +61,13 @@ export const createArticleSummarizer = (
   const collapseBlankLines = (text: string): string =>
     text.replace(/\n\s*\n+/g, '\n');
 
+  // Helper for post-processing text
+  const postProcessText = (text: string): string => {
+    const sanitized = sanitizeSummary(text.trim());
+    const labeledStripped = stripLabels(sanitized);
+    return collapseBlankLines(labeledStripped);
+  };
+
   // Capture the model name for metadata.
   const modelName = config.model;
 
@@ -56,11 +86,90 @@ export const createArticleSummarizer = (
         ? '\n[Truncated for length constraints]'
         : '';
 
-    const prompt = `
+    // --- Attempt 1: Structured Summary ---
+    const structuredSystemPrompt = `
+You are a helpful assistant summarizing Hacker News articles. Follow these instructions precisely:
+- Use the 'thinking' field to think step-by-step about the content before generating the summary fields. This field will not be part of the final output.
+- Return "No summary available" if content is missing, unreadable, or you cannot extract the required fields.
+- NEVER hallucinate; summarize only the provided content.
+- Extract the following fields based on the content:
+  * context: Provide the context.
+  * core_idea: State the core idea.
+  * insight_1: Detail the first main insight.
+  * insight_2: Detail the second main insight.
+  * insight_3: Detail the third main insight. (Optional, omit if not applicable or content is short)
+  * insight_4: Detail the fourth main insight. (Optional, omit if not applicable or content is short)
+  * insight_5: Detail the fifth main insight. (Optional, omit if not applicable or content is short)
+  * author_conclusion: Describe the author's conclusion.
+- Omit any fields that are not applicable or cannot be confidently extracted from the text.
+- Use a neutral, factual tone suitable for a tech audience.
+- Respond ONLY with the structured JSON data requested.
+    `.trim();
+
+    const structuredUserPrompt = `
+<title>${sanitizeInput(title)}</title>
+<content>${sanitizeInput(truncatedContent)}${truncationNotice}</content>
+    `.trim();
+
+    try {
+      const structuredResponseData = await client.chat.completions.create({
+        model: config.model,
+        messages: [
+          { role: 'system', content: structuredSystemPrompt },
+          { role: 'user', content: structuredUserPrompt },
+        ],
+        max_tokens: MAX_OUTPUT_TOKENS + 50, // Allow a bit more for structured output
+        temperature: 0.2,
+        top_p: 0.9,
+        response_model: { schema: StructuredSummarySchema, name: 'StructuredSummary' },
+        options: { num_ctx: NUM_CTX },
+      });
+
+      const parseResult = StructuredSummarySchema.safeParse(structuredResponseData);
+
+      if (parseResult.success) {
+        const data = parseResult.data;
+        const { context, core_idea, insight_1, insight_2, insight_3, insight_4, insight_5, author_conclusion } = data;
+
+        const essentialFields = [context, core_idea, insight_1, insight_2, author_conclusion];
+        if (essentialFields.some(field => !field?.trim())) {
+          console.warn(`[Structured Summary] Essential fields (context, core_idea, insight_1, insight_2, author_conclusion) missing or empty for "${title}". Proceeding to fallback.`);
+        } else {
+          // Log warnings for missing truly optional fields
+          if (!insight_3?.trim()) console.warn(`[Structured Summary] Optional field 'insight_3' missing or empty for "${title}".`);
+          if (!insight_4?.trim()) console.warn(`[Structured Summary] Optional field 'insight_4' missing or empty for "${title}".`);
+          if (!insight_5?.trim()) console.warn(`[Structured Summary] Optional field 'insight_5' missing or empty for "${title}".`);
+
+          const summaryLines = [
+            context, core_idea, insight_1, insight_2,
+            insight_3, insight_4, insight_5, // These can be undefined/empty
+            author_conclusion
+          ]
+          .map(line => line?.trim() || '')
+          .filter(line => line.length > 0);
+
+          if (summaryLines.length < 2) {
+            console.warn(`[Structured Summary] Resulting summary for "${title}" has less than 2 lines (${summaryLines.length}). Proceeding to fallback.`);
+          } else {
+            return postProcessText(summaryLines.join('\n'));
+          }
+        }
+      } else {
+        console.warn(`[Structured Summary] Parsing failed for "${title}": ${parseResult.error.message}. Proceeding to fallback.`);
+      }
+    } catch (error: any) {
+      console.warn(`[Structured Summary] LLM call or unexpected error for "${title}": ${error.message}. Proceeding to fallback.`);
+    }
+
+    // --- Fallback: Simple "summary" field (original method) ---
+    console.log(`[Fallback Summary] Attempting simple summary for "${title}".`);
+    
+    const fallbackSystemPrompt = 'You are a helpful assistant. Respond with only the JSON object containing a "summary" field.';
+    const fallbackUserPrompt = `
       SUMMARY REQUEST
       ---------------
       INSTRUCTIONS:
-      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available".
+      - If the article content is missing, unreadable, or under ${MIN_CONTENT_LENGTH} characters, return "No summary available" inside the "summary" field.
       - NEVER hallucinate or fabricate content; only summarize what's provided.
       - Provide a clear, concise summary of the Hacker News article.
       - The summary must be exactly 5 lines long, with each line serving a unique role:
@@ -80,35 +189,32 @@ export const createArticleSummarizer = (
     `.trim();
 
     try {
-      const response = await client.chat.completions.create({
+      const fallbackResponse = await client.chat.completions.create({
         model: config.model,
         messages: [
-          {
-            role: 'system',
-            content:
-              'You are a helpful assistant. Respond with only the JSON object containing a "summary" field.',
-          },
-          { role: 'user', content: prompt },
+          {role: 'system', content: fallbackSystemPrompt },
+          {role: 'user', content: fallbackUserPrompt },
         ],
         max_tokens: MAX_OUTPUT_TOKENS,
         temperature: 0.2,
         top_p: 0.9,
-        response_model: { schema, name: 'SummaryResponse' },
+        response_model: { schema: SummaryResponseSchema, name: 'SummaryResponseFallback' },
+        options: { num_ctx: NUM_CTX },
       });
+      
+      // Assuming response_model ensures fallbackResponse is { summary: string } or throws
+      const rawSummary = (fallbackResponse as { summary: string }).summary;
 
-      const container = (response as any).data ?? (response as any);
-      const rawSummary = container.summary as string | undefined;
-
-      if (!rawSummary?.trim()) {
+      if (!rawSummary?.trim() || rawSummary.trim().toLowerCase() === 'no summary available') {
+        console.warn(`[Fallback Summary] LLM returned empty or "No summary available" for "${title}".`);
         return 'No summary available';
       }
-
-      // Sanitize, strip labels, then collapse blank lines
-      const sanitized = sanitizeSummary(rawSummary.trim());
-      const labeledStripped = stripLabels(sanitized);
-      return collapseBlankLines(labeledStripped);
-    } catch {
-      return 'No summary available';
+      return postProcessText(rawSummary);
+    } catch (fallbackError: any) {
+      const errorMessage = `CRITICAL: Fallback summarization for article "${title}" failed. Original error: ${fallbackError.message}`;
+      console.error(errorMessage, fallbackError);
+      // As per requirement "if the fallback fails, we crash with a helpful message."
+      throw new Error(errorMessage);
     }
   };
 
@@ -123,10 +229,20 @@ export const createArticleSummarizer = (
     bar.start(articles.length, 0);
 
     for (let i = 0; i < articles.length; i++) {
-      articles[i].summary = await summarizeContent(
-        articles[i].title,
-        articles[i].content || ''
-      );
+      try {
+        articles[i].summary = await summarizeContent(
+          articles[i].title,
+          articles[i].content || ''
+        );
+      } catch (error) {
+        // If summarizeContent throws (e.g. critical fallback failure), this catch block will handle it.
+        // We will log the error and set a default "Error in summarization" message for this article.
+        // The entire process for other articles will continue.
+        console.error(`Error processing article "${articles[i].title}" in summarizeArticles loop: `, error);
+        articles[i].summary = 'Error during summarization process.';
+        // Optionally, re-throw if a single failure should stop everything:
+        // throw error; 
+      }
       articles[i].modelName = modelName;
       bar.update(i + 1);
     }
