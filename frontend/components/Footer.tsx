@@ -1,31 +1,41 @@
 import React from 'react';
 import Typography from '@mui/material/Typography';
-import FavoriteIcon from '@mui/icons-material/Favorite';
+import { FaSkullCrossbones } from 'react-icons/fa';
 
 const Footer: React.FC = () => {
   return (
     <footer className="py-4 bg-gray-100 border-t border-gray-300">
-      <div className="w-full flex justify-center items-center">
+      <div className="w-full flex flex-col justify-center items-center">
         <Typography
-          variant="caption"
-          color="textSecondary"
+          variant="body2"
+          className="text-gray-600"
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
+            fontSize: '0.95rem',
+            fontWeight: 500,
+            letterSpacing: '0.5px',
           }}
         >
-          Made with
-          <FavoriteIcon
-            fontSize="small"
-            sx={{
-              color: '#ef4444',
-              position: 'relative',
-              top: '1px',
+          <span
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
             }}
-          />
-          by Gopher Signal
+          >
+            Made Possible
+            <FaSkullCrossbones
+              style={{
+                fontSize: '1.6rem',
+                color: '#808080',
+                position: 'relative',
+                top: '1px',
+              }}
+            />
+            by Uncle Dennis
+          </span>
         </Typography>
       </div>
     </footer>
