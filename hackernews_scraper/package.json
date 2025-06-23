@@ -31,7 +31,7 @@
   },
   "dependencies": {
     "@instructor-ai/instructor": "^1.5.0",
-    "@octokit/rest": "^21.1.1",
+    "@octokit/rest": "^22.0.0",
     "@types/cli-progress": "^3.11.6",
     "axios": "^1.6.8",
     "cli-progress": "^3.12.0",
