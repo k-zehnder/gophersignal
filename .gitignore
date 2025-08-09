@@ -139,3 +139,4 @@ coverage.html
 debugOllama.ts
 debugTavily.ts
 debug.ts
+.aider*
