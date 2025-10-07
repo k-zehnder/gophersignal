@@ -2,7 +2,7 @@ services:
   frontend:
     image: kjzehnder3/gophersignal-frontend:latest
     ports:
-      - 3000:3000
+      - '3000:3000'
     depends_on:
       - backend
     networks:
@@ -14,12 +14,14 @@ services:
   backend:
     image: kjzehnder3/gophersignal-backend:latest
     ports:
-      - 8080:8080
+      - '8080:8080'
     networks:
       - app-network
     env_file:
       - .env
     restart: unless-stopped
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
 
   hackernews_scraper:
     image: kjzehnder3/gophersignal-hackernews_scraper:latest
@@ -28,11 +30,13 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
 
   rss:
     image: kjzehnder3/gophersignal-rss:latest
     ports:
-      - 9090:9090
+      - '9090:9090'
     networks:
       - app-network
     env_file:
@@ -40,12 +44,14 @@ services:
     depends_on:
       - backend
     restart: unless-stopped
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
 
   nginx:
     image: nginx:latest
     ports:
-      - 80:80
-      - 443:443
+      - '80:80'
+      - '443:443'
     networks:
       - app-network
     volumes:
