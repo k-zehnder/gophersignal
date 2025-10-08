@@ -1,7 +1,6 @@
 #!/bin/sh
 set -euo pipefail
 
-# Prefer explicit env; default to host.docker.internal on Linux
 : "${MYSQL_HOST:=host.docker.internal}"
 : "${MYSQL_PORT:=3306}"
 : "${MYSQL_DATABASE:=gophersignal}"
