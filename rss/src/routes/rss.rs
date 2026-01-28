@@ -126,33 +126,31 @@ fn build_item_guid(article: &Article) -> rss::Guid {
 
 // Footer metadata showing upvotes comments model commit domain.
 fn build_item_footer(article: &Article) -> String {
-    let upvotes_html = format!("▲ {}", article.upvotes.unwrap_or(0));
+    // Combined upvotes and comments link
+    let upvotes_and_comments_html = {
+        let upvotes_count = article.upvotes.unwrap_or(0);
+        let comments_count = article.comment_count.unwrap_or(0);
 
-    // Comments count (link only if >0)
-    let comments_html = {
-        let cnt = article.comment_count.unwrap_or(0);
-        let txt = cnt.to_string();
-        if cnt > 0 {
-            let url = article
-                .comment_link
-                .as_deref()
-                .filter(|s| !s.is_empty())
-                .map(ToString::to_string)
-                .unwrap_or_else(|| {
-                    article
-                        .hn_id
-                        .filter(|&id| id > 0)
-                        .map(|id| format!("https://news.ycombinator.com/item?id={}", id))
-                        .unwrap_or_else(|| "#".into())
-                });
-            format!(
-                r#"<a href="{url}">💬 {txt}</a>"#,
-                url = encode_minimal(&url),
-                txt = txt
-            )
-        } else {
-            format!("💬 {}", txt)
-        }
+        let link_text = format!("▲ {} 💬 {}", upvotes_count, comments_count);
+
+        let url = article
+            .comment_link
+            .as_deref()
+            .filter(|s| !s.is_empty())
+            .map(ToString::to_string)
+            .unwrap_or_else(|| {
+                article
+                    .hn_id
+                    .filter(|&id| id > 0)
+                    .map(|id| format!("https://news.ycombinator.com/item?id={}", id))
+                    .unwrap_or_else(|| "#".into()) // Fallback if no comment link or HN ID
+            });
+
+        format!(
+            r#"<a href="{url}">{text}</a>"#,
+            url = encode_minimal(&url),
+            text = link_text
+        )
     };
 
     let model_html = article
@@ -189,8 +187,7 @@ fn build_item_footer(article: &Article) -> String {
     );
 
     vec![
-        upvotes_html,
-        comments_html,
+        upvotes_and_comments_html,
         model_html,
         commit_html,
         domain_html,
