@@ -27,7 +27,7 @@
     "sinon": "^21.0.0",
     "ts-jest": "^29.1.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.2"
+    "typescript": "^6.0.2"
   },
   "dependencies": {
     "@instructor-ai/instructor": "^1.5.0",
