@@ -30,7 +30,7 @@ export const createArticleSummarizer = (
   // For this change, we ensure `summarizeContent` uses the correct schemas internally.
   // The diff showed `schema: z.AnyZodObject = StructuredSummarySchema`, let's update this for consistency,
   // though summarizeContent will override it.
-  _schema_param_not_directly_used_in_summarize_content: z.AnyZodObject = StructuredSummarySchema // Renamed to clarify
+  _schema_param_not_directly_used_in_summarize_content: z.ZodTypeAny = StructuredSummarySchema // Renamed to clarify
 ) => {
   const MAX_CONTENT_LENGTH = config.maxContentLength || 2000;
   const MAX_OUTPUT_TOKENS = config.maxSummaryLength || 150; // Consider if structured needs more
