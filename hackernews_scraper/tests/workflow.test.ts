@@ -1,3 +1,5 @@
+/// <reference types="jest" />
+
 import { createWorkflow } from '../src/workflow';
 import { Services } from '../src/services/createServices';
 
