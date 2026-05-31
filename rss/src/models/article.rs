@@ -1,5 +1,6 @@
 use serde::Deserialize;
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug, Clone, sqlx::FromRow)]
 pub struct Article {
     pub id: i32,
@@ -26,6 +27,7 @@ pub struct Article {
     pub model_name: Option<String>,
 }
 
+#[allow(dead_code)]
 #[derive(Deserialize, Debug)]
 pub struct ApiResponse {
     pub code: u32,
