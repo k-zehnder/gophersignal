@@ -42,7 +42,9 @@ const ArticleListItem: React.FC<ArticleListItemProps> = ({ article }) => {
       </Typography>
 
       {/* Summary */}
-      <Typography sx={{ fontSize: '1rem' }}>{article.summary}</Typography>
+      <Typography sx={{ fontSize: '1rem', whiteSpace: 'pre-line' }}>
+        {article.summary}
+      </Typography>
 
       {/* Upvotes & Comments Row */}
       {(article.upvotes || article.comment_count !== undefined) && (

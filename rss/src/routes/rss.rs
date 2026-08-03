@@ -91,9 +91,17 @@ fn build_rss_item(article: &Article, total: usize, idx: usize) -> rss::Item {
         .build()
 }
 
-// Escape the summary and append the footer metadata.
+// Replace newlines with <br>, escape the summary, and append the footer metadata.
 fn build_item_description(article: &Article) -> String {
-    let mut html = encode_minimal(article.summary.as_deref().unwrap_or("No summary"));
+    // Get the raw summary, replace newlines with <br>, then escape.
+    let summary_with_breaks = article
+        .summary
+        .as_deref()
+        .unwrap_or("No summary")
+        .replace('\n', "<br>");
+    let mut html = encode_minimal(&summary_with_breaks);
+
+    // Append the footer.
     html.push_str(&format!(
         "<br><br><small>{}</small>",
         build_item_footer(article)
