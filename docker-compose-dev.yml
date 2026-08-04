@@ -72,6 +72,7 @@ services:
     environment:
       - OLLAMA_CONFIG=/ollama/config
       - OLLAMA_CONTEXT_LENGTH=8192
+      - OLLAMA_KV_CACHE_TYPE=q4_0  # takes less VRAM and RAM
     healthcheck:
       test: ['CMD', 'test', '-f', '/tmp/ollama_model_ready']
       interval: 10s
